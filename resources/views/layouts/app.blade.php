@@ -10,9 +10,6 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">Toyoseat</a>
-            <div class="ms-auto">
-                <a href="/admin/login" class="btn btn-outline-light btn-sm">Admin Login</a>
-            </div>
         </div>
     </nav>
 
