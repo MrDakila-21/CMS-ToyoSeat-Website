@@ -58,9 +58,10 @@
                             </div>
                             <input type="email" 
                                    class="form-control-username" 
+                                   autocomplete="off"
                                    id="email" 
                                    name="email" 
-                                   placeholder="User Name" 
+                                   placeholder="Username" 
                                    value="{{ old('email') }}"
                                    required 
                                    autofocus>
@@ -79,6 +80,7 @@
                             </div>
                             <input type="password" 
                                    class="form-control-password" 
+                                    autocomplete="new-password"
                                    id="password" 
                                    name="password" 
                                    placeholder="Password"
