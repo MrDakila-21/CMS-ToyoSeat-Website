@@ -78,15 +78,16 @@ body {
     left: 50%;
     transform: translateX(-50%);
     top: 128px;
-    font-family: 'Poppins', sans-serif;
-    font-style: normal;
+    font-family: 'Cinzel', serif;
+    font-style: italic;
     font-weight: 700;
-    font-size: 32px;
+    font-size: 31px;
     line-height: 48px;
     color: #015A96;
     text-align: center;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
+    white-space: nowrap; /* Prevents text from wrapping */
 }
 
 /* PHILIPPINES CORPORATION */
@@ -97,14 +98,16 @@ body {
     left: 50%;
     transform: translateX(-50%);
     top: 167px;
-    font-family: 'Inria Sans', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-style: italic;
-    font-weight: 400;
+    font-weight: 800;
     font-size: 12px;
     line-height: 17px;
     text-align: center;
+    letter-spacing: 1px;
     color: #015A96;
     margin: 0;
+    white-space: nowrap; /* Prevents text from wrapping */
 }
 
 /* CMS ADMIN LOGIN */
@@ -118,7 +121,7 @@ body {
     font-family: 'Poppins', sans-serif;
     font-style: normal;
     font-weight: 600;
-    font-size: 20px;
+    font-size: 15px;
     line-height: 30px;
     color: #8F8686;
     text-align: center;
