@@ -10,10 +10,9 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <span class="navbar-brand">Toyoseat Admin Panel</span>
-            <form method="POST" action="{{ route('admin.logout') }}">
-                @csrf
-                <button type="submit" class="btn btn-danger btn-sm">Logout</button>
-            </form>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                Logout
+            </button>
         </div>
     </nav>
 
@@ -35,5 +34,78 @@
             </div>
         </div>
     </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to logout from the admin panel?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Yes, Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Disable forward/back navigation after logout -->
+    <script>
+        // Disable browser back/forward cache (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                // Page was loaded from bfcache (back/forward cache)
+                // Check if user is not authenticated (you can add a meta tag or data attribute)
+                fetch('/admin/check-auth', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        window.location.href = '/admin/login';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = '/admin/login';
+                });
+            }
+        });
+        
+        // Prevent back button from showing cached pages
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+            // Check auth status when back button is pressed
+            fetch('/admin/check-auth', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login';
+                }
+            })
+            .catch(() => {
+                window.location.href = '/admin/login';
+            });
+        };
+    </script>
 </body>
 </html>
