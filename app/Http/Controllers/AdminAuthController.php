@@ -27,7 +27,9 @@ class AdminAuthController extends Controller
             $request->session()->regenerate();
             // Regenerate session ID for security
             $request->session()->regenerateToken();
-            return redirect()->intended('/admin/dashboard');
+            
+            // Redirect with success message
+            return redirect()->intended('/admin/dashboard')->with('success', 'Welcome ADMIN! You have successfully logged in.');
         }
 
         return back()->withErrors([
@@ -60,12 +62,12 @@ class AdminAuthController extends Controller
         
         // Clear any remember me cookies
         if ($request->hasCookie(Auth::getRecallerName())) {
-            $response = redirect('/admin/login');
+            $response = redirect('/admin/login')->with('success', 'Successfully logged out!');
             $response->withCookie(\Cookie::forget(Auth::getRecallerName()));
             return $response;
         }
         
-        return redirect('/admin/login')->withHeaders([
+        return redirect('/admin/login')->with('success', 'Successfully logged out!')->withHeaders([
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => 'Sun, 02 Jan 1990 00:00:00 GMT',

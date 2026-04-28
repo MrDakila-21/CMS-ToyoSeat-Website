@@ -18,8 +18,17 @@
     </style>
 </head>
 <body>
+    @if(session('success'))
+        <div id="login-success-toast" class="login-toast success-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-circle-check"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
     @if($errors->any())
-        <div id="login-error-toast" class="login-toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="login-error-toast" class="login-toast error-toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="login-toast-content">
                 <i class="fas fa-circle-exclamation"></i>
                 <span>{{ $errors->first() }}</span>
@@ -129,14 +138,25 @@
             };
             lockSvg.src = '{{ asset('images/lock.svg') }}';
 
-            var toast = document.getElementById('login-error-toast');
-            if (toast) {
+            // Handle error toast
+            var errorToast = document.getElementById('login-error-toast');
+            if (errorToast) {
                 setTimeout(function() {
-                    toast.classList.add('hide');
+                    errorToast.classList.add('hide');
                 }, 5000);
-
                 setTimeout(function() {
-                    toast.remove();
+                    errorToast.remove();
+                }, 5600);
+            }
+            
+            // Handle success toast
+            var successToast = document.getElementById('login-success-toast');
+            if (successToast) {
+                setTimeout(function() {
+                    successToast.classList.add('hide');
+                }, 5000);
+                setTimeout(function() {
+                    successToast.remove();
                 }, 5600);
             }
 
