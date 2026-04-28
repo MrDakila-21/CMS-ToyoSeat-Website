@@ -5,8 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Toyoseat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Toast message styles matching login page */
+        .login-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .login-toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+        
+        .login-toast.success-toast .login-toast-content {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .login-toast.error-toast .login-toast-content {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .login-toast .login-toast-content i {
+            font-size: 24px;
+        }
+        
+        .login-toast.success-toast i {
+            color: #28a745;
+        }
+        
+        .login-toast.error-toast i {
+            color: #dc3545;
+        }
+        
+        .login-toast.hide {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
+    @if(session('success'))
+        <div id="dashboard-success-toast" class="login-toast success-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-circle-check"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <span class="navbar-brand">Toyoseat Admin Panel</span>
@@ -60,8 +143,18 @@
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Disable forward/back navigation after logout -->
     <script>
+        // Handle success toast auto-hide
+        var successToast = document.getElementById('dashboard-success-toast');
+        if (successToast) {
+            setTimeout(function() {
+                successToast.classList.add('hide');
+            }, 5000);
+            setTimeout(function() {
+                successToast.remove();
+            }, 5600);
+        }
+        
         // Disable browser back/forward cache (bfcache)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
