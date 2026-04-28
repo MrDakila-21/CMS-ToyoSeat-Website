@@ -565,8 +565,8 @@
                     Toyo Seat is committed to creating innovative seating solutions that enhance comfort, safety, and sustainability for a better tomorrow.
                 </div>
                 <div class="footer-social">
-                    <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=100057821552844" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.youtube.com/@ToyoSeatPhilippinesCorporation" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                     <a href="#" target="_blank" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
