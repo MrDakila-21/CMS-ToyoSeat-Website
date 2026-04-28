@@ -1,0 +1,339 @@
+/* resources/css/home.css */
+
+/* Reset for full screen */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Full Screen Hero Section */
+.hero-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Background Image - Full Screen */
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Gradient Overlay 1 - Bottom to Top */
+.gradient-overlay-1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, #000000 0%, rgba(0, 6, 10, 0.7) 10.5%, rgba(88, 138, 172, 0) 52.2%, rgba(255, 255, 255, 0) 100%);
+    z-index: 1;
+}
+
+/* Gradient Overlay 2 - Left to Right */
+.gradient-overlay-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #0E334C -2.12%, rgba(1, 90, 150, 0.6) 19.47%, rgba(172, 218, 249, 0) 65.91%, rgba(255, 255, 255, 0) 97.88%);
+    z-index: 1;
+}
+
+/* Text Container - Moved UP slightly */
+/* Text Container - Positioned higher */
+.text-container {
+    position: absolute;
+    z-index: 2;
+    left: 67px;
+    top: 10%;
+    transform: translateY(-50%);
+}
+
+/* SHAPING THE FUTURE */
+.shaping-title {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 36px;
+    color: #80CCFF;
+    margin-bottom: 20px;
+}
+
+/* Line 10 */
+.line-10 {
+    width: 86px;
+    height: 2px;
+    background: #80CCFF;
+    margin-bottom: 20px;
+}
+
+/* Lead. Move. Motivate. */
+.lead-move-motivate {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 50px;
+    line-height: 1.2;
+    color: #FFFFFF;
+    margin-bottom: 30px;
+}
+
+.lead-move-motivate div {
+    margin-bottom: 5px;
+}
+
+/* Quote Text */
+.quote-text {
+    width: 407px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 300;
+    font-size: 20px;
+    line-height: 30px;
+    color: #FFFFFF;
+    margin-bottom: 30px;
+}
+
+/* Line 11 */
+.line-11 {
+    width: 49px;
+    height: 2px;
+    background: #80CCFF;
+    margin-bottom: 15px;
+}
+
+/* TOGETHER, WE DRIVE TOMORROW */
+.together-text {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: #B4DFFD;
+}
+
+/* Bottom Cards Section - Smaller and more compact */
+.bottom-cards {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    flex-wrap: wrap;
+    padding: 0 20px;
+}
+
+/* Individual Card - Smaller size */
+.card-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.card-item:hover {
+    transform: translateY(-3px);
+}
+
+/* Icon Circle - Smaller */
+.card-icon-circle {
+    width: 55px;
+    height: 55px;
+    background: #015A96;
+    border: 1.5px solid #4285F4;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.card-item:hover .card-icon-circle {
+    background: #3988BD;
+    border-color: #80CCFF;
+}
+
+/* Icon Image - Smaller */
+.card-icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+/* Card Title - Smaller */
+.card-title {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 18px;
+    color: #FFFFFF;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.card-item:hover .card-title {
+    color: #80CCFF;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .bottom-cards {
+        gap: 45px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 45px;
+    }
+    
+    .quote-text {
+        width: 350px;
+        font-size: 18px;
+    }
+    
+    .text-container {
+        top: 40%;
+    }
+}
+
+@media (max-width: 992px) {
+    .text-container {
+        left: 40px;
+        top: 38%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 38px;
+    }
+    
+    .quote-text {
+        width: 320px;
+        font-size: 16px;
+        line-height: 26px;
+    }
+    
+    .bottom-cards {
+        bottom: 30px;
+        gap: 35px;
+    }
+    
+    .card-icon-circle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .card-icon-img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .card-title {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .text-container {
+        left: 30px;
+        top: 35%;
+    }
+    
+    .shaping-title {
+        font-size: 18px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 30px;
+    }
+    
+    .quote-text {
+        width: 280px;
+        font-size: 14px;
+        line-height: 22px;
+    }
+    
+    .together-text {
+        font-size: 12px;
+    }
+    
+    .bottom-cards {
+        bottom: 25px;
+        gap: 25px;
+    }
+    
+    .card-icon-circle {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .card-icon-img {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .card-title {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .text-container {
+        left: 20px;
+        top: 30%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 24px;
+    }
+    
+    .quote-text {
+        width: 240px;
+        font-size: 12px;
+        line-height: 18px;
+    }
+    
+    .shaping-title {
+        font-size: 16px;
+    }
+    
+    .bottom-cards {
+        flex-wrap: wrap;
+        gap: 20px;
+        bottom: 20px;
+    }
+    
+    .card-item {
+        flex: 0 0 calc(50% - 20px);
+    }
+    
+    .card-icon-circle {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-icon-img {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .card-title {
+        font-size: 9px;
+    }
+}
