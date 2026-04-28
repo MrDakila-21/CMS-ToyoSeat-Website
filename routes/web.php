@@ -14,11 +14,16 @@ Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login']);
     });
     
-    // Protected admin routes
+    // Protected admin routes (must be authenticated)
     Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [AdminAuthController::class, 'dashboard'])->name('admin.dashboard');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
+        
+        // Homepage image management routes (moved here from guest group)
+        Route::get('/homepage/image', [App\Http\Controllers\Admin\HomepageController::class, 'getImage']);
+        Route::post('/homepage/upload-image', [App\Http\Controllers\Admin\HomepageController::class, 'uploadImage']);
+        Route::delete('/homepage/remove-image', [App\Http\Controllers\Admin\HomepageController::class, 'removeImage']);
     });
 });
 

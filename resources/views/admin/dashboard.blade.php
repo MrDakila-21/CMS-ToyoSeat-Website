@@ -527,24 +527,91 @@
         <!-- Main Content Area -->
         <main class="main-content">
             <!-- Home Panel (Existing Content) -->
-            <div id="home-panel" class="content-panel active">
-                <div class="alert alert-success">
-                    <h4 class="alert-heading">Welcome, Admin!</h4>
-                    <p>You have successfully logged in to the admin panel.</p>
-                    <hr>
-                    <p class="mb-0">This is the admin dashboard. Use the sidebar to manage content for your website.</p>
+            <!-- Home Panel with Image Management -->
+<div id="home-panel" class="content-panel active">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Welcome, Admin!</h4>
+        <p>You have successfully logged in to the admin panel.</p>
+        <hr>
+        <p class="mb-0">Manage your homepage background image below.</p>
+    </div>
+    
+    <!-- Homepage Background Image Management Card -->
+    <div class="card content-card">
+        <div class="card-header">
+            <h5><i class="fas fa-image me-2"></i>Homepage Background Image</h5>
+        </div>
+        <div class="card-body">
+            <form id="homepageImageForm" enctype="multipart/form-data">
+                @csrf
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Current Image Preview -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Current Background Image</label>
+                            <div id="currentImagePreview" class="border rounded p-2 text-center" style="min-height: 200px; background-color: #f8f9fa;">
+                                <img id="previewImg" src="" alt="Current Background" style="max-width: 100%; max-height: 200px; display: none;">
+                                <div id="noImagePlaceholder" class="text-muted py-5">
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <p>No background image uploaded yet</p>
+                                    <small>Default GIF will be shown on website</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- Upload New Image -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Upload New Background Image</label>
+                            <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
+                            </div>
+                        </div>
+                        
+                        <!-- New Image Preview (before upload) -->
+                        <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
+                            <label class="form-label fw-bold">New Image Preview</label>
+                            <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa;">
+                                <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>Select a section from the sidebar to start managing content.</p>
-                        <a href="/" class="btn btn-primary">View Website</a>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload me-1"></i> Upload/Update Background Image
+                        </button>
+                        <button type="button" class="btn btn-danger ms-2" id="removeImageBtn">
+                            <i class="fas fa-trash-alt me-1"></i> Remove Background Image
+                        </button>
+                        <a href="{{ url('/') }}" class="btn btn-secondary ms-2" target="_blank">
+                            <i class="fas fa-eye me-1"></i> Preview Website
+                        </a>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Loading Spinner Modal -->
+    <div class="modal fade" id="uploadingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Uploading Image...</h5>
+                    <p class="text-muted mb-0">Please wait while your image is being processed.</p>
+                </div>
             </div>
+        </div>
+    </div>
+</div>
 
             <!-- About Us Panels -->
             <div id="about-overview-panel" class="content-panel">
@@ -858,6 +925,206 @@
                 window.location.href = '/admin/login';
             });
         };
+    </script>
+
+    <script>
+        // ============================================
+// Homepage Background Image Management
+// ============================================
+
+// Load current homepage image on panel activation
+// Load current homepage image on panel activation
+function loadCurrentHomepageImage() {
+    fetch('/admin/homepage/image', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.has_image) {
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            
+            previewImg.src = 'data:image/png;base64,' + data.image_data;
+            previewImg.style.display = 'inline-block';
+            noImagePlaceholder.style.display = 'none';
+        } else {
+            // No image, show placeholder
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            previewImg.style.display = 'none';
+            noImagePlaceholder.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading homepage image:', error);
+    });
+}
+
+// Preview new image before upload
+document.getElementById('backgroundImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const newPreviewContainer = document.getElementById('newImagePreviewContainer');
+    const newPreviewImg = document.getElementById('newPreviewImg');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            newPreviewImg.src = event.target.result;
+            newPreviewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        newPreviewContainer.style.display = 'none';
+        newPreviewImg.src = '';
+    }
+});
+
+// Handle form submission for image upload
+document.getElementById('homepageImageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('backgroundImage');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showCustomToast('Please select an image file first.', 'error');
+        return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
+        return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showCustomToast('File is too large. Maximum size is 5MB.', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('background_image', file);
+    formData.append('_token', document.querySelector('input[name="_token"]').value);
+    
+    // Show loading modal
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadingModal'));
+    uploadModal.show();
+    
+    fetch('/admin/homepage/upload-image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        uploadModal.hide();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            // Clear file input and new preview
+            fileInput.value = '';
+            document.getElementById('newImagePreviewContainer').style.display = 'none';
+            document.getElementById('newPreviewImg').src = '';
+            // Reload current image
+            loadCurrentHomepageImage();
+        } else {
+            showCustomToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        uploadModal.hide();
+        console.error('Error:', error);
+        showCustomToast('An error occurred while uploading the image.', 'error');
+    });
+});
+
+// Handle remove image button
+document.getElementById('removeImageBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to remove the background image? The default GIF will be shown instead.')) {
+        const uploadModal = new bootstrap.Modal(document.getElementById('uploadingModal'));
+        uploadModal.show();
+        
+        fetch('/admin/homepage/remove-image', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadModal.hide();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                // Reset preview
+                const previewImg = document.getElementById('previewImg');
+                const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+                previewImg.style.display = 'none';
+                noImagePlaceholder.style.display = 'block';
+                // Clear file input
+                document.getElementById('backgroundImage').value = '';
+                document.getElementById('newImagePreviewContainer').style.display = 'none';
+            } else {
+                showCustomToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            uploadModal.hide();
+            console.error('Error:', error);
+            showCustomToast('An error occurred while removing the image.', 'error');
+        });
+    }
+});
+
+// Custom toast function for dashboard messages
+function showCustomToast(message, type = 'success') {
+    const existingToast = document.querySelector('.login-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `login-toast ${type === 'success' ? 'success-toast' : 'error-toast'}`;
+    toast.innerHTML = `
+        <div class="login-toast-content">
+            <i class="fas ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('hide');
+    }, 5000);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5600);
+}
+
+// Load image when home tab is opened
+// Override switchTab function to load homepage image when home tab is selected
+const originalSwitchTab = switchTab;
+window.switchTab = function(tabId) {
+    originalSwitchTab(tabId);
+    if (tabId === 'home') {
+        loadCurrentHomepageImage();
+    }
+};
+
+// Initial load if home tab is active
+if (document.querySelector('#home-panel').classList.contains('active')) {
+    loadCurrentHomepageImage();
+}
     </script>
 </body>
 </html>
