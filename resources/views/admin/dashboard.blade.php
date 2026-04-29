@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Admin Dashboard - Toyoseat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -110,94 +113,94 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <!-- Home Panel (Existing Content) -->
             <!-- Home Panel with Image Management -->
-<div id="home-panel" class="content-panel active">
-    <div class="alert alert-success">
-        <h4 class="alert-heading">Welcome, Admin!</h4>
-        <p>You have successfully logged in to the admin panel.</p>
-        <hr>
-        <p class="mb-0">Manage your homepage background image below.</p>
-    </div>
-    
-    <!-- Homepage Background Image Management Card -->
-    <div class="card content-card">
-        <div class="card-header">
-            <h5><i class="fas fa-image me-2"></i>Homepage Background Image</h5>
-        </div>
-        <div class="card-body">
-            <form id="homepageImageForm" enctype="multipart/form-data">
-                @csrf
-                <div class="row">
-                    <div class="col-md-6">
-                        <!-- Current Image Preview -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Current Background Image</label>
-                            <div id="currentImagePreview" class="border rounded p-2 text-center" style="min-height: 200px; background-color: #f8f9fa;">
-                                <img id="previewImg" src="" alt="Current Background" style="max-width: 100%; max-height: 200px; display: none;">
-                                <div id="noImagePlaceholder" class="text-muted py-5">
-                                    <i class="fas fa-image fa-3x mb-2"></i>
-                                    <p>No background image uploaded yet</p>
-                                    <small>Default GIF will be shown on website</small>
+            <div id="home-panel" class="content-panel active">
+                <div class="alert alert-success">
+                    <h4 class="alert-heading">Welcome, Admin!</h4>
+                    <p>You have successfully logged in to the admin panel.</p>
+                    <hr>
+                    <p class="mb-0">Manage your homepage background image below.</p>
+                </div>
+                
+                <!-- Homepage Background Image Management Card -->
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-image me-2"></i>Homepage Background Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="homepageImageForm" enctype="multipart/form-data">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Current Image Preview -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Current Background Image</label>
+                                        <div id="currentImagePreview" class="border rounded p-2 text-center" style="min-height: 200px; background-color: #f8f9fa;">
+                                            <img id="previewImg" src="" alt="Current Background" style="max-width: 100%; max-height: 200px; display: none;">
+                                            <div id="noImagePlaceholder" class="text-muted py-5">
+                                                <i class="fas fa-image fa-3x mb-2"></i>
+                                                <p>No background image uploaded yet</p>
+                                                <small>Default GIF will be shown on website</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                                
+                                <div class="col-md-6">
+                                    <!-- Upload New Image -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Upload New Background Image</label>
+                                        <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
+                                        <div class="form-text mt-2">
+                                            <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- New Image Preview with Remove Button -->
+                                    <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
+                                        <label class="form-label fw-bold">New Image Preview</label>
+                                        <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa; position: relative;">
+                                            <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
+                                            <button type="button" id="removeNewImageBtn" class="btn btn-sm btn-danger mt-2" style="position: absolute; top: 5px; right: 5px;">
+                                                <i class="fas fa-times"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                            <i class="fas fa-upload me-1"></i> Upload/Update Background Image
+                                        </button>
+                                        <button type="button" class="btn btn-danger ms-2" id="removeImageBtn">
+                                            <i class="fas fa-trash-alt me-1"></i> Remove Background Image
+                                        </button>
+                                        <a href="{{ url('/') }}" class="btn btn-secondary ms-2" target="_blank">
+                                            <i class="fas fa-eye me-1"></i> Preview Website
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Loading Modal -->
+                <div class="modal fade" id="uploadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body text-center py-4">
+                                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5>Processing...</h5>
+                                <p class="text-muted mb-0">Please wait while your request is being processed.</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-6">
-    <!-- Upload New Image -->
-    <div class="mb-3">
-        <label class="form-label fw-bold">Upload New Background Image</label>
-        <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
-        <div class="form-text mt-2">
-            <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
-        </div>
-    </div>
-    
-    <!-- New Image Preview with Remove Button -->
-    <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
-        <label class="form-label fw-bold">New Image Preview</label>
-        <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa; position: relative;">
-            <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
-            <button type="button" id="removeNewImageBtn" class="btn btn-sm btn-danger mt-2" style="position: absolute; top: 5px; right: 5px;">
-                <i class="fas fa-times"></i> Remove
-            </button>
-        </div>
-    </div>
-</div>
-                
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary" id="uploadBtn">
-                            <i class="fas fa-upload me-1"></i> Upload/Update Background Image
-                        </button>
-                        <button type="button" class="btn btn-danger ms-2" id="removeImageBtn">
-                            <i class="fas fa-trash-alt me-1"></i> Remove Background Image
-                        </button>
-                        <a href="{{ url('/') }}" class="btn btn-secondary ms-2" target="_blank">
-                            <i class="fas fa-eye me-1"></i> Preview Website
-                        </a>
-                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Loading Spinner Modal -->
-<!-- Loading Modal with dynamic content -->
-<div class="modal fade" id="uploadingModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center py-4">
-                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h5>Processing...</h5>
-                <p class="text-muted mb-0">Please wait while your request is being processed.</p>
             </div>
-        </div>
-    </div>
-</div>
 
             <!-- About Us Panels -->
             <div id="about-overview-panel" class="content-panel">
@@ -390,5 +393,42 @@
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('js/dash.js') }}"></script>
+    
+    <!-- Add JavaScript to prevent back button access after logout -->
+    <script>
+        // Prevent back button access to dashboard after logout
+        (function() {
+            // Check authentication status periodically
+            function checkAuthStatus() {
+                fetch('/admin/check-auth', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        // If not authenticated, redirect to login
+                        window.location.href = '/admin/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Auth check failed:', error);
+                });
+            }
+            
+            // Check auth every 5 seconds
+            setInterval(checkAuthStatus, 5000);
+            
+            // Check auth when page becomes visible (user returns to tab)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkAuthStatus();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
