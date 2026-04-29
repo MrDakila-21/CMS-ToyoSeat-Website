@@ -43,6 +43,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminAuthController::class, 'dashboard'])->name('admin.dashboard');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
+        Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent'); // Add this line
 
         // Homepage image management routes
         Route::get('/homepage/image', [HomepageController::class, 'getImage'])->name('admin.homepage.image');
