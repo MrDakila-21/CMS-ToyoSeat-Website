@@ -62,16 +62,11 @@ class AdminAuthController extends Controller
         
         // Clear any remember me cookies
         if ($request->hasCookie(Auth::getRecallerName())) {
-            $response = redirect('/admin/login')->with('success', 'Successfully logged out!');
-            $response->withCookie(\Cookie::forget(Auth::getRecallerName()));
-            return $response;
+            $cookie = \Cookie::forget(Auth::getRecallerName());
+            return redirect('/admin/login')->with('success', 'Successfully logged out!')->withCookie($cookie);
         }
         
-        return redirect('/admin/login')->with('success', 'Successfully logged out!')->withHeaders([
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => 'Sun, 02 Jan 1990 00:00:00 GMT',
-        ]);
+        return redirect('/admin/login')->with('success', 'Successfully logged out!');
     }
     
     // Add this method to check authentication status via AJAX
@@ -79,6 +74,10 @@ class AdminAuthController extends Controller
     {
         return response()->json([
             'authenticated' => Auth::check()
+        ])->withHeaders([
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Sun, 02 Jan 1990 00:00:00 GMT',
         ]);
     }
 }

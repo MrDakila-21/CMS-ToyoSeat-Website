@@ -10,21 +10,16 @@
 @section('content')
 @php
 use App\Models\Homepage;
-$image = Homepage::where('key', 'main_image')->first();
+$image = Homepage::where('key', 'hero_background')->first();
 @endphp
 
 <!-- SECTION 1: Hero Section -->
 <div class="hero-wrapper">
-<<<<<<< HEAD
     <!-- Background Image - handles both base64 and regular images -->
-    @if($image && $image->image_data)
-        <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
+    @if($image && $image->image_data && !empty($image->image_data))
+        <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
     @else
-        <div class="hero-background" style="background-image: url('{{ asset('images/Home.png') }}');"></div>
-=======
-    @if($image)
-    <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
->>>>>>> cd3c2fa5fb709b6cfe747dd8a99c58763a47a006
+        <div class="hero-background" style="background-image: url('{{ asset('images/Home.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
     @endif
     
     <div class="gradient-overlay-1"></div>
@@ -143,7 +138,7 @@ $image = Homepage::where('key', 'main_image')->first();
                         $mediaItems = [
                             ['date' => '2024/07/31', 'text' => 'Our company was featured in the Chugoku Shimbun newspaper.'],
                             ['date' => '2023/03/27', 'text' => 'Signing of solar power generation PPA agreement.'],
-                            ['date' => '2022/11/04', 'text' => 'Featured on RCC “E-Town Sports.”'],
+                            ['date' => '2022/11/04', 'text' => 'Featured on RCC "E-Town Sports."'],
                         ];
                     @endphp
 

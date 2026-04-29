@@ -1,117 +1,281 @@
-  // ============================================
-    // Homepage Background Image Management
-    // ============================================
+// ============================================
+// Sidebar Toggle and Tab Switching
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sidebar dropdowns
+    initSidebarDropdowns();
     
-    // Global modal instance
-    let uploadingModal = null;
-    let currentOperation = null; // Track current operation: 'upload' or 'remove'
+    // Initialize tab switching
+    initTabSwitching();
     
-    // Initialize modal when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalElement = document.getElementById('uploadingModal');
-        if (modalElement) {
-            uploadingModal = new bootstrap.Modal(modalElement, {
-                backdrop: 'static',
-                keyboard: false
+    // Initialize homepage image management
+    initHomepageManagement();
+    
+    // Auto-hide success toast message
+    const successToast = document.getElementById('dashboard-success-toast');
+    if (successToast) {
+        setTimeout(() => {
+            successToast.classList.add('hide');
+            setTimeout(() => successToast.remove(), 600);
+        }, 4000);
+    }
+    
+    // Prevent back button from accessing protected pages
+    preventBackButtonAccess();
+});
+
+// Function to prevent back button access after logout
+function preventBackButtonAccess() {
+    // Replace current state to prevent back navigation
+    history.replaceState(null, null, location.href);
+    
+    // Listen for popstate events (back button)
+    window.addEventListener('popstate', function(event) {
+        // Check authentication
+        fetch('/admin/check-auth', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            },
+            cache: 'no-store'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.authenticated) {
+                // Force redirect to login and prevent back navigation
+                window.location.replace('/admin/login');
+            } else {
+                // If authenticated, push state again to prevent further back navigation
+                history.pushState(null, null, location.href);
+            }
+        })
+        .catch(() => {
+            window.location.replace('/admin/login');
+        });
+    });
+}
+
+// Initialize sidebar dropdowns
+function initSidebarDropdowns() {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle-main');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdownId = this.getAttribute('data-dropdown');
+            const dropdown = document.getElementById(dropdownId);
+            const chevron = this.querySelector('.chevron-icon');
+            
+            if (dropdown) {
+                dropdown.classList.toggle('open');
+                if (chevron) {
+                    chevron.style.transform = dropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
+                }
+            }
+        });
+    });
+}
+
+// Initialize tab switching
+function initTabSwitching() {
+    const tabLinks = document.querySelectorAll('[data-tab]');
+    const panels = document.querySelectorAll('.content-panel');
+    
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabId = this.getAttribute('data-tab');
+            
+            // Update active state on sidebar links
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show selected panel
+            panels.forEach(panel => {
+                panel.classList.remove('active');
             });
             
-            // Add event listener to ensure cleanup when modal is fully hidden
-            modalElement.addEventListener('hidden.bs.modal', function() {
-                // Force remove any leftover backdrops
+            const activePanel = document.getElementById(`${tabId}-panel`);
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+            
+            // If home panel is selected, reload the image
+            if (tabId === 'home') {
+                loadCurrentHomepageImage();
+            }
+        });
+    });
+}
+
+// ============================================
+// Homepage Background Image Management
+// ============================================
+
+let uploadingModal = null;
+let isModalVisible = false;
+let currentUploadRequest = null;
+
+/**
+ * Safely hide the modal and clean up all backdrops
+ */
+function safelyHideModal() {
+    return new Promise((resolve) => {
+        if (uploadingModal && isModalVisible) {
+            try {
+                // First, remove any lingering backdrops manually
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                
+                // Remove modal-open class and reset body styles
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                
+                // Now hide the modal
+                uploadingModal.hide();
+                isModalVisible = false;
+                
+                // Small delay to ensure modal is fully hidden
+                setTimeout(resolve, 100);
+            } catch (error) {
+                console.error('Error hiding modal:', error);
+                // Force cleanup
                 const backdrops = document.querySelectorAll('.modal-backdrop');
                 backdrops.forEach(backdrop => backdrop.remove());
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
-            });
-        }
-        
-        // Load current homepage image if home panel is active
-        if (document.querySelector('#home-panel') && document.querySelector('#home-panel').classList.contains('active')) {
-            loadCurrentHomepageImage();
+                isModalVisible = false;
+                resolve();
+            }
+        } else {
+            resolve();
         }
     });
-    
-    // Function to update modal content based on operation
-    function updateModalContent(operation) {
-        const modalBody = document.querySelector('#uploadingModal .modal-body');
-        
-        if (!modalBody) return;
-        
-        if (operation === 'upload') {
-            modalBody.innerHTML = `
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <h5>Uploading Image...</h5>
-                    <p class="text-muted mb-0">Please wait while your image is being processed.</p>
-                </div>
-            `;
-        } else if (operation === 'remove') {
-            modalBody.innerHTML = `
-                <div class="text-center py-4">
-                    <div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <h5>Removing Background Image...</h5>
-                    <p class="text-muted mb-0">Please wait while we remove the background image.</p>
-                </div>
-            `;
-        }
-    }
-    
-    // Function to safely hide modal with proper cleanup
-    function hideUploadingModal() {
+}
+
+/**
+ * Safely show the modal
+ */
+function safelyShowModal() {
+    return new Promise((resolve) => {
         if (uploadingModal) {
-            // Force hide the modal
-            uploadingModal.hide();
-            
-            // Manually clean up any leftover backdrop after a short delay
-            setTimeout(function() {
+            try {
+                // Ensure no lingering backdrops before showing
                 const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(function(backdrop) {
-                    backdrop.remove();
-                });
+                backdrops.forEach(backdrop => backdrop.remove());
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
-                document.body.style.position = '';
-            }, 150);
-        }
-    }
-    
-    // Load current homepage image
-    function loadCurrentHomepageImage() {
-        fetch('/admin/homepage/image', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.has_image) {
-                const previewImg = document.getElementById('previewImg');
-                const noImagePlaceholder = document.getElementById('noImagePlaceholder');
                 
-                previewImg.src = 'data:image/png;base64,' + data.image_data;
-                previewImg.style.display = 'inline-block';
-                noImagePlaceholder.style.display = 'none';
-            } else {
-                const previewImg = document.getElementById('previewImg');
-                const noImagePlaceholder = document.getElementById('noImagePlaceholder');
-                previewImg.style.display = 'none';
-                noImagePlaceholder.style.display = 'block';
+                uploadingModal.show();
+                isModalVisible = true;
+                setTimeout(resolve, 100);
+            } catch (error) {
+                console.error('Error showing modal:', error);
+                resolve();
             }
-        })
-        .catch(error => {
-            console.error('Error loading homepage image:', error);
-            showCustomToast('Failed to load current image', 'error');
+        } else {
+            resolve();
+        }
+    });
+}
+
+function initHomepageManagement() {
+    // Initialize modal
+    const modalElement = document.getElementById('uploadingModal');
+    if (modalElement) {
+        uploadingModal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        // Clean up modal when hidden
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            isModalVisible = false;
+            // Force remove any leftover backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         });
     }
     
-    // Preview new image before upload
+    // Load current image
+    loadCurrentHomepageImage();
+    
+    // Set up event listeners
+    setupImageUploadListeners();
+}
+
+function loadCurrentHomepageImage() {
+    fetch('/admin/homepage/image', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.has_image) {
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            
+            if (previewImg && noImagePlaceholder) {
+                previewImg.src = 'data:image/png;base64,' + data.image_data;
+                previewImg.style.display = 'inline-block';
+                noImagePlaceholder.style.display = 'none';
+            }
+        } else {
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            
+            if (previewImg && noImagePlaceholder) {
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+                noImagePlaceholder.style.display = 'block';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading homepage image:', error);
+        showCustomToast('Failed to load current image', 'error');
+    });
+}
+
+// Helper function to validate image file
+function validateImageFile(file) {
+    // Check if file exists
+    if (!file) {
+        return 'Please select an image file first.';
+    }
+    
+    // Check file size (5MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        return 'File exceeds the 5MB size limit. Please choose a smaller file.';
+    }
+    
+    // Validate file type with proper MIME type checking
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    
+    if (!allowedTypes.includes(file.type) || !allowedExtensions.includes(fileExtension)) {
+        return 'Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.';
+    }
+    
+    return null;
+}
+
+function setupImageUploadListeners() {
+    // File input preview
     const backgroundImageInput = document.getElementById('backgroundImage');
     if (backgroundImageInput) {
         backgroundImageInput.addEventListener('change', function(e) {
@@ -120,60 +284,46 @@
             const newPreviewImg = document.getElementById('newPreviewImg');
             
             if (file) {
-                // Validate file size first
-                if (file.size > 5 * 1024 * 1024) {
-                    showCustomToast('File exceeds the 5MB size limit. Please choose a smaller file.', 'error');
-                    this.value = ''; // Clear the input
-                    newPreviewContainer.style.display = 'none';
-                    return;
-                }
-                
-                // Validate file type
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                if (!allowedTypes.includes(file.type)) {
-                    showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
-                    this.value = ''; // Clear the input
-                    newPreviewContainer.style.display = 'none';
+                // Validate file
+                const validationError = validateImageFile(file);
+                if (validationError) {
+                    showCustomToast(validationError, 'error');
+                    this.value = '';
+                    if (newPreviewContainer) newPreviewContainer.style.display = 'none';
                     return;
                 }
                 
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    newPreviewImg.src = event.target.result;
-                    newPreviewContainer.style.display = 'block';
+                    if (newPreviewImg) newPreviewImg.src = event.target.result;
+                    if (newPreviewContainer) newPreviewContainer.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             } else {
-                newPreviewContainer.style.display = 'none';
-                newPreviewImg.src = '';
+                if (newPreviewContainer) newPreviewContainer.style.display = 'none';
+                if (newPreviewImg) newPreviewImg.src = '';
             }
         });
     }
     
-    // Handle form submission for image upload
+    // Form submission
     const homepageImageForm = document.getElementById('homepageImageForm');
     if (homepageImageForm) {
-        homepageImageForm.addEventListener('submit', function(e) {
+        homepageImageForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Cancel any ongoing request
+            if (currentUploadRequest) {
+                currentUploadRequest.abort();
+            }
             
             const fileInput = document.getElementById('backgroundImage');
             const file = fileInput.files[0];
             
-            if (!file) {
-                showCustomToast('Please select an image file first.', 'error');
-                return;
-            }
-            
-            // Validate file type again before submission
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
-                return;
-            }
-            
-            // Validate file size again before submission
-            if (file.size > 5 * 1024 * 1024) {
-                showCustomToast('File is too large. Maximum size is 5MB.', 'error');
+            // Validate file
+            const validationError = validateImageFile(file);
+            if (validationError) {
+                showCustomToast(validationError, 'error');
                 return;
             }
             
@@ -181,84 +331,108 @@
             formData.append('background_image', file);
             formData.append('_token', document.querySelector('input[name="_token"]').value);
             
-            // Disable the upload button to prevent double submission
+            // Disable upload and remove buttons
             const uploadBtn = document.getElementById('uploadBtn');
+            const removeBtn = document.getElementById('removeImageBtn');
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+            if (removeBtn) removeBtn.disabled = true;
             
-            // Update modal for upload operation and show it
-            currentOperation = 'upload';
-            updateModalContent('upload');
-            if (uploadingModal) {
-                uploadingModal.show();
-            }
+            // Show modal with proper cleanup
+            await safelyShowModal();
             
-            fetch('/admin/homepage/upload-image', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+            // Set timeout to auto-hide modal after 30 seconds if stuck
+            let autoHideTimeout = setTimeout(async () => {
+                if (isModalVisible) {
+                    console.warn('Modal auto-hide triggered');
+                    await safelyHideModal();
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
+            }, 30000);
+            
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            currentUploadRequest = controller;
+            const requestTimeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            try {
+                const response = await fetch('/admin/homepage/upload-image', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(requestTimeoutId);
+                clearTimeout(autoHideTimeout);
+                
+                const data = await response.json();
+                
                 // Hide modal first
-                hideUploadingModal();
+                await safelyHideModal();
                 
-                // Re-enable upload button
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload/Update Background Image';
-                
+                // Show toast message after modal is hidden
                 if (data.success) {
                     showCustomToast(data.message, 'success');
-                    // Clear file input and new preview
+                    // Clear file input and preview
                     fileInput.value = '';
-                    document.getElementById('newImagePreviewContainer').style.display = 'none';
-                    document.getElementById('newPreviewImg').src = '';
+                    const newPreviewContainer = document.getElementById('newImagePreviewContainer');
+                    const newPreviewImg = document.getElementById('newPreviewImg');
+                    if (newPreviewContainer) newPreviewContainer.style.display = 'none';
+                    if (newPreviewImg) newPreviewImg.src = '';
                     // Reload current image
-                    loadCurrentHomepageImage();
+                    await loadCurrentHomepageImage();
                 } else {
                     showCustomToast(data.message, 'error');
                 }
-            })
-            .catch(error => {
-                hideUploadingModal();
-                // Re-enable upload button
+            } catch (error) {
+                clearTimeout(requestTimeoutId);
+                clearTimeout(autoHideTimeout);
+                
+                // Hide modal
+                await safelyHideModal();
+                
+                if (error.name === 'AbortError') {
+                    showCustomToast('Request timeout. Please try again with a smaller file.', 'error');
+                } else {
+                    console.error('Error:', error);
+                    showCustomToast('Network error. Please check your connection and try again.', 'error');
+                }
+            } finally {
+                // Re-enable buttons
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload/Update Background Image';
-                console.error('Error:', error);
-                showCustomToast('Network error. Please check your connection and try again.', 'error');
-            });
+                if (removeBtn) removeBtn.disabled = false;
+                currentUploadRequest = null;
+            }
         });
     }
     
-    // Remove newly selected image (before upload)
+    // Remove new image button
     const removeNewImageBtn = document.getElementById('removeNewImageBtn');
     if (removeNewImageBtn) {
         removeNewImageBtn.addEventListener('click', function() {
             const fileInput = document.getElementById('backgroundImage');
-            fileInput.value = '';
+            if (fileInput) fileInput.value = '';
             
             const newPreviewContainer = document.getElementById('newImagePreviewContainer');
             const newPreviewImg = document.getElementById('newPreviewImg');
             
-            newPreviewContainer.style.display = 'none';
-            newPreviewImg.src = '';
+            if (newPreviewContainer) newPreviewContainer.style.display = 'none';
+            if (newPreviewImg) newPreviewImg.src = '';
             
-            showCustomToast('New image selection removed.', 'success');
+            showCustomToast('New image selection removed.', 'info');
         });
     }
     
-    // Handle remove image button
+    // Remove image button
     const removeImageBtn = document.getElementById('removeImageBtn');
     if (removeImageBtn) {
-        removeImageBtn.addEventListener('click', function() {
+        removeImageBtn.addEventListener('click', async function() {
             const previewImg = document.getElementById('previewImg');
-            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
-            
-            // Check if image is currently displayed
-            const hasActiveImage = previewImg.style.display === 'inline-block' && previewImg.src && previewImg.src !== '';
+            const hasActiveImage = previewImg && previewImg.style.display === 'inline-block' && previewImg.src && previewImg.src !== '';
             
             if (!hasActiveImage) {
                 showCustomToast('No background image to remove.', 'error');
@@ -266,112 +440,158 @@
             }
             
             if (confirm('Are you sure you want to remove the background image? The default picture will be shown instead.')) {
-                // Disable remove button
-                removeImageBtn.disabled = true;
-                removeImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
-                
-                // Update modal for remove operation and show it
-                currentOperation = 'remove';
-                updateModalContent('remove');
-                if (uploadingModal) {
-                    uploadingModal.show();
+                // Cancel any ongoing request
+                if (currentUploadRequest) {
+                    currentUploadRequest.abort();
                 }
                 
-                fetch('/admin/homepage/remove-image', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+                // Disable buttons
+                removeImageBtn.disabled = true;
+                const uploadBtn = document.getElementById('uploadBtn');
+                if (uploadBtn) uploadBtn.disabled = true;
+                removeImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
+                
+                // Show modal
+                await safelyShowModal();
+                
+                // Set timeout for auto-hide
+                let autoHideTimeout = setTimeout(async () => {
+                    if (isModalVisible) {
+                        await safelyHideModal();
                     }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Hide modal
-                    hideUploadingModal();
+                }, 30000);
+                
+                const controller = new AbortController();
+                currentUploadRequest = controller;
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                try {
+                    const response = await fetch('/admin/homepage/remove-image', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        signal: controller.signal
+                    });
                     
-                    // Re-enable remove button
-                    removeImageBtn.disabled = false;
-                    removeImageBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove Background Image';
+                    clearTimeout(timeoutId);
+                    clearTimeout(autoHideTimeout);
+                    
+                    const data = await response.json();
+                    
+                    // Hide modal
+                    await safelyHideModal();
                     
                     if (data.success) {
                         showCustomToast(data.message, 'success');
-                        // Reset preview to show placeholder
-                        previewImg.style.display = 'none';
-                        previewImg.src = '';
-                        noImagePlaceholder.style.display = 'block';
+                        // Reset preview
+                        if (previewImg) {
+                            previewImg.style.display = 'none';
+                            previewImg.src = '';
+                        }
+                        const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+                        if (noImagePlaceholder) noImagePlaceholder.style.display = 'block';
+                        
                         // Clear file input
                         const fileInput = document.getElementById('backgroundImage');
-                        if (fileInput) {
-                            fileInput.value = '';
-                        }
+                        if (fileInput) fileInput.value = '';
+                        
                         const newPreviewContainer = document.getElementById('newImagePreviewContainer');
-                        if (newPreviewContainer) {
-                            newPreviewContainer.style.display = 'none';
-                        }
+                        if (newPreviewContainer) newPreviewContainer.style.display = 'none';
                     } else {
                         showCustomToast(data.message, 'error');
                     }
-                })
-                .catch(error => {
-                    hideUploadingModal();
-                    // Re-enable remove button
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    clearTimeout(autoHideTimeout);
+                    
+                    // Hide modal
+                    await safelyHideModal();
+                    
+                    if (error.name === 'AbortError') {
+                        showCustomToast('Request timeout. Please try again.', 'error');
+                    } else {
+                        console.error('Error:', error);
+                        showCustomToast('Network error. Please check your connection and try again.', 'error');
+                    }
+                } finally {
+                    // Re-enable buttons
                     removeImageBtn.disabled = false;
                     removeImageBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove Background Image';
-                    console.error('Error:', error);
-                    showCustomToast('Network error. Please check your connection and try again.', 'error');
-                });
+                    if (uploadBtn) uploadBtn.disabled = false;
+                    currentUploadRequest = null;
+                }
             }
         });
     }
-    
-    // Custom toast function for dashboard messages
-    function showCustomToast(message, type = 'success') {
-        // Remove existing toast
-        const existingToast = document.querySelector('.login-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        
-        const toast = document.createElement('div');
-        toast.className = `login-toast ${type === 'success' ? 'success-toast' : 'error-toast'}`;
-        toast.innerHTML = `
-            <div class="login-toast-content">
-                <i class="fas ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
-                <span>${escapeHtml(message)}</span>
-            </div>
-        `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.classList.add('hide');
-        }, 5000);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 5600);
+}
+
+// Custom toast function
+function showCustomToast(message, type = 'success') {
+    // Remove existing toast
+    const existingToast = document.querySelector('.login-toast');
+    if (existingToast) {
+        existingToast.remove();
     }
     
-    // Helper function to escape HTML to prevent XSS
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    const toast = document.createElement('div');
+    toast.className = `login-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : 'info-toast')}`;
+    toast.innerHTML = `
+        <div class="login-toast-content">
+            <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
+            <span>${escapeHtml(message)}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Trigger reflow to ensure animation plays
+    toast.offsetHeight;
+    
+    // Show toast
+    toast.classList.add('show');
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    }, 5000);
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Expose functions globally
+window.switchTab = function(tabId) {
+    const panels = document.querySelectorAll('.content-panel');
+    panels.forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    const activePanel = document.getElementById(`${tabId}-panel`);
+    if (activePanel) {
+        activePanel.classList.add('active');
     }
     
-    // Override switchTab function to load homepage image when home tab is selected
-    const originalSwitchTab = window.switchTab;
-    window.switchTab = function(tabId) {
-        if (originalSwitchTab) {
-            originalSwitchTab(tabId);
+    // Update sidebar links
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-tab') === tabId) {
+            link.classList.add('active');
         }
-        if (tabId === 'home') {
-            loadCurrentHomepageImage();
-        }
-    };
+    });
     
-    // Initial load if home tab is active
-    if (document.querySelector('#home-panel') && document.querySelector('#home-panel').classList.contains('active')) {
+    // If home panel is selected, reload the image
+    if (tabId === 'home') {
         loadCurrentHomepageImage();
     }
+};
