@@ -10,15 +10,32 @@
 @section('content')
 @php
 use App\Models\Homepage;
-$image = Homepage::where('key', 'main_image')->first();
+
+// Try to get image with fallback chain
+$image = Homepage::where('key', 'hero_background')->first();
+
+// If no hero_background, try main_image
+if (!$image || !$image->image_data) {
+    $image = Homepage::where('key', 'main_image')->first();
+}
+
+// You can add more fallbacks if needed
+// if (!$image || !$image->image_data) {
+//     $image = Homepage::where('key', 'background')->first();
+// }
 @endphp
 
 <!-- SECTION 1: Hero Section -->
 <div class="hero-wrapper">
-    @if($image)
-    <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
+    <!-- Background Image - handles both base64 and regular images -->
+    @if($image && $image->image_data)
+        <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
+    @else
+        <div class="hero-background" style="background-image: url('{{ asset('images/sample8.gif') }}');"></div>
     @endif
     
+    <!-- Rest of your content remains the same -->
+    <!-- Gradients -->
     <div class="gradient-overlay-1"></div>
     <div class="gradient-overlay-2"></div>
     
@@ -33,8 +50,10 @@ $image = Homepage::where('key', 'main_image')->first();
         <div class="quote-text">
             We are committed to delivering high-quality seating solutions that create value for our customers and comfort for everyday life.
         </div>
-        <div class="line-11"></div>
-        <div class="together-text">TOGETHER, WE DRIVE TOMORROW.</div>
+        <div class="together-wrapper">
+            <div class="line-11"></div>
+            <div class="together-text">TOGETHER, WE DRIVE TOMORROW.</div>
+        </div>
     </div>
     
     <div class="bottom-cards">
