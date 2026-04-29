@@ -569,3 +569,224 @@
         gap: 40px;
     }
 }
+
+/* ============ SECTION 2 STYLES - EXACT FIGMA DESIGN ============ */
+.section2 {
+    position: relative;
+    width: 100%;
+    min-height: 993px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+.section2-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(240, 240, 240, 0.85);
+    z-index: 1;
+}
+
+.section2-content {
+    position: relative;
+    z-index: 2;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 60px 80px;
+    display: flex;
+    gap: 60px;
+}
+
+/* Announcements Column */
+.announcements-col,
+.mediainfo-col {
+    flex: 1;
+    position: relative;
+}
+
+.section-icon {
+    position: absolute;
+    left: 29px;
+    top: 35px;
+    width: 119px;
+    height: 101px;
+    z-index: 3;
+}
+
+.announcements-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 60px;
+    color: #015A96;
+    margin-left: 137px;
+    margin-top: 55px;
+    margin-bottom: 0;
+}
+
+.mediainfo-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 48px;
+    color: #015A96;
+    margin-left: 137px;
+    margin-top: 486px;
+    margin-bottom: 0;
+}
+
+.underline {
+    height: 6px;
+    background: #015A96;
+    border-radius: 30px;
+    margin-top: 10px;
+}
+
+.announcements-underline {
+    width: 317px;
+    margin-left: 137px;
+}
+
+.mediainfo-underline {
+    width: 143px;
+    margin-left: 137px;
+}
+
+.ellipse-dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #015A96;
+    border-radius: 50%;
+}
+
+.ellipse-dot-1 {
+    left: 576px;
+    top: 74px;
+}
+
+.ellipse-dot-2 {
+    left: 576px;
+    top: 499px;
+}
+
+/* News Cards */
+.news-cards {
+    margin-top: 30px;
+    margin-left: 52px;
+}
+
+.news-card {
+    display: flex;
+    width: 554px;
+    height: 67px;
+    margin-bottom: 33px;
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.news-date-box {
+    width: 121px;
+    background: #015A96;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px 0 0 10px;
+    flex-shrink: 0;
+}
+
+.news-date-box span {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: #FFFFFF;
+}
+
+.news-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-family: 'Hind', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 26px;
+    color: #000000;
+}
+
+/* First card special styling */
+.news-cards .news-card:first-child .news-date-box {
+    width: 120px;
+}
+
+/* Media Information cards specific */
+.mediainfo-col .news-card .news-date-box {
+    width: 129px;
+}
+
+.mediainfo-col .news-card:nth-child(2) .news-text,
+.mediainfo-col .news-card:nth-child(3) .news-text {
+    font-size: 18px;
+    line-height: 29px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .section2-content {
+        padding: 40px;
+        flex-direction: column;
+    }
+    
+    .mediainfo-title {
+        margin-top: 40px;
+    }
+    
+    .news-card {
+        width: 100%;
+        max-width: 554px;
+    }
+}
+
+@media (max-width: 768px) {
+    .announcements-title {
+        font-size: 28px;
+        margin-left: 100px;
+    }
+    
+    .mediainfo-title {
+        font-size: 24px;
+        margin-left: 100px;
+    }
+    
+    .news-card {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .news-date-box {
+        width: 100% !important;
+        height: 40px;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .news-text {
+        padding: 15px;
+    }
+    
+    .announcements-underline,
+    .mediainfo-underline {
+        margin-left: 100px;
+    }
+    
+    .ellipse-dot-1,
+    .ellipse-dot-2 {
+        display: none;
+    }
+}
