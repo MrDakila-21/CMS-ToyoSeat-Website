@@ -561,24 +561,26 @@
                     </div>
                     
                     <div class="col-md-6">
-                        <!-- Upload New Image -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Upload New Background Image</label>
-                            <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
-                            <div class="form-text mt-2">
-                                <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
-                            </div>
-                        </div>
-                        
-                        <!-- New Image Preview (before upload) -->
-                        <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
-                            <label class="form-label fw-bold">New Image Preview</label>
-                            <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa;">
-                                <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Upload New Image -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">Upload New Background Image</label>
+        <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
+        <div class="form-text mt-2">
+            <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
+        </div>
+    </div>
+    
+    <!-- New Image Preview with Remove Button -->
+    <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
+        <label class="form-label fw-bold">New Image Preview</label>
+        <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa; position: relative;">
+            <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
+            <button type="button" id="removeNewImageBtn" class="btn btn-sm btn-danger mt-2" style="position: absolute; top: 5px; right: 5px;">
+                <i class="fas fa-times"></i> Remove
+            </button>
+        </div>
+    </div>
+</div>
                 
                 <div class="row mt-3">
                     <div class="col-12">
@@ -970,6 +972,23 @@ document.getElementById('backgroundImage').addEventListener('change', function(e
     const newPreviewImg = document.getElementById('newPreviewImg');
     
     if (file) {
+        // Validate file size first
+        if (file.size > 5 * 1024 * 1024) {
+            showCustomToast('File exceeds the 5MB size limit. Please choose a smaller file.', 'error');
+            this.value = ''; // Clear the input
+            newPreviewContainer.style.display = 'none';
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
+            this.value = ''; // Clear the input
+            newPreviewContainer.style.display = 'none';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(event) {
             newPreviewImg.src = event.target.result;
@@ -1045,8 +1064,38 @@ document.getElementById('homepageImageForm').addEventListener('submit', function
     });
 });
 
+
+// Remove newly selected image (before upload)
+document.getElementById('removeNewImageBtn').addEventListener('click', function() {
+    // Clear the file input
+    const fileInput = document.getElementById('backgroundImage');
+    fileInput.value = '';
+    
+    // Hide the new image preview container
+    const newPreviewContainer = document.getElementById('newImagePreviewContainer');
+    const newPreviewImg = document.getElementById('newPreviewImg');
+    
+    newPreviewContainer.style.display = 'none';
+    newPreviewImg.src = '';
+    
+    // Show a toast notification
+    showCustomToast('New image selection removed.', 'success');
+});
+
 // Handle remove image button
 document.getElementById('removeImageBtn').addEventListener('click', function() {
+    // First check if there's an image to remove
+    const previewImg = document.getElementById('previewImg');
+    const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+    
+    // Check if image is currently displayed
+    const hasActiveImage = previewImg.style.display === 'inline-block' && previewImg.src && previewImg.src !== '';
+    
+    if (!hasActiveImage) {
+        showCustomToast('No background image to remove.', 'error');
+        return;
+    }
+    
     if (confirm('Are you sure you want to remove the background image? The default GIF will be shown instead.')) {
         const uploadModal = new bootstrap.Modal(document.getElementById('uploadingModal'));
         uploadModal.show();
@@ -1069,6 +1118,7 @@ document.getElementById('removeImageBtn').addEventListener('click', function() {
                 const previewImg = document.getElementById('previewImg');
                 const noImagePlaceholder = document.getElementById('noImagePlaceholder');
                 previewImg.style.display = 'none';
+                previewImg.src = '';
                 noImagePlaceholder.style.display = 'block';
                 // Clear file input
                 document.getElementById('backgroundImage').value = '';
