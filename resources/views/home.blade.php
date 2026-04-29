@@ -15,8 +15,16 @@ $image = Homepage::where('key', 'main_image')->first();
 
 <!-- SECTION 1: Hero Section -->
 <div class="hero-wrapper">
+<<<<<<< HEAD
+    <!-- Background Image - handles both base64 and regular images -->
+    @if($image && $image->image_data)
+        <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
+    @else
+        <div class="hero-background" style="background-image: url('{{ asset('images/Home.png') }}');"></div>
+=======
     @if($image)
     <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
+>>>>>>> cd3c2fa5fb709b6cfe747dd8a99c58763a47a006
     @endif
     
     <div class="gradient-overlay-1"></div>

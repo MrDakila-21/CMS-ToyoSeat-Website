@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Homepage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class HomepageController extends Controller
 {
@@ -16,7 +17,6 @@ class HomepageController extends Controller
     public function getImage()
     {
         try {
-            // Change from 'main_image' to 'hero_background' for consistency
             $image = Homepage::where('key', 'hero_background')->first();
             
             if ($image && $image->image_data) {
@@ -35,7 +35,7 @@ class HomepageController extends Controller
             Log::error('Error fetching homepage image: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch image'
+                'message' => 'Failed to fetch current image. Please refresh and try again.'
             ], 500);
         }
     }
@@ -45,15 +45,16 @@ class HomepageController extends Controller
      */
     public function uploadImage(Request $request)
     {
+        
         try {
-            $request->validate([
-                'background_image' => 'required|image|mimes:jpeg,png,gif,webp|max:5120' // 5MB max
+            // Validate the request - this will throw ValidationException if fails
+            $validated = $request->validate([
+                'background_image' => 'required|image|mimes:jpeg,png,gif,webp|max:5120'
             ]);
             
             $image = $request->file('background_image');
             $imageData = base64_encode(file_get_contents($image->getRealPath()));
             
-            // Update or create record - use 'hero_background' consistently
             Homepage::updateOrCreate(
                 ['key' => 'hero_background'],
                 ['image_data' => $imageData]
@@ -63,16 +64,38 @@ class HomepageController extends Controller
                 'success' => true,
                 'message' => 'Background image uploaded successfully!'
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+            
+        } catch (ValidationException $e) {
+            // This catches validation errors specifically
+            $errors = $e->errors();
+            $errorMessage = 'Invalid file';
+            
+            if (isset($errors['background_image'])) {
+                $errorMessage = $errors['background_image'][0];
+                
+                // Make the error message more user-friendly
+                if (str_contains($errorMessage, 'max')) {
+                    $errorMessage = 'File exceeds the 5MB size limit. Maximum size is 5MB.';
+                } elseif (str_contains($errorMessage, 'mimes')) {
+                    $errorMessage = 'Invalid file type. Only JPG, PNG, GIF, and WEBP images are allowed.';
+                } elseif (str_contains($errorMessage, 'required')) {
+                    $errorMessage = 'Please select an image file to upload.';
+                } elseif (str_contains($errorMessage, 'image')) {
+                    $errorMessage = 'The file must be an image. Please upload a valid image file.';
+                }
+            }
+            
             return response()->json([
                 'success' => false,
-                'message' => $e->errors()['background_image'][0] ?? 'Invalid image file'
+                'message' => $errorMessage
             ], 422);
+            
         } catch (\Exception $e) {
+            // Catch any other unexpected errors
             Log::error('Error uploading homepage image: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to upload image. Please try again.'
+                'message' => 'Server error: Unable to process the image. Please try again.'
             ], 500);
         }
     }
@@ -83,19 +106,20 @@ class HomepageController extends Controller
     public function removeImage()
     {
         try {
-            // Use 'hero_background' consistently
-            $deleted = Homepage::where('key', 'hero_background')->delete();
+            $image = Homepage::where('key', 'hero_background')->first();
             
-            if ($deleted) {
+            if (!$image || !$image->image_data) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Background image removed successfully. Default GIF will be used.'
-                ]);
+                    'success' => false,
+                    'message' => 'No background image found to remove.'
+                ], 404);
             }
+            
+            $image->delete();
             
             return response()->json([
                 'success' => true,
-                'message' => 'No background image to remove.'
+                'message' => 'Background image removed successfully. Default picture will now be displayed.'
             ]);
         } catch (\Exception $e) {
             Log::error('Error removing homepage image: ' . $e->getMessage());
