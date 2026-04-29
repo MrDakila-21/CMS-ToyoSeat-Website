@@ -31,7 +31,7 @@ if (!$image || !$image->image_data) {
     @if($image && $image->image_data)
         <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}');"></div>
     @else
-        <div class="hero-background" style="background-image: url('{{ asset('images/sample8.gif') }}');"></div>
+        <div class="hero-background" style="background-image: url('{{ asset('images/Home.png') }}');"></div>
     @endif
     
     <!-- Rest of your content remains the same -->
