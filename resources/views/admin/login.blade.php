@@ -13,7 +13,7 @@
     <style>
         /* Inline style for dynamic background image */
         body {
-            background-image: url('{{ asset('images/background.svg') }}');
+            background-image: url('{{ asset('images/sample8.gif') }}');
         }
     </style>
 </head>

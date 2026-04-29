@@ -78,7 +78,352 @@
                 opacity: 0;
             }
         }
+
+        /* Navbar Styles matching app.blade */
+        .navbar-custom {
+            background: linear-gradient(90deg, #0E334C 12.02%, #3988BD 46.63%, #0E334C 100%);
+            box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.3);
+            padding: 0.75rem 0;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            width: 90%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar-brand-custom {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .company-logo {
+            height: 50px;
+            width: auto;
+            display: block;
+        }
+
+        .company-name {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .company-name-main {
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            color: white;
+            margin: 0;
+        }
+
+        .company-name-sub {
+            font-weight: 500;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-wrapper {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0E334C 0%, #1a5a7e 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-header small {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sidebar-link i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-link span {
+            flex: 1;
+        }
+
+        .sidebar-link .chevron-icon {
+            width: auto;
+            margin-right: 0;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.1);
+            padding-left: 25px;
+        }
+
+        .sidebar-link.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid #80CCFF;
+        }
+
+        /* Dropdown Submenu */
+        .sidebar-dropdown {
+            list-style: none;
+            padding-left: 45px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .sidebar-dropdown.open {
+            max-height: 500px;
+        }
+
+        .sidebar-dropdown li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-dropdown a {
+            display: block;
+            padding: 8px 12px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sidebar-dropdown a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding-left: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: #f5f7fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Content Panels */
+        .content-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Updated Alert - Figma colors */
+        .alert-success {
+            background: linear-gradient(135deg, #0E334C 0%, #015A96 100%);
+            border: none;
+            color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .alert-success .alert-heading {
+            color: #80CCFF;
+            font-weight: 600;
+        }
+
+        .alert-success hr {
+            background-color: rgba(128, 204, 255, 0.3);
+        }
+
+        /* Updated Card - Figma colors */
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, #0E334C 12.02%, #3988BD 46.63%, #0E334C 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            border: none;
+            padding: 15px 20px;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* Updated Button - Figma colors */
+        .btn-primary {
+            background: linear-gradient(135deg, #015A96, #0E334C);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0E334C, #015A96);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(1, 90, 150, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* Modal footer button colors */
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 8px;
+        }
+
+        /* Body background accent */
+        body {
+            background: #f5f7fa;
+        }
+
+        /* Mobile responsive sidebar */
+        @media (max-width: 768px) {
+            .dashboard-wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+            .sidebar-link {
+                padding: 10px 15px;
+            }
+            .sidebar-dropdown {
+                padding-left: 35px;
+            }
+            .navbar-container {
+                width: 95%;
+            }
+            .company-logo {
+                height: 40px;
+            }
+            .company-name-main {
+                font-size: 1rem;
+            }
+            .company-name-sub {
+                font-size: 0.6rem;
+            }
+        }
+
+        /* Content management card styles */
+        .content-card {
+            margin-bottom: 20px;
+        }
+
+        .content-card .card-body {
+            padding: 20px;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+
+        .placeholder-content i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #3988BD;
+        }
+
+        /* Logout button styling */
+        .btn-logout {
+            background: rgba(220, 53, 69, 0.9);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: #dc3545;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
     </style>
+
+    <!-- Add Google Fonts to match Figma -->
+    <link href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Hind:wght@300;400;500;600;700&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     @if(session('success'))
@@ -90,32 +435,350 @@
         </div>
     @endif
 
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">Toyoseat Admin Panel</span>
-            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                Logout
+    <!-- Navbar with Logo matching app.blade -->
+    <div class="navbar-custom">
+        <div class="navbar-container">
+            <a href="{{ url('/') }}" class="navbar-brand-custom">
+                <img src="{{ asset('images/logo.svg') }}" 
+                     alt="Toyoseat Logo" 
+                     class="company-logo"
+                     onerror="this.style.display='none';">
+                <div class="company-name">
+                    <div class="company-name-main">TOYO SEAT</div>
+                    <div class="company-name-sub">PHILIPPINES CORPORATION</div>
+                </div>
+            </a>
+            <div>
+                <span class="text-white me-3" style="opacity: 0.9;">
+                    <i class="fas fa-user-shield me-1"></i>
+                    Admin Panel
+                </span>
+                <button type="button" class="btn-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
+                <small>Manage website content</small>
+            </div>
+            <ul class="sidebar-menu">
+                <!-- Home Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link active" data-tab="home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+
+                <!-- About Us Dropdown -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="aboutDropdown">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Us</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-dropdown" id="aboutDropdown">
+                        <li><a data-tab="about-overview">Overview</a></li>
+                        <li><a data-tab="about-business">Business Introduction</a></li>
+                        <li><a data-tab="about-location">Location</a></li>
+                        <li><a data-tab="about-history">History</a></li>
+                        <li><a data-tab="about-iso">ISO Obtained</a></li>
+                        <li><a data-tab="about-privacy">Privacy Policy</a></li>
+                    </ul>
+                </li>
+
+                <!-- Recruitment Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" data-tab="recruitment">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Recruitment Information</span>
+                    </a>
+                </li>
+
+                <!-- News Dropdown -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="newsDropdown">
+                        <i class="fas fa-newspaper"></i>
+                        <span>News</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-dropdown" id="newsDropdown">
+                        <li><a data-tab="news-media">Media Information</a></li>
+                        <li><a data-tab="news-announcements">Announcements</a></li>
+                    </ul>
+                </li>
+
+                <!-- Inquiry Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" data-tab="inquiry">
+                        <i class="fas fa-envelope"></i>
+                        <span>Inquiry</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Home Panel (Existing Content) -->
+            <!-- Home Panel with Image Management -->
+<div id="home-panel" class="content-panel active">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Welcome, Admin!</h4>
+        <p>You have successfully logged in to the admin panel.</p>
+        <hr>
+        <p class="mb-0">Manage your homepage background image below.</p>
+    </div>
+    
+    <!-- Homepage Background Image Management Card -->
+    <div class="card content-card">
+        <div class="card-header">
+            <h5><i class="fas fa-image me-2"></i>Homepage Background Image</h5>
+        </div>
+        <div class="card-body">
+            <form id="homepageImageForm" enctype="multipart/form-data">
+                @csrf
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Current Image Preview -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Current Background Image</label>
+                            <div id="currentImagePreview" class="border rounded p-2 text-center" style="min-height: 200px; background-color: #f8f9fa;">
+                                <img id="previewImg" src="" alt="Current Background" style="max-width: 100%; max-height: 200px; display: none;">
+                                <div id="noImagePlaceholder" class="text-muted py-5">
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <p>No background image uploaded yet</p>
+                                    <small>Default GIF will be shown on website</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+    <!-- Upload New Image -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">Upload New Background Image</label>
+        <input type="file" class="form-control" id="backgroundImage" name="background_image" accept="image/jpeg,image/png,image/gif,image/webp">
+        <div class="form-text mt-2">
+            <i class="fas fa-info-circle"></i> Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB
+        </div>
+    </div>
+    
+    <!-- New Image Preview with Remove Button -->
+    <div class="mb-3" id="newImagePreviewContainer" style="display: none;">
+        <label class="form-label fw-bold">New Image Preview</label>
+        <div class="border rounded p-2 text-center" style="min-height: 150px; background-color: #f8f9fa; position: relative;">
+            <img id="newPreviewImg" src="" alt="New Image Preview" style="max-width: 100%; max-height: 150px;">
+            <button type="button" id="removeNewImageBtn" class="btn btn-sm btn-danger mt-2" style="position: absolute; top: 5px; right: 5px;">
+                <i class="fas fa-times"></i> Remove
             </button>
         </div>
-    </nav>
+    </div>
+</div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload me-1"></i> Upload/Update Background Image
+                        </button>
+                        <button type="button" class="btn btn-danger ms-2" id="removeImageBtn">
+                            <i class="fas fa-trash-alt me-1"></i> Remove Background Image
+                        </button>
+                        <a href="{{ url('/') }}" class="btn btn-secondary ms-2" target="_blank">
+                            <i class="fas fa-eye me-1"></i> Preview Website
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Loading Spinner Modal -->
+    <div class="modal fade" id="uploadingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Uploading Image...</h5>
+                    <p class="text-muted mb-0">Please wait while your image is being processed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="container mt-5">
-        <div class="alert alert-success">
-            <h4 class="alert-heading">Welcome, Admin!</h4>
-            <p>You have successfully logged in to the admin panel.</p>
-            <hr>
-            <p class="mb-0">This is the admin dashboard. Your website's CRUD functionality will be implemented here later.</p>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h5>Quick Actions</h5>
+            <!-- About Us Panels -->
+            <div id="about-overview-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle me-2"></i>Manage Overview Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Overview Content Management</h4>
+                            <p>Form for editing the Overview page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <p>Content management will be added here in the next phase.</p>
-                <a href="/" class="btn btn-primary">View Website</a>
+
+            <div id="about-business-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line me-2"></i>Manage Business Introduction Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Business Introduction Content Management</h4>
+                            <p>Form for editing the Business Introduction page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <div id="about-location-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-map-marker-alt me-2"></i>Manage Location Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Location Content Management</h4>
+                            <p>Form for editing the Location page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about-history-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-history me-2"></i>Manage History Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>History Content Management</h4>
+                            <p>Form for editing the History page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about-iso-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-certificate me-2"></i>Manage ISO Obtained Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>ISO Obtained Content Management</h4>
+                            <p>Form for editing the ISO Obtained page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about-privacy-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shield-alt me-2"></i>Manage Privacy Policy Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Privacy Policy Content Management</h4>
+                            <p>Form for editing the Privacy Policy page content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Edit Content (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recruitment Panel -->
+            <div id="recruitment-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-briefcase me-2"></i>Manage Recruitment Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Recruitment Information Management</h4>
+                            <p>Form for managing job postings and recruitment content will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Manage Jobs (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News Panels -->
+            <div id="news-media-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-photo-video me-2"></i>Manage Media Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Media Information Management</h4>
+                            <p>Form for managing media releases and press information will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Manage Media (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="news-announcements-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-bullhorn me-2"></i>Manage Announcements</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Announcements Management</h4>
+                            <p>Form for creating and managing announcements will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>Manage Announcements (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiry Panel -->
+            <div id="inquiry-panel" class="content-panel">
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-envelope me-2"></i>Manage Inquiries</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <i class="fas fa-edit"></i>
+                            <h4>Inquiry Management</h4>
+                            <p>Form for viewing and managing customer inquiries will be placed here.</p>
+                            <button class="btn btn-primary mt-3" disabled>View Inquiries (Coming Soon)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Logout Confirmation Modal -->
@@ -155,6 +818,71 @@
             }, 5600);
         }
         
+        // Sidebar dropdown toggle functionality
+        document.querySelectorAll('.dropdown-toggle-main').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const dropdownId = this.getAttribute('data-dropdown');
+                const dropdown = document.getElementById(dropdownId);
+                const chevron = this.querySelector('.chevron-icon');
+                
+                if (dropdown) {
+                    dropdown.classList.toggle('open');
+                    if (chevron) {
+                        chevron.style.transform = dropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
+                    }
+                }
+            });
+        });
+
+        // Tab switching functionality
+        function switchTab(tabId) {
+            // Hide all panels
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Show selected panel
+            const selectedPanel = document.getElementById(tabId + '-panel');
+            if (selectedPanel) {
+                selectedPanel.classList.add('active');
+            }
+            
+            // Update active state on sidebar links
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Remove active from dropdown items
+            document.querySelectorAll('.sidebar-dropdown a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active to clicked tab
+            const activeLink = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        // Add click handlers to all sidebar links
+        document.querySelectorAll('[data-tab]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+
+        // Make sidebar main links also work
+        document.querySelectorAll('.sidebar-link[data-tab]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+
         // Disable browser back/forward cache (bfcache)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
@@ -199,6 +927,254 @@
                 window.location.href = '/admin/login';
             });
         };
+    </script>
+
+    <script>
+        // ============================================
+// Homepage Background Image Management
+// ============================================
+
+// Load current homepage image on panel activation
+// Load current homepage image on panel activation
+function loadCurrentHomepageImage() {
+    fetch('/admin/homepage/image', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.has_image) {
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            
+            previewImg.src = 'data:image/png;base64,' + data.image_data;
+            previewImg.style.display = 'inline-block';
+            noImagePlaceholder.style.display = 'none';
+        } else {
+            // No image, show placeholder
+            const previewImg = document.getElementById('previewImg');
+            const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+            previewImg.style.display = 'none';
+            noImagePlaceholder.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading homepage image:', error);
+    });
+}
+
+// Preview new image before upload
+document.getElementById('backgroundImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const newPreviewContainer = document.getElementById('newImagePreviewContainer');
+    const newPreviewImg = document.getElementById('newPreviewImg');
+    
+    if (file) {
+        // Validate file size first
+        if (file.size > 5 * 1024 * 1024) {
+            showCustomToast('File exceeds the 5MB size limit. Please choose a smaller file.', 'error');
+            this.value = ''; // Clear the input
+            newPreviewContainer.style.display = 'none';
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
+            this.value = ''; // Clear the input
+            newPreviewContainer.style.display = 'none';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            newPreviewImg.src = event.target.result;
+            newPreviewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        newPreviewContainer.style.display = 'none';
+        newPreviewImg.src = '';
+    }
+});
+
+// Handle form submission for image upload
+document.getElementById('homepageImageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('backgroundImage');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showCustomToast('Please select an image file first.', 'error');
+        return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showCustomToast('Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.', 'error');
+        return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showCustomToast('File is too large. Maximum size is 5MB.', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('background_image', file);
+    formData.append('_token', document.querySelector('input[name="_token"]').value);
+    
+    // Show loading modal
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadingModal'));
+    uploadModal.show();
+    
+    fetch('/admin/homepage/upload-image', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        uploadModal.hide();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            // Clear file input and new preview
+            fileInput.value = '';
+            document.getElementById('newImagePreviewContainer').style.display = 'none';
+            document.getElementById('newPreviewImg').src = '';
+            // Reload current image
+            loadCurrentHomepageImage();
+        } else {
+            showCustomToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        uploadModal.hide();
+        console.error('Error:', error);
+        showCustomToast('An error occurred while uploading the image.', 'error');
+    });
+});
+
+
+// Remove newly selected image (before upload)
+document.getElementById('removeNewImageBtn').addEventListener('click', function() {
+    // Clear the file input
+    const fileInput = document.getElementById('backgroundImage');
+    fileInput.value = '';
+    
+    // Hide the new image preview container
+    const newPreviewContainer = document.getElementById('newImagePreviewContainer');
+    const newPreviewImg = document.getElementById('newPreviewImg');
+    
+    newPreviewContainer.style.display = 'none';
+    newPreviewImg.src = '';
+    
+    // Show a toast notification
+    showCustomToast('New image selection removed.', 'success');
+});
+
+// Handle remove image button
+document.getElementById('removeImageBtn').addEventListener('click', function() {
+    // First check if there's an image to remove
+    const previewImg = document.getElementById('previewImg');
+    const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+    
+    // Check if image is currently displayed
+    const hasActiveImage = previewImg.style.display === 'inline-block' && previewImg.src && previewImg.src !== '';
+    
+    if (!hasActiveImage) {
+        showCustomToast('No background image to remove.', 'error');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to remove the background image? The default GIF will be shown instead.')) {
+        const uploadModal = new bootstrap.Modal(document.getElementById('uploadingModal'));
+        uploadModal.show();
+        
+        fetch('/admin/homepage/remove-image', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadModal.hide();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                // Reset preview
+                const previewImg = document.getElementById('previewImg');
+                const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+                noImagePlaceholder.style.display = 'block';
+                // Clear file input
+                document.getElementById('backgroundImage').value = '';
+                document.getElementById('newImagePreviewContainer').style.display = 'none';
+            } else {
+                showCustomToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            uploadModal.hide();
+            console.error('Error:', error);
+            showCustomToast('An error occurred while removing the image.', 'error');
+        });
+    }
+});
+
+// Custom toast function for dashboard messages
+function showCustomToast(message, type = 'success') {
+    const existingToast = document.querySelector('.login-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `login-toast ${type === 'success' ? 'success-toast' : 'error-toast'}`;
+    toast.innerHTML = `
+        <div class="login-toast-content">
+            <i class="fas ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('hide');
+    }, 5000);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5600);
+}
+
+// Load image when home tab is opened
+// Override switchTab function to load homepage image when home tab is selected
+const originalSwitchTab = switchTab;
+window.switchTab = function(tabId) {
+    originalSwitchTab(tabId);
+    if (tabId === 'home') {
+        loadCurrentHomepageImage();
+    }
+};
+
+// Initial load if home tab is active
+if (document.querySelector('#home-panel').classList.contains('active')) {
+    loadCurrentHomepageImage();
+}
     </script>
 </body>
 </html>

@@ -68,6 +68,8 @@
             display: flex;
             flex-direction: column;
             line-height: 1.2;
+            font-family: 'Cinzel', serif;
+            font-style: italic;
         }
 
         .company-name-main {
@@ -84,6 +86,7 @@
             letter-spacing: 0.5px;
             color: rgba(255, 255, 255, 0.9);
             margin: 0;
+            font-family: 'Playfair Display', serif;
         }
 
         .nav-menu {
@@ -562,8 +565,8 @@
                     Toyo Seat is committed to creating innovative seating solutions that enhance comfort, safety, and sustainability for a better tomorrow.
                 </div>
                 <div class="footer-social">
-                    <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=100057821552844" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.youtube.com/@ToyoSeatPhilippinesCorporation" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                     <a href="#" target="_blank" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
