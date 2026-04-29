@@ -412,3 +412,16 @@
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
     
+        /* Make sure toast appears above modal */
+.login-toast {
+    z-index: 9999 !important;
+}
+
+/* Ensure modal backdrop is properly removed */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal-backdrop.fade.show {
+    z-index: 1040;
+}
