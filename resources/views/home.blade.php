@@ -19,7 +19,7 @@ $image = Homepage::where('key', 'hero_background')->first();
     @if($image && $image->image_data && !empty($image->image_data))
         <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
     @else
-        <div class="hero-background" style="background-image: url('{{ asset('images/Home.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+        <div class="hero-background" style="background-image: url('{{ asset('images/mazda.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
     @endif
     
     <div class="gradient-overlay-1"></div>
