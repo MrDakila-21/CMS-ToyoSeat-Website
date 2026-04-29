@@ -43,7 +43,10 @@ class AdminAuthController extends Controller
         if (!Auth::check()) {
             return redirect()->route('admin.login');
         }
-        return view('admin.dashboard');
+        
+        // Pass initial content data to the dashboard
+        $initialTab = 'home';
+        return view('admin.dashboard', compact('initialTab'));
     }
 
     public function logout(Request $request)
@@ -78,6 +81,46 @@ class AdminAuthController extends Controller
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => 'Sun, 02 Jan 1990 00:00:00 GMT',
+        ]);
+    }
+    
+    // New method to load content via AJAX
+    public function loadContent(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        $tab = $request->get('tab');
+        $subtab = $request->get('subtab');
+        
+        $view = '';
+        
+        // Determine which view to load
+        if ($tab === 'home') {
+            $view = 'admin.partials.home';
+        } elseif ($tab === 'about') {
+            $view = "admin.partials.about.{$subtab}";
+        } elseif ($tab === 'recruitment') {
+            $view = 'admin.partials.recruitment';
+        } elseif ($tab === 'news') {
+            $view = "admin.partials.news.{$subtab}";
+        } elseif ($tab === 'inquiry') {
+            $view = 'admin.partials.inquiry';
+        } else {
+            return response()->json(['error' => 'Invalid tab'], 400);
+        }
+        
+        // Check if view exists
+        if (!view()->exists($view)) {
+            return response()->json(['error' => 'Content not found'], 404);
+        }
+        
+        $html = view($view)->render();
+        
+        return response()->json([
+            'success' => true,
+            'html' => $html
         ]);
     }
 }
