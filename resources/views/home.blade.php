@@ -41,25 +41,25 @@ $image = Homepage::where('key', 'hero_background')->first();
     </div>
     
     <div class="bottom-cards">
-        <div class="card-item" data-url="{{ url('/about/overview') }}">
+        <div class="card-item" data-url="{{ url('/guest/about/overview') }}">
             <div class="card-icon-circle">
                 <img src="{{ asset('images/Group 1.svg') }}" alt="Our Thoughts" class="card-icon-img">
             </div>
             <div class="card-title">OUR THOUGHTS</div>
         </div>
-        <div class="card-item" data-url="{{ url('/about/overview') }}">
+        <div class="card-item" data-url="{{ url('/guest/about/overview') }}">
             <div class="card-icon-circle">
                 <img src="{{ asset('images/Group 2.svg') }}" alt="Company Profile" class="card-icon-img">
             </div>
             <div class="card-title">COMPANY PROFILE</div>
         </div>
-        <div class="card-item" data-url="{{ url('/about/business-introduction') }}">
+        <div class="card-item" data-url="{{ url('/guest/about/business-introduction') }}">
             <div class="card-icon-circle">
                 <img src="{{ asset('images/Group 3.svg') }}" alt="Introduction" class="card-icon-img">
             </div>
             <div class="card-title">INTRODUCTION</div>
         </div>
-        <div class="card-item" data-url="{{ url('/about/history') }}">
+        <div class="card-item" data-url="{{ url('/guest/about/history') }}">
             <div class="card-icon-circle">
                 <img src="{{ asset('images/Group 4.svg') }}" alt="History" class="card-icon-img">
             </div>
