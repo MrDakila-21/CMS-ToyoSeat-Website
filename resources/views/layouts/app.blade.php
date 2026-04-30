@@ -526,7 +526,7 @@
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
                 <ul class="dropdown-menu-custom">
-                    <li><a href="{{ route('guest.news.media-information') }}">Media Information</a></li>
+                    <li><a href="{{ route('guest.news.media-information') }}">Events & Activities</a></li>
                     <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
                 </ul>
             </li>
@@ -597,7 +597,7 @@
                 <div class="footer-section">
                     <h4>NEWS & INQUIRY</h4>
                     <ul class="footer-links">
-                        <li><a href="{{ route('guest.news.media-information') }}">Media Information</a></li>
+                        <li><a href="{{ route('guest.news.media-information') }}">Events & Activities</a></li>
                         <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
                         <li><a href="{{ route('guest.inquiry.index') }}">Inquiry</a></li>
                     </ul>
