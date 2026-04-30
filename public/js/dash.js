@@ -328,8 +328,7 @@ function loadSlides() {
     });
 }
 
-// Replace the renderSlides function in dash.js with this:
-
+// Replace the renderSlides function with this updated version with better checkbox styling
 function renderSlides(slides) {
     const container = document.getElementById('slidesContainer');
     
@@ -351,21 +350,22 @@ function renderSlides(slides) {
     slides.forEach((slide, index) => {
         html += `
             <div class="col-md-3 col-sm-6 mb-3 slide-item" data-id="${slide.id}" data-order="${slide.order}">
-                <div class="card h-100">
-                    <div class="position-relative">
-                        <img src="${slide.image_url}" class="card-img-top" alt="Slide ${index + 1}" style="height: 150px; object-fit: cover;">
-                        <div class="position-absolute top-0 inset-start-0 m-2">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input slide-checkbox" data-id="${slide.id}" style="width: 20px; height: 20px;" ${slide.is_active ? 'checked' : ''}>
-                            </div>
+                <div class="card h-100 position-relative">
+                    <div style="position: relative;">
+                        <img src="${slide.image_url}" class="card-img-top" alt="Slide ${index + 1}" style="height: 150px; object-fit: cover; width: 100%;">
+                        <div style="position: absolute; top: 8px; left: 8px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 4px; padding: 4px;">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0;">
+                                <input type="checkbox" class="slide-checkbox" data-id="${slide.id}" style="width: 18px; height: 18px; cursor: pointer; margin: 0;" ${slide.is_active ? 'checked' : ''}>
+                                <span style="font-size: 12px; color: #333;">Select</span>
+                            </label>
                         </div>
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 inset-end-0 m-2" onclick="window.deleteSlide(${slide.id})">
+                        <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 8px; right: 8px; z-index: 10; padding: 4px 8px; font-size: 12px;" onclick="window.deleteSlide(${slide.id})">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
                     <div class="card-body p-2 text-center">
                         <small class="text-muted">Order: ${slide.order}</small>
-                        <div class="drag-handle mt-1" style="cursor: move;">
+                        <div class="drag-handle mt-1" style="cursor: grab;">
                             <i class="fas fa-grip-vertical"></i> Drag to reorder
                         </div>
                     </div>
@@ -376,7 +376,7 @@ function renderSlides(slides) {
     
     container.innerHTML = html;
     
-    // Initialize drag and drop
+    // Initialize drag and drop - preserve checkbox states during drag
     if (typeof Sortable !== 'undefined') {
         if (sortableInstance) {
             sortableInstance.destroy();
@@ -388,7 +388,10 @@ function renderSlides(slides) {
                 animation: 150,
                 handle: '.drag-handle',
                 onEnd: function() {
-                    updateOrderFromDrag();
+                    // Save checked states before updating order
+                    const checkedIds = getCheckedSlideIds();
+                    // Update the order
+                    updateOrderFromDragWithState(checkedIds);
                 }
             });
             console.log('Sortable initialized');
@@ -398,7 +401,8 @@ function renderSlides(slides) {
     }
 }
 
-function updateOrderFromDrag() {
+// New function to handle order update with state preservation
+function updateOrderFromDragWithState(checkedIds) {
     const items = document.querySelectorAll('.slide-item');
     const updatedOrders = [];
     
@@ -425,20 +429,126 @@ function updateOrderFromDrag() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Order update response:', data);
         if (data.success) {
+            // Update order numbers in UI without reloading
+            updatedOrders.forEach(order => {
+                const slideItem = document.querySelector(`.slide-item[data-id="${order.id}"]`);
+                if (slideItem) {
+                    const orderLabel = slideItem.querySelector('.text-muted');
+                    if (orderLabel) {
+                        orderLabel.textContent = `Order: ${order.order}`;
+                    }
+                    slideItem.dataset.order = order.order;
+                }
+            });
+            // Show success message
             window.showCustomToast('Order updated successfully!', 'success');
-            loadSlides(); // Reload to refresh order display
         } else {
             window.showCustomToast(data.message || 'Failed to update order', 'error');
+            // Reload slides to restore correct order
+            loadSlides();
         }
     })
     .catch(error => {
         console.error('Error updating order:', error);
-        window.showCustomToast('Network error updating order', 'error');
+        window.showCustomToast('Network error updating order.', 'error');
     });
 }
 
-// Setup multiple image upload listener
+function updateOrderFromDrag() {
+    const items = document.querySelectorAll('.slide-item');
+    const updatedOrders = [];
+    
+    items.forEach((item, index) => {
+        const slideId = parseInt(item.dataset.id);
+        updatedOrders.push({
+            id: slideId,
+            order: index
+        });
+    });
+    
+    console.log('Updating orders:', updatedOrders);
+    
+    // Don't show toast for order update to avoid confusion
+    // Update orders in database
+    fetch('/admin/homepage/update-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ slides: updatedOrders })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Order update response:', data);
+        if (data.success) {
+            // Only show success toast, don't reload to avoid flicker
+            window.showCustomToast('Order updated successfully!', 'success');
+            // Just update the order numbers in the UI without reloading
+            updateOrderNumbersInUI(updatedOrders);
+        } else {
+            window.showCustomToast(data.message || 'Failed to update order', 'error');
+            // Reload slides to restore correct order on error
+            loadSlides();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating order:', error);
+        window.showCustomToast('Network error updating order. Please refresh the page.', 'error');
+        // Reload slides to restore correct order on error
+        loadSlides();
+    });
+}
+
+// Helper function to update order numbers in UI without reloading
+function updateOrderNumbersInUI(updatedOrders) {
+    updatedOrders.forEach(order => {
+        const slideItem = document.querySelector(`.slide-item[data-id="${order.id}"]`);
+        if (slideItem) {
+            const orderLabel = slideItem.querySelector('.text-muted');
+            if (orderLabel) {
+                orderLabel.textContent = `Order: ${order.order}`;
+            }
+            // Update the data-order attribute
+            slideItem.dataset.order = order.order;
+        }
+    });
+}
+
+// Helper function to get currently checked slide IDs
+function getCheckedSlideIds() {
+    const checkedBoxes = document.querySelectorAll('.slide-checkbox:checked');
+    const checkedIds = [];
+    checkedBoxes.forEach(checkbox => {
+        const id = parseInt(checkbox.getAttribute('data-id'));
+        if (!isNaN(id)) {
+            checkedIds.push(id);
+        }
+    });
+    return checkedIds;
+}
+
+// Helper function to restore checked states after reload
+function restoreCheckedStates(checkedIds) {
+    if (!checkedIds || checkedIds.length === 0) return;
+    
+    // Wait a bit for the DOM to update
+    setTimeout(() => {
+        const checkboxes = document.querySelectorAll('.slide-checkbox');
+        checkboxes.forEach(checkbox => {
+            const id = parseInt(checkbox.getAttribute('data-id'));
+            if (checkedIds.includes(id)) {
+                checkbox.checked = true;
+            }
+        });
+    }, 100);
+}
+
+// Setup multiple image upload listener - FIX for multiple file upload with remove preview
 function setupMultipleUploadListener() {
     const form = document.getElementById('multipleImagesForm');
     if (!form) {
@@ -451,10 +561,19 @@ function setupMultipleUploadListener() {
     const fileInput = document.getElementById('multipleImages');
     const previewContainer = document.getElementById('uploadPreviewContainer');
     
-    // Preview selected images
+    // Store selected files for validation
+    let selectedFiles = [];
+    
+    // Important: Set multiple attribute properly
     if (fileInput) {
+        fileInput.setAttribute('multiple', 'multiple');
+        
+        // Preview selected images with remove buttons
         fileInput.addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
+            selectedFiles = files;
+            console.log('Files selected:', files.length);
+            
             if (files.length === 0) {
                 if (previewContainer) {
                     previewContainer.style.display = 'none';
@@ -463,25 +582,151 @@ function setupMultipleUploadListener() {
                 return;
             }
             
+            // Validate each file before showing preview
+            const validFiles = [];
+            const errors = [];
+            
+            files.forEach((file, index) => {
+                const validationError = validateUploadFile(file);
+                if (validationError) {
+                    errors.push(`${file.name}: ${validationError}`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            
+            if (errors.length > 0) {
+                window.showCustomToast(errors.join('\n'), 'error');
+                // Remove invalid files from selection
+                selectedFiles = validFiles;
+                // Update file input with valid files only
+                const dataTransfer = new DataTransfer();
+                validFiles.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+            }
+            
+            if (validFiles.length === 0) {
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
+                return;
+            }
+            
             if (previewContainer) {
-                previewContainer.innerHTML = '<div class="col-12 mb-2"><strong>Preview:</strong></div>';
+                previewContainer.innerHTML = '<div class="col-12 mb-2"><strong>Preview (' + validFiles.length + ' images):</strong> <button type="button" class="btn btn-sm btn-danger" id="clearAllPreviews">Clear All</button></div>';
                 previewContainer.style.display = 'flex';
                 previewContainer.style.flexWrap = 'wrap';
                 
-                files.forEach((file) => {
+                validFiles.forEach((file, idx) => {
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         const previewDiv = document.createElement('div');
-                        previewDiv.className = 'col-md-2 col-4 mb-2';
+                        previewDiv.className = 'col-md-2 col-4 mb-2 preview-item';
+                        previewDiv.setAttribute('data-file-index', idx);
+                        previewDiv.setAttribute('data-file-name', file.name);
                         previewDiv.innerHTML = `
-                            <img src="${event.target.result}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;" title="${escapeHtml(file.name)}">
+                            <div class="position-relative">
+                                <img src="${event.target.result}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-preview-btn" style="padding: 2px 6px; font-size: 10px;" data-file-name="${escapeHtml(file.name)}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <small class="text-muted d-block text-truncate mt-1">${escapeHtml(file.name.substring(0, 20))}</small>
+                                <small class="text-muted d-block" style="font-size: 10px;">${(file.size / 1024).toFixed(1)} KB</small>
+                            </div>
                         `;
                         previewContainer.appendChild(previewDiv);
                     };
                     reader.readAsDataURL(file);
                 });
+                
+                // Add clear all button functionality after DOM update
+                setTimeout(() => {
+                    const clearAllBtn = document.getElementById('clearAllPreviews');
+                    if (clearAllBtn) {
+                        clearAllBtn.addEventListener('click', function() {
+                            clearAllPreviews();
+                        });
+                    }
+                    
+                    // Add remove individual preview functionality
+                    document.querySelectorAll('.remove-preview-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const fileName = this.getAttribute('data-file-name');
+                            removePreviewImage(fileName);
+                        });
+                    });
+                }, 100);
             }
         });
+    }
+    
+    // Function to clear all previews
+    function clearAllPreviews() {
+        if (fileInput) {
+            fileInput.value = '';
+            selectedFiles = [];
+        }
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        window.showCustomToast('All images cleared', 'info');
+    }
+    
+    // Function to remove individual preview image
+    function removePreviewImage(fileName) {
+        if (!fileInput) return;
+        
+        // Get current files
+        const currentFiles = Array.from(fileInput.files);
+        // Filter out the file to remove
+        const remainingFiles = currentFiles.filter(file => file.name !== fileName);
+        
+        // Update selectedFiles
+        selectedFiles = remainingFiles;
+        
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        remainingFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+        
+        // Re-render preview
+        if (remainingFiles.length === 0) {
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+        } else {
+            // Trigger change event to re-render preview
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+        
+        window.showCustomToast(`Removed ${fileName}`, 'info');
+    }
+    
+    // Function to validate upload file
+    function validateUploadFile(file) {
+        if (!file) {
+            return 'Invalid file';
+        }
+        
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            return `File exceeds the 5MB size limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+        }
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (!allowedTypes.includes(file.type) || !allowedExtensions.includes(fileExtension)) {
+            return 'Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.';
+        }
+        
+        return null;
     }
     
     // Handle form submission
@@ -497,6 +742,8 @@ function setupMultipleUploadListener() {
         }
         
         const files = fileInput.files;
+        console.log('Files to upload:', files.length);
+        
         if (files.length === 0) {
             window.showCustomToast('Please select at least one image to upload.', 'error');
             return;
@@ -507,9 +754,24 @@ function setupMultipleUploadListener() {
             return;
         }
         
+        // Validate all files before upload
+        const validationErrors = [];
+        for (let i = 0; i < files.length; i++) {
+            const error = validateUploadFile(files[i]);
+            if (error) {
+                validationErrors.push(`${files[i].name}: ${error}`);
+            }
+        }
+        
+        if (validationErrors.length > 0) {
+            window.showCustomToast(validationErrors.join('\n'), 'error');
+            return;
+        }
+        
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
             formData.append('images[]', files[i]);
+            console.log('Appending file:', files[i].name);
         }
         
         const token = document.querySelector('input[name="_token"]')?.value;
@@ -521,7 +783,7 @@ function setupMultipleUploadListener() {
         const originalText = uploadBtn ? uploadBtn.innerHTML : '';
         if (uploadBtn) {
             uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading ' + files.length + ' images...';
         }
         
         // Show modal
@@ -550,6 +812,7 @@ function setupMultipleUploadListener() {
             if (data.success) {
                 window.showCustomToast(data.message, 'success');
                 if (fileInput) fileInput.value = '';
+                selectedFiles = [];
                 if (previewContainer) {
                     previewContainer.style.display = 'none';
                     previewContainer.innerHTML = '';
@@ -582,13 +845,6 @@ function setupPresentListener() {
     console.log('Setting up present listener');
     
     presentBtn.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.slide-checkbox:checked');
-        
-        if (checkedBoxes.length === 0) {
-            window.showCustomToast('Please select at least one image to present.', 'error');
-            return;
-        }
-        
         // Get IDs in the order they appear in the DOM (visual order)
         const slideItems = document.querySelectorAll('.slide-item');
         const selectedIds = [];
@@ -601,11 +857,11 @@ function setupPresentListener() {
         });
         
         if (selectedIds.length === 0) {
-            window.showCustomToast('No valid images selected.', 'error');
+            window.showCustomToast('Please select at least one image to present.', 'error');
             return;
         }
         
-        if (confirm(`Are you sure you want to present ${selectedIds.length} image(s) as the slideshow?`)) {
+        if (confirm(`Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`)) {
             presentBtn.disabled = true;
             presentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
             
@@ -623,6 +879,7 @@ function setupPresentListener() {
             .then(data => {
                 if (data.success) {
                     window.showCustomToast(data.message, 'success');
+                    loadSlides(); // Reload to show updated active states
                 } else {
                     window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
                 }
@@ -1058,220 +1315,3 @@ function setupLegacyImageUploadListeners() {
         });
     }
 }
-
-function showCustomToast(message, type = 'success') {
-    const existingToast = document.querySelector('.login-toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = `login-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : 'info-toast')}`;
-    toast.innerHTML = `
-        <div class="login-toast-content">
-            <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
-            <span>${escapeHtml(message)}</span>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    toast.offsetHeight;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 300);
-    }, 5000);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ============================================
-// Media (Events & Activities) Management
-// ============================================
-
-function initMediaManagement() {
-    if (window.__mediaMgmtDelegated) return;
-    window.__mediaMgmtDelegated = true;
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
-                ...(options.headers || {})
-            }
-        });
-
-        let data = null;
-        try {
-            data = await response.json();
-        } catch {
-            // Non-JSON response
-        }
-
-        if (!response.ok) {
-            const message = data?.message || data?.error || 'Request failed';
-            throw new Error(message);
-        }
-
-        return data;
-    }
-
-    function getModalInstance(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el || typeof bootstrap === 'undefined') return null;
-        return bootstrap.Modal.getOrCreateInstance(el);
-    }
-
-    document.addEventListener('change', async (e) => {
-        const target = e.target;
-        if (!(target instanceof Element)) return;
-        if (!target.classList.contains('status-select')) return;
-
-        const id = target.getAttribute('data-id');
-        const status = target.value;
-        if (!id || !status) return;
-
-        try {
-            const data = await fetchJson(`/admin/media/${id}/status/${status}`, {
-                method: 'PATCH'
-            });
-            showCustomToast(data?.message || 'Status updated successfully', 'success');
-        } catch (error) {
-            console.error(error);
-            showCustomToast(error?.message || 'Error updating status', 'error');
-        }
-    });
-
-    document.addEventListener('click', async (e) => {
-        const target = e.target;
-        if (!(target instanceof Element)) return;
-
-        const editBtn = target.closest('.edit-btn');
-        if (editBtn) {
-            const id = editBtn.getAttribute('data-id');
-            if (!id) return;
-
-            try {
-                const data = await fetchJson(`/admin/media/${id}/edit`, { method: 'GET' });
-
-                const editBody = document.getElementById('mediaEditModalBody');
-                const editForm = document.getElementById('mediaEditForm');
-                if (!editBody || !editForm) return;
-
-                const currentImageHtml = data.image
-                    ? `<img src="/storage/${escapeHtml(data.image)}" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" alt="Current image">`
-                    : `<span class="badge text-bg-secondary">No image</span>`;
-
-                editBody.innerHTML = `
-                    <div class="mb-3">
-                        <label class="form-label">Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" value="${escapeHtml(data.title || '')}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Type <span class="text-danger">*</span></label>
-                        <select name="type" class="form-select" required>
-                            <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                            <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description || '')}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input type="date" name="event_date" class="form-control" value="${escapeHtml(data.event_date || '')}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Current Image</label><br>
-                        ${currentImageHtml}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Replace Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        <div class="form-text">Leave empty to keep current image</div>
-                    </div>
-                `;
-
-                editForm.setAttribute('action', `/admin/media/${id}`);
-                getModalInstance('mediaEditModal')?.show();
-            } catch (error) {
-                console.error(error);
-                showCustomToast(error?.message || 'Failed to load record', 'error');
-            }
-
-            return;
-        }
-
-        const deleteBtn = target.closest('.delete-btn');
-        if (deleteBtn) {
-            const id = deleteBtn.getAttribute('data-id');
-            if (!id) return;
-            if (!confirm('Are you sure you want to delete this item?')) return;
-
-            try {
-                const data = await fetchJson(`/admin/media/${id}`, { method: 'DELETE' });
-                showCustomToast(data?.message || 'Item deleted successfully', 'success');
-                if (typeof window.loadContent === 'function') {
-                    window.loadContent('news', 'media');
-                }
-            } catch (error) {
-                console.error(error);
-                showCustomToast(error?.message || 'Error deleting item', 'error');
-            }
-        }
-    });
-
-    document.addEventListener('submit', async (e) => {
-        const form = e.target;
-        if (!(form instanceof HTMLFormElement)) return;
-
-        if (form.id !== 'mediaAddForm' && form.id !== 'mediaEditForm') return;
-        e.preventDefault();
-
-        const action = form.getAttribute('action');
-        if (!action) return;
-
-        const formData = new FormData(form);
-
-        try {
-            const data = await fetchJson(action, {
-                method: 'POST',
-                body: formData
-            });
-
-            showCustomToast(data?.message || 'Saved successfully', 'success');
-
-            if (form.id === 'mediaAddForm') {
-                getModalInstance('mediaAddModal')?.hide();
-                form.reset();
-            } else {
-                getModalInstance('mediaEditModal')?.hide();
-            }
-
-            if (typeof window.loadContent === 'function') {
-                window.loadContent('news', 'media');
-            }
-        } catch (error) {
-            console.error(error);
-            showCustomToast(error?.message || 'Failed to save changes', 'error');
-        }
-    }, true);
-}
-
-// Expose functions globally
-window.initHomepageManagement = initHomepageManagement;
-window.initMediaManagement = initMediaManagement;
