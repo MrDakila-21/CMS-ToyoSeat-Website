@@ -1,4 +1,5 @@
 <?php
+// routes/web.php
 
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\EventActivityController;
@@ -13,8 +14,6 @@ Route::get('/login', function () {
 
 // Home page
 Route::get('/', [HomeController::class, 'index'])->name('home');
-// Home page (your existing home.blade)
-Route::view('/', 'home')->name('home');
 
 // Guest routes
 Route::prefix('guest')->name('guest.')->group(function () {
@@ -47,6 +46,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
         Route::view('/', 'guest.inquiry.inquiry')->name('index');
     });
 });
+
 // Admin routes
 Route::prefix('admin')->group(function () {
     // Login routes (accessible only for guests)
@@ -60,9 +60,16 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminAuthController::class, 'dashboard'])->name('admin.dashboard');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
-        Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent'); // Add this line
+        Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
 
-        // Homepage image management routes
+        // Homepage slideshow management routes
+        Route::get('/homepage/slides', [HomepageController::class, 'getSlides'])->name('admin.homepage.slides');
+        Route::post('/homepage/upload-multiple', [HomepageController::class, 'uploadMultipleImages'])->name('admin.homepage.uploadMultiple');
+        Route::post('/homepage/update-order', [HomepageController::class, 'updateSlidesOrder'])->name('admin.homepage.updateOrder');
+        Route::post('/homepage/present', [HomepageController::class, 'presentSlides'])->name('admin.homepage.present');
+        Route::delete('/homepage/slide/{id}', [HomepageController::class, 'deleteSlide'])->name('admin.homepage.deleteSlide');
+        
+        // Legacy route (keep for compatibility)
         Route::get('/homepage/image', [HomepageController::class, 'getImage'])->name('admin.homepage.image');
         Route::post('/homepage/upload-image', [HomepageController::class, 'uploadImage'])->name('admin.homepage.upload');
         Route::delete('/homepage/remove-image', [HomepageController::class, 'removeImage'])->name('admin.homepage.remove');
