@@ -479,7 +479,7 @@
 {{-- FULL WIDTH NAVBAR --}}
 <div class="navbar-custom">
     <div class="navbar-container">
-        <a href="{{ url('/') }}" class="navbar-brand-custom">
+        <a href="{{ route('home') }}" class="navbar-brand-custom">
             <img src="{{ asset('images/logo.svg') }}" 
                  alt="Toyoseat Logo" 
                  class="company-logo"
@@ -498,41 +498,41 @@
 
         <ul class="nav-menu" id="navMenu">
             <li class="nav-item">
-                <a href="{{ url('/') }}" class="nav-link-custom {{ request()->is('/') ? 'active' : '' }}">Home</a>
+                <a href="{{ route('home') }}" class="nav-link-custom {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
             </li>
 
             <li class="nav-item nav-item-dropdown" id="aboutDropdownLi">
-                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->is('about*') ? 'active' : '' }}">
+                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.about.*') ? 'active' : '' }}">
                     About Us
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
                 <ul class="dropdown-menu-custom">
-                    <li><a href="{{ url('/about/overview') }}">Overview</a></li>
-                    <li><a href="{{ url('/about/business-introduction') }}">Business introduction</a></li>
-                    <li><a href="{{ url('/about/location') }}">Location</a></li>
-                    <li><a href="{{ url('/about/history') }}">History</a></li>
-                    <li><a href="{{ url('/about/iso-obtained') }}">ISO Obtained</a></li>
-                    <li><a href="{{ url('/about/privacy-policy') }}">Privacy Policy</a></li>
+                    <li><a href="{{ route('guest.about.overview') }}">Overview</a></li>
+                    <li><a href="{{ route('guest.about.business-introduction') }}">Business introduction</a></li>
+                    <li><a href="{{ route('guest.about.location') }}">Location</a></li>
+                    <li><a href="{{ route('guest.about.history') }}">History</a></li>
+                    <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
+                    <li><a href="{{ route('guest.about.privacy-policy') }}">Privacy Policy</a></li>
                 </ul>
             </li>
 
             <li class="nav-item">
-                <a href="{{ url('/recruitment') }}" class="nav-link-custom {{ request()->is('recruitment*') ? 'active' : '' }}">Recruitment information</a>
+                <a href="{{ route('guest.recruitment.information') }}" class="nav-link-custom {{ request()->routeIs('guest.recruitment.*') ? 'active' : '' }}">Recruitment information</a>
             </li>
 
             <li class="nav-item nav-item-dropdown" id="newsDropdownLi">
-                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->is('news*') ? 'active' : '' }}">
+                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.news.*') ? 'active' : '' }}">
                     News
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
                 <ul class="dropdown-menu-custom">
-                    <li><a href="{{ url('/news/media-information') }}">Media Information</a></li>
-                    <li><a href="{{ url('/news/announcements') }}">Announcements</a></li>
+                    <li><a href="{{ route('guest.news.media-information') }}">Media Information</a></li>
+                    <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
                 </ul>
             </li>
 
             <li class="nav-item">
-                <a href="{{ url('/inquiry') }}" class="nav-link-custom {{ request()->is('inquiry*') ? 'active' : '' }}">Inquiry</a>
+                <a href="{{ route('guest.inquiry.index') }}" class="nav-link-custom {{ request()->routeIs('guest.inquiry.*') ? 'active' : '' }}">Inquiry</a>
             </li>
         </ul>
     </div>
@@ -576,30 +576,30 @@
                 <div class="footer-section">
                     <h4>COMPANY</h4>
                     <ul class="footer-links">
-                        <li><a href="{{ url('/about/overview') }}">Overview</a></li>
-                        <li><a href="{{ url('/about/business-introduction') }}">Business introduction</a></li>
-                        <li><a href="{{ url('/about/location') }}">Location</a></li>
-                        <li><a href="{{ url('/about/history') }}">History</a></li>
-                        <li><a href="{{ url('/about/iso-obtained') }}">ISO Obtained</a></li>
-                        <li><a href="{{ url('/about/privacy-policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ route('guest.about.overview') }}">Overview</a></li>
+                        <li><a href="{{ route('guest.about.business-introduction') }}">Business introduction</a></li>
+                        <li><a href="{{ route('guest.about.location') }}">Location</a></li>
+                        <li><a href="{{ route('guest.about.history') }}">History</a></li>
+                        <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
+                        <li><a href="{{ route('guest.about.privacy-policy') }}">Privacy Policy</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-section">
                     <h4>RECRUITMENT</h4>
                     <ul class="footer-links">
-                        <li><a href="{{ url('/recruitment/information-top') }}">Information TOP</a></li>
-                        <li><a href="{{ url('/recruitment/new-graduate') }}">New Graduate Recruitment</a></li>
-                        <li><a href="{{ url('/recruitment/career') }}">Career Recruitment</a></li>
+                        <li><a href="{{ route('guest.recruitment.information') }}">Information TOP</a></li>
+                        <li><a href="{{ route('guest.recruitment.new-graduate') }}">New Graduate Recruitment</a></li>
+                        <li><a href="{{ route('guest.recruitment.career') }}">Career Recruitment</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-section">
                     <h4>NEWS & INQUIRY</h4>
                     <ul class="footer-links">
-                        <li><a href="{{ url('/news/media-information') }}">Media Information</a></li>
-                        <li><a href="{{ url('/news/announcements') }}">Announcements</a></li>
-                        <li><a href="{{ url('/inquiry') }}">Inquiry</a></li>
+                        <li><a href="{{ route('guest.news.media-information') }}">Media Information</a></li>
+                        <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
+                        <li><a href="{{ route('guest.inquiry.index') }}">Inquiry</a></li>
                     </ul>
                 </div>
             </div>
