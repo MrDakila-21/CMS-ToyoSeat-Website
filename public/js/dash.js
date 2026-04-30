@@ -256,6 +256,10 @@ let allSlides = [];
 // Initialize homepage management
 window.initHomepageManagement = function() {
     console.log('Initializing homepage management...');
+    
+    // Reset the present listener flag when reinitializing
+    presentListenerAttached = false;
+    
     loadSortableScript()
         .then(() => {
             console.log('SortableJS ready, loading slides...');
@@ -628,7 +632,7 @@ function setupMultipleUploadListener() {
                         previewDiv.innerHTML = `
                             <div class="position-relative">
                                 <img src="${event.target.result}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
-                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-preview-btn" style="padding: 2px 6px; font-size: 10px;" data-file-name="${escapeHtml(file.name)}">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 inset-end-0 m-1 remove-preview-btn" style="padding: 2px 6px; font-size: 10px;" data-file-name="${escapeHtml(file.name)}">
                                     <i class="fas fa-times"></i>
                                 </button>
                                 <small class="text-muted d-block text-truncate mt-1">${escapeHtml(file.name.substring(0, 20))}</small>
@@ -834,7 +838,8 @@ function setupMultipleUploadListener() {
     });
 }
 
-// Setup present button listener
+let presentListenerAttached = false;
+
 function setupPresentListener() {
     const presentBtn = document.getElementById('presentSlidesBtn');
     if (!presentBtn) {
@@ -842,9 +847,29 @@ function setupPresentListener() {
         return;
     }
     
+    // Remove existing listener if already attached
+    if (presentListenerAttached) {
+        // Clone and replace the button to remove all existing listeners
+        const newPresentBtn = presentBtn.cloneNode(true);
+        presentBtn.parentNode.replaceChild(newPresentBtn, presentBtn);
+        // Update reference to the new button
+        const updatedPresentBtn = document.getElementById('presentSlidesBtn');
+        if (updatedPresentBtn) {
+            attachPresentListener(updatedPresentBtn);
+        }
+    } else {
+        attachPresentListener(presentBtn);
+    }
+}
+
+function attachPresentListener(button) {
     console.log('Setting up present listener');
+    presentListenerAttached = true;
     
-    presentBtn.addEventListener('click', function() {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         // Get IDs in the order they appear in the DOM (visual order)
         const slideItems = document.querySelectorAll('.slide-item');
         const selectedIds = [];
@@ -861,9 +886,13 @@ function setupPresentListener() {
             return;
         }
         
-        if (confirm(`Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`)) {
-            presentBtn.disabled = true;
-            presentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+        // Use a simple confirm instead of multiple confirms
+        const confirmMessage = `Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`;
+        
+        if (confirm(confirmMessage)) {
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
             
             fetch('/admin/homepage/present', {
                 method: 'POST',
@@ -889,8 +918,8 @@ function setupPresentListener() {
                 window.showCustomToast('Network error. Please try again.', 'error');
             })
             .finally(() => {
-                presentBtn.disabled = false;
-                presentBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Present Selected Images';
+                button.disabled = false;
+                button.innerHTML = originalText;
             });
         }
     });
