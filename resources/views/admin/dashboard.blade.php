@@ -3,38 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard - Toyoseat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/dash.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Hind:wght@300;400;500;600;700&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Add loading indicator styles */
+        .content-loading {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 12px;
+        }
+        .content-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3988BD;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">Toyoseat Admin Panel</span>
-            <form method="POST" action="{{ route('admin.logout') }}">
-                @csrf
-                <button type="submit" class="btn btn-danger btn-sm">Logout</button>
-            </form>
-        </div>
-    </nav>
-
-    <div class="container mt-5">
-        <div class="alert alert-success">
-            <h4 class="alert-heading">Welcome, Admin!</h4>
-            <p>You have successfully logged in to the admin panel.</p>
-            <hr>
-            <p class="mb-0">This is the admin dashboard. Your website's CRUD functionality will be implemented here later.</p>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h5>Quick Actions</h5>
+    @if(session('success'))
+        <div id="dashboard-success-toast" class="login-toast success-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-circle-check"></i>
+                <span>{{ session('success') }}</span>
             </div>
-            <div class="card-body">
-                <p>Content management will be added here in the next phase.</p>
-                <a href="/" class="btn btn-primary">View Website</a>
+        </div>
+    @endif
+
+    <!-- Navbar with Logo matching app.blade -->
+    <div class="navbar-custom">
+        <div class="navbar-container">
+            <a href="{{ url('/') }}" class="navbar-brand-custom">
+                <img src="{{ asset('images/logo.svg') }}" 
+                     alt="Toyoseat Logo" 
+                     class="company-logo"
+                     onerror="this.style.display='none';">
+                <div class="company-name">
+                    <div class="company-name-main">TOYO SEAT</div>
+                    <div class="company-name-sub">PHILIPPINES CORPORATION</div>
+                </div>
+            </a>
+            <div>
+                <span class="text-white me-3" style="opacity: 0.9;">
+                    <i class="fas fa-user-shield me-1"></i>
+                    Admin Panel
+                </span>
+                <button type="button" class="btn-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </button>
             </div>
         </div>
     </div>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
+                <small>Manage website content</small>
+            </div>
+            <ul class="sidebar-menu">
+                <!-- Home Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link active" data-tab="home" data-main-tab="home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+
+                <!-- About Us Dropdown -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="aboutDropdown">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Us</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-dropdown" id="aboutDropdown">
+                        <li><a data-tab="about" data-subtab="overview">Overview</a></li>
+                        <li><a data-tab="about" data-subtab="business">Business Introduction</a></li>
+                        <li><a data-tab="about" data-subtab="location">Location</a></li>
+                        <li><a data-tab="about" data-subtab="history">History</a></li>
+                        <li><a data-tab="about" data-subtab="iso">ISO Obtained</a></li>
+                        <li><a data-tab="about" data-subtab="privacy">Privacy Policy</a></li>
+                    </ul>
+                </li>
+
+                <!-- Recruitment Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" data-tab="recruitment" data-main-tab="recruitment">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Recruitment Information</span>
+                    </a>
+                </li>
+
+                <!-- News Dropdown -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="newsDropdown">
+                        <i class="fas fa-newspaper"></i>
+                        <span>News</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="sidebar-dropdown" id="newsDropdown">
+                        <li><a data-tab="news" data-subtab="media">Media Information</a></li>
+                        <li><a data-tab="news" data-subtab="announcements">Announcements</a></li>
+                    </ul>
+                </li>
+
+                <!-- Inquiry Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link" data-tab="inquiry" data-main-tab="inquiry">
+                        <i class="fas fa-envelope"></i>
+                        <span>Inquiry</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="dynamic-content" class="content-panel active">
+                <!-- Content will be loaded dynamically here -->
+                <div class="content-loading">
+                    <div class="spinner"></div>
+                    <p>Loading content...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to logout from the admin panel?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Yes, Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('js/dash.js') }}"></script>
+    
+    <script>
+        // Initialize dashboard with dynamic content loading
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialTab = @json($initialTab ?? 'home');
+            const initialSubtab = @json($initialSubtab ?? null);
+            loadContent(initialTab, initialSubtab);
+        });
+        
+        // Function to load content via AJAX
+        function loadContent(mainTab, subTab = null) {
+            const contentContainer = document.getElementById('dynamic-content');
+            
+            // Show loading indicator
+            contentContainer.innerHTML = `
+                <div class="content-loading">
+                    <div class="spinner"></div>
+                    <p>Loading content...</p>
+                </div>
+            `;
+            
+            // Build URL with parameters
+            let url = `/admin/load-content?tab=${mainTab}`;
+            if (subTab) {
+                url += `&subtab=${subTab}`;
+            }
+            
+            // Fetch content
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    contentContainer.innerHTML = data.html;
+                    // Re-initialize any tab-specific JavaScript
+                    if (mainTab === 'home') {
+                        initHomepageManagement();
+                    }
+                    if (mainTab === 'news' && subTab === 'media' && typeof window.initMediaManagement === 'function') {
+                        window.initMediaManagement();
+                    }
+                } else if (data.error) {
+                    contentContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.error}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading content:', error);
+                contentContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed to load content. Please try again.
+                    </div>
+                `;
+            });
+        }
+
+        // Expose loader for other scripts
+        window.loadContent = loadContent;
+        
+        // Tab switching logic
+        document.querySelectorAll('[data-tab]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const mainTab = this.getAttribute('data-tab');
+                const subTab = this.getAttribute('data-subtab');
+                
+                // Update active state on sidebar links
+                document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(l => {
+                    l.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Load content
+                loadContent(mainTab, subTab);
+            });
+        });
+        
+        // Prevent back button access after logout
+        (function() {
+            // Check authentication status periodically
+            function checkAuthStatus() {
+                fetch('/admin/check-auth', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        window.location.href = '/admin/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Auth check failed:', error);
+                });
+            }
+            
+            setInterval(checkAuthStatus, 5000);
+            
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkAuthStatus();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
 // try

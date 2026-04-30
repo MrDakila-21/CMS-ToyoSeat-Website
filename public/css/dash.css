@@ -1,0 +1,427 @@
+
+        /* Toast message styles matching login page */
+        .login-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .login-toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+        
+        .login-toast.success-toast .login-toast-content {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .login-toast.error-toast .login-toast-content {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .login-toast .login-toast-content i {
+            font-size: 24px;
+        }
+        
+        .login-toast.success-toast i {
+            color: #28a745;
+        }
+        
+        .login-toast.error-toast i {
+            color: #dc3545;
+        }
+        
+        .login-toast.hide {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Navbar Styles matching app.blade */
+        .navbar-custom {
+            background: linear-gradient(90deg, #0E334C 12.02%, #3988BD 46.63%, #0E334C 100%);
+            box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.3);
+            padding: 0.75rem 0;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            width: 90%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar-brand-custom {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .company-logo {
+            height: 50px;
+            width: auto;
+            display: block;
+        }
+
+        .company-name {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .company-name-main {
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            color: white;
+            margin: 0;
+        }
+
+        .company-name-sub {
+            font-weight: 500;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-wrapper {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0E334C 0%, #1a5a7e 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-header small {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sidebar-link i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-link span {
+            flex: 1;
+        }
+
+        .sidebar-link .chevron-icon {
+            width: auto;
+            margin-right: 0;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.1);
+            padding-left: 25px;
+        }
+
+        .sidebar-link.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid #80CCFF;
+        }
+
+        /* Dropdown Submenu */
+        .sidebar-dropdown {
+            list-style: none;
+            padding-left: 45px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .sidebar-dropdown.open {
+            max-height: 500px;
+        }
+
+        .sidebar-dropdown li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-dropdown a {
+            display: block;
+            padding: 8px 12px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sidebar-dropdown a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding-left: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: #f5f7fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Content Panels */
+        .content-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Updated Alert - Figma colors */
+        .alert-success {
+            background: linear-gradient(135deg, #0E334C 0%, #015A96 100%);
+            border: none;
+            color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .alert-success .alert-heading {
+            color: #80CCFF;
+            font-weight: 600;
+        }
+
+        .alert-success hr {
+            background-color: rgba(128, 204, 255, 0.3);
+        }
+
+        /* Updated Card - Figma colors */
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, #0E334C 12.02%, #3988BD 46.63%, #0E334C 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            border: none;
+            padding: 15px 20px;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* Updated Button - Figma colors */
+        .btn-primary {
+            background: linear-gradient(135deg, #015A96, #0E334C);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0E334C, #015A96);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(1, 90, 150, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* Modal footer button colors */
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 8px;
+        }
+
+        /* Body background accent */
+        body {
+            background: #f5f7fa;
+        }
+
+        /* Mobile responsive sidebar */
+        @media (max-width: 768px) {
+            .dashboard-wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+            .sidebar-link {
+                padding: 10px 15px;
+            }
+            .sidebar-dropdown {
+                padding-left: 35px;
+            }
+            .navbar-container {
+                width: 95%;
+            }
+            .company-logo {
+                height: 40px;
+            }
+            .company-name-main {
+                font-size: 1rem;
+            }
+            .company-name-sub {
+                font-size: 0.6rem;
+            }
+        }
+
+        /* Content management card styles */
+        .content-card {
+            margin-bottom: 20px;
+        }
+
+        .content-card .card-body {
+            padding: 20px;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+
+        .placeholder-content i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #3988BD;
+        }
+
+        /* Logout button styling */
+        .btn-logout {
+            background: rgba(220, 53, 69, 0.9);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: #dc3545;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+    
+        /* Make sure toast appears above modal */
+.login-toast {
+    z-index: 9999 !important;
+}
+
+/* Ensure modal backdrop is properly removed */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal-backdrop.fade.show {
+    z-index: 1040;
+}
