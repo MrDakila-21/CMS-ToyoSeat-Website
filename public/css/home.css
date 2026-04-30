@@ -897,3 +897,66 @@
         min-width: 100px;
     }
 }
+
+ /* Slideshow styles - ADDED without removing existing styles */
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            z-index: 1;
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+        
+        /* Slideshow checkbox styling */
+.slide-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin: 0;
+    accent-color: #0E334C;
+}
+
+.slide-checkbox:checked {
+    background-color: #0E334C;
+    border-color: #0E334C;
+}
+
+/* Preview remove button styling */
+.remove-preview-btn {
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.remove-preview-btn:hover {
+    opacity: 1;
+}
+
+.preview-item {
+    position: relative;
+}
+
+#clearAllPreviews {
+    margin-left: 10px;
+    font-size: 12px;
+}

@@ -5,48 +5,6 @@
 
 @push('styles')
     <link href="{{ asset('css/home.css') }}" rel="stylesheet">
-    <style>
-        /* Slideshow styles - ADDED without removing existing styles */
-        .hero-slideshow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 1;
-        }
-        
-        .hero-slide {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-            z-index: 1;
-        }
-        
-        .hero-slide.active {
-            opacity: 1;
-            z-index: 2;
-        }
-        
-        
-        /* Keep original hero-background as fallback */
-        .hero-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-    </style>
 @endpush
 
 @section('content')
