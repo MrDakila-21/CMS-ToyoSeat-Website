@@ -5,6 +5,13 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
+// Add this at the beginning of your routes file
+Route::get('/login', function () {
+    return redirect()->route('admin.login');
+})->name('login');
+
+// Home page
+Route::get('/', [HomeController::class, 'index'])->name('home');
 // Home page (your existing home.blade)
 Route::view('/', 'home')->name('home');
 
