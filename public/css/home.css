@@ -145,20 +145,21 @@
     z-index: 2;
     display: flex;
     justify-content: center;
-    gap: 60px;
+    align-items: center;
+    gap: 80px; /* Equal spacing between cards */
     flex-wrap: wrap;
     padding: 0 20px;
 }
-
 /* Individual Card - Smaller size */
 .card-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: transform 0.3s ease;
+    flex: 0 0 auto; /* Prevent stretching */
 }
-
 .card-item:hover {
     transform: translateY(-3px);
 }
@@ -173,9 +174,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin: 0 auto 8px auto; /* Centered horizontally */
     transition: all 0.3s ease;
 }
+
 
 .card-item:hover .card-icon-circle {
     background: #3988BD;
@@ -574,10 +576,6 @@
    SECTION 2 BASE
 ========================= */
 
-/* =========================
-   SECTION 2 BASE
-========================= */
-
 /* ================= SECTION BASE ================= */
 
 .section2 {
@@ -661,12 +659,12 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .section-icon {
-    width: 38px;
-    height: auto;
+    width: 50px;
+    height: 50px;
 }
 
 .announcements-title,
@@ -681,10 +679,11 @@
 /* ================= UNDERLINE ================= */
 
 .underline {
-    width: 60px;
+    width: 575px;
     height: 3px;
     background: #0A5AA6;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
+    margin-top: 5px;
 }
 
 /* ================= NEWS CARDS ================= */
