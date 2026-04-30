@@ -5,21 +5,77 @@
 
 @push('styles')
     <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+    <style>
+        /* Slideshow styles - ADDED without removing existing styles */
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            z-index: 1;
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+        
+        
+        /* Keep original hero-background as fallback */
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+    </style>
 @endpush
 
 @section('content')
 @php
 use App\Models\Homepage;
+use App\Models\HomepageSlide;
 $image = Homepage::where('key', 'hero_background')->first();
+$slides = HomepageSlide::where('is_active', true)->orderBy('order', 'asc')->get();
+$hasSlides = $slides->count() > 0;
 @endphp
 
 <!-- SECTION 1: Hero Section -->
 <div class="hero-wrapper">
-    <!-- Background Image - handles both base64 and regular images -->
-    @if($image && $image->image_data && !empty($image->image_data))
-        <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+    <!-- Slideshow Background - ADDED -->
+    @if($hasSlides)
+        <div class="hero-slideshow">
+            @foreach($slides as $index => $slide)
+                <div class="hero-slide {{ $index === 0 ? 'active' : '' }}" 
+                     style="background-image: url('{{ asset('storage/' . $slide->image_path) }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                </div>
+            @endforeach
+        </div>
     @else
-        <div class="hero-background" style="background-image: url('{{ asset('images/mazda.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+        <!-- Original Background Image - KEPT -->
+        @if($image && $image->image_data && !empty($image->image_data))
+            <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+        @else
+            <div class="hero-background" style="background-image: url('{{ asset('images/mazda.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+        @endif
     @endif
     
     <div class="gradient-overlay-1"></div>
@@ -163,4 +219,28 @@ $image = Homepage::where('key', 'hero_background')->first();
 
 @push('scripts')
     <script src="{{ asset('js/home.js') }}"></script>
+    <script>
+        // Slideshow functionality - ADDED without removing existing scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.hero-slide');
+            if (slides.length <= 1) return;
+            
+            let currentSlide = 0;
+            const slideCount = slides.length;
+            
+            function showNextSlide() {
+                // Remove active class from current slide
+                slides[currentSlide].classList.remove('active');
+                
+                // Move to next slide
+                currentSlide = (currentSlide + 1) % slideCount;
+                
+                // Add active class to next slide
+                slides[currentSlide].classList.add('active');
+            }
+            
+            // Change slide every 5 seconds
+            setInterval(showNextSlide, 5000);
+        });
+    </script>
 @endpush
