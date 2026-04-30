@@ -175,8 +175,9 @@
     <script>
         // Initialize dashboard with dynamic content loading
         document.addEventListener('DOMContentLoaded', function() {
-            // Load initial content (home tab)
-            loadContent('home');
+            const initialTab = @json($initialTab ?? 'home');
+            const initialSubtab = @json($initialSubtab ?? null);
+            loadContent(initialTab, initialSubtab);
         });
         
         // Function to load content via AJAX
@@ -214,6 +215,9 @@
                     if (mainTab === 'home') {
                         initHomepageManagement();
                     }
+                    if (mainTab === 'news' && subTab === 'media' && typeof window.initMediaManagement === 'function') {
+                        window.initMediaManagement();
+                    }
                 } else if (data.error) {
                     contentContainer.innerHTML = `
                         <div class="alert alert-danger">
@@ -233,6 +237,9 @@
                 `;
             });
         }
+
+        // Expose loader for other scripts
+        window.loadContent = loadContent;
         
         // Tab switching logic
         document.querySelectorAll('[data-tab]').forEach(link => {
