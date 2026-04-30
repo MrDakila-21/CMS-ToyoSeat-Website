@@ -38,7 +38,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Manage Slideshow Images</h6>
                     <button type="button" class="btn btn-success" id="presentSlidesBtn">
-                        <i class="fas fa-check-circle me-1"></i> Present Selected Images
+                        <i class="fas fa-check-circle me-1"></i> Present Selected Images/Save
                     </button>
                 </div>
                 

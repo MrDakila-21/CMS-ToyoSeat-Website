@@ -332,7 +332,6 @@ function loadSlides() {
     });
 }
 
-// Replace the renderSlides function with this updated version with better checkbox styling
 function renderSlides(slides) {
     const container = document.getElementById('slidesContainer');
     
@@ -350,7 +349,15 @@ function renderSlides(slides) {
         return;
     }
     
-    let html = '';
+    // Count active slides
+    const activeCount = slides.filter(slide => slide.is_active).length;
+    const activeMessage = activeCount > 0 
+        ? `<div class="col-12 mb-3"><div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>${activeCount} image(s) are currently active in the slideshow.</div></div>`
+        : `<div class="col-12 mb-3"><div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>No images are active. The homepage will show the default background image. Select images below and click "Present Selected Images" to activate them.</div></div>`;
+    
+    let html = activeMessage;
+    html += '<div class="row">';
+    
     slides.forEach((slide, index) => {
         html += `
             <div class="col-md-3 col-sm-6 mb-3 slide-item" data-id="${slide.id}" data-order="${slide.order}">
@@ -366,6 +373,7 @@ function renderSlides(slides) {
                         <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 8px; right: 8px; z-index: 10; padding: 4px 8px; font-size: 12px;" onclick="window.deleteSlide(${slide.id})">
                             <i class="fas fa-trash-alt"></i>
                         </button>
+                        ${slide.is_active ? '<span style="position: absolute; bottom: 8px; left: 8px; background: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; z-index: 10;"><i class="fas fa-play me-1"></i>Active</span>' : ''}
                     </div>
                     <div class="card-body p-2 text-center">
                         <small class="text-muted">Order: ${slide.order}</small>
@@ -378,9 +386,10 @@ function renderSlides(slides) {
         `;
     });
     
+    html += '</div>';
     container.innerHTML = html;
     
-    // Initialize drag and drop - preserve checkbox states during drag
+    // Initialize drag and drop
     if (typeof Sortable !== 'undefined') {
         if (sortableInstance) {
             sortableInstance.destroy();
@@ -388,13 +397,11 @@ function renderSlides(slides) {
         
         const sortableContainer = document.getElementById('slidesContainer');
         if (sortableContainer) {
-            sortableInstance = new Sortable(sortableContainer, {
+            sortableInstance = new Sortable(sortableContainer.querySelector('.row'), {
                 animation: 150,
                 handle: '.drag-handle',
                 onEnd: function() {
-                    // Save checked states before updating order
                     const checkedIds = getCheckedSlideIds();
-                    // Update the order
                     updateOrderFromDragWithState(checkedIds);
                 }
             });
@@ -838,6 +845,7 @@ function setupMultipleUploadListener() {
     });
 }
 
+// Setup present button listener - FIX for handling no selected images
 let presentListenerAttached = false;
 
 function setupPresentListener() {
@@ -847,19 +855,103 @@ function setupPresentListener() {
         return;
     }
     
-    // Remove existing listener if already attached
-    if (presentListenerAttached) {
-        // Clone and replace the button to remove all existing listeners
-        const newPresentBtn = presentBtn.cloneNode(true);
-        presentBtn.parentNode.replaceChild(newPresentBtn, presentBtn);
-        // Update reference to the new button
-        const updatedPresentBtn = document.getElementById('presentSlidesBtn');
-        if (updatedPresentBtn) {
-            attachPresentListener(updatedPresentBtn);
+    // Remove existing listener by cloning and replacing
+    const newPresentBtn = presentBtn.cloneNode(true);
+    presentBtn.parentNode.replaceChild(newPresentBtn, presentBtn);
+    
+    newPresentBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Get IDs in the order they appear in the DOM (visual order)
+        const slideItems = document.querySelectorAll('.slide-item');
+        const selectedIds = [];
+        
+        slideItems.forEach(item => {
+            const checkbox = item.querySelector('.slide-checkbox');
+            if (checkbox && checkbox.checked) {
+                selectedIds.push(parseInt(item.dataset.id));
+            }
+        });
+        
+        // Handle case when no images are selected
+        if (selectedIds.length === 0) {
+            const confirmMessage = 'No images selected. This will clear the slideshow and use the default background image on the homepage. Are you sure?';
+            
+            if (confirm(confirmMessage)) {
+                newPresentBtn.disabled = true;
+                const originalText = newPresentBtn.innerHTML;
+                newPresentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+                
+                // Send empty array to clear all active slides
+                fetch('/admin/homepage/present', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ slide_ids: [] })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.showCustomToast(data.message, 'success');
+                        loadSlides(); // Reload to show updated states
+                    } else {
+                        window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing slideshow:', error);
+                    window.showCustomToast('Network error. Please try again.', 'error');
+                })
+                .finally(() => {
+                    newPresentBtn.disabled = false;
+                    newPresentBtn.innerHTML = originalText;
+                });
+            }
+            return;
         }
-    } else {
-        attachPresentListener(presentBtn);
-    }
+        
+        // If images are selected, show normal confirmation
+        const confirmMessage = `Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`;
+        
+        if (confirm(confirmMessage)) {
+            newPresentBtn.disabled = true;
+            const originalText = newPresentBtn.innerHTML;
+            newPresentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            
+            fetch('/admin/homepage/present', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ slide_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.showCustomToast(data.message, 'success');
+                    loadSlides(); // Reload to show updated active states
+                } else {
+                    window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error presenting slides:', error);
+                window.showCustomToast('Network error. Please try again.', 'error');
+            })
+            .finally(() => {
+                newPresentBtn.disabled = false;
+                newPresentBtn.innerHTML = originalText;
+            });
+        }
+    });
 }
 
 function attachPresentListener(button) {
