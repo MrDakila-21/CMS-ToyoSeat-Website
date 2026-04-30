@@ -2,6 +2,7 @@
 // routes/web.php
 
 use App\Http\Controllers\Admin\HomepageController;
+use App\Http\Controllers\Admin\EventActivityController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,12 @@ Route::prefix('admin')->group(function () {
         
         // Legacy route (keep for compatibility)
         Route::get('/homepage/image', [HomepageController::class, 'getImage'])->name('admin.homepage.image');
+        Route::post('/homepage/upload-image', [HomepageController::class, 'uploadImage'])->name('admin.homepage.upload');
+        Route::delete('/homepage/remove-image', [HomepageController::class, 'removeImage'])->name('admin.homepage.remove');
+
+        // Event/Activity management routes
+        Route::resource('media', EventActivityController::class)->names('admin.media');
+        Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
     });
 });
 

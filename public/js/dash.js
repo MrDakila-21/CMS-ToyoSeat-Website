@@ -1058,3 +1058,220 @@ function setupLegacyImageUploadListeners() {
         });
     }
 }
+
+function showCustomToast(message, type = 'success') {
+    const existingToast = document.querySelector('.login-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `login-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : 'info-toast')}`;
+    toast.innerHTML = `
+        <div class="login-toast-content">
+            <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
+            <span>${escapeHtml(message)}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    toast.offsetHeight;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    }, 5000);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================
+// Media (Events & Activities) Management
+// ============================================
+
+function initMediaManagement() {
+    if (window.__mediaMgmtDelegated) return;
+    window.__mediaMgmtDelegated = true;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    async function fetchJson(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                ...(options.headers || {})
+            }
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch {
+            // Non-JSON response
+        }
+
+        if (!response.ok) {
+            const message = data?.message || data?.error || 'Request failed';
+            throw new Error(message);
+        }
+
+        return data;
+    }
+
+    function getModalInstance(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el || typeof bootstrap === 'undefined') return null;
+        return bootstrap.Modal.getOrCreateInstance(el);
+    }
+
+    document.addEventListener('change', async (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        if (!target.classList.contains('status-select')) return;
+
+        const id = target.getAttribute('data-id');
+        const status = target.value;
+        if (!id || !status) return;
+
+        try {
+            const data = await fetchJson(`/admin/media/${id}/status/${status}`, {
+                method: 'PATCH'
+            });
+            showCustomToast(data?.message || 'Status updated successfully', 'success');
+        } catch (error) {
+            console.error(error);
+            showCustomToast(error?.message || 'Error updating status', 'error');
+        }
+    });
+
+    document.addEventListener('click', async (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        const editBtn = target.closest('.edit-btn');
+        if (editBtn) {
+            const id = editBtn.getAttribute('data-id');
+            if (!id) return;
+
+            try {
+                const data = await fetchJson(`/admin/media/${id}/edit`, { method: 'GET' });
+
+                const editBody = document.getElementById('mediaEditModalBody');
+                const editForm = document.getElementById('mediaEditForm');
+                if (!editBody || !editForm) return;
+
+                const currentImageHtml = data.image
+                    ? `<img src="/storage/${escapeHtml(data.image)}" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" alt="Current image">`
+                    : `<span class="badge text-bg-secondary">No image</span>`;
+
+                editBody.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="${escapeHtml(data.title || '')}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type <span class="text-danger">*</span></label>
+                        <select name="type" class="form-select" required>
+                            <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
+                            <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description || '')}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" name="event_date" class="form-control" value="${escapeHtml(data.event_date || '')}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label><br>
+                        ${currentImageHtml}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Replace Image</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <div class="form-text">Leave empty to keep current image</div>
+                    </div>
+                `;
+
+                editForm.setAttribute('action', `/admin/media/${id}`);
+                getModalInstance('mediaEditModal')?.show();
+            } catch (error) {
+                console.error(error);
+                showCustomToast(error?.message || 'Failed to load record', 'error');
+            }
+
+            return;
+        }
+
+        const deleteBtn = target.closest('.delete-btn');
+        if (deleteBtn) {
+            const id = deleteBtn.getAttribute('data-id');
+            if (!id) return;
+            if (!confirm('Are you sure you want to delete this item?')) return;
+
+            try {
+                const data = await fetchJson(`/admin/media/${id}`, { method: 'DELETE' });
+                showCustomToast(data?.message || 'Item deleted successfully', 'success');
+                if (typeof window.loadContent === 'function') {
+                    window.loadContent('news', 'media');
+                }
+            } catch (error) {
+                console.error(error);
+                showCustomToast(error?.message || 'Error deleting item', 'error');
+            }
+        }
+    });
+
+    document.addEventListener('submit', async (e) => {
+        const form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        if (form.id !== 'mediaAddForm' && form.id !== 'mediaEditForm') return;
+        e.preventDefault();
+
+        const action = form.getAttribute('action');
+        if (!action) return;
+
+        const formData = new FormData(form);
+
+        try {
+            const data = await fetchJson(action, {
+                method: 'POST',
+                body: formData
+            });
+
+            showCustomToast(data?.message || 'Saved successfully', 'success');
+
+            if (form.id === 'mediaAddForm') {
+                getModalInstance('mediaAddModal')?.hide();
+                form.reset();
+            } else {
+                getModalInstance('mediaEditModal')?.hide();
+            }
+
+            if (typeof window.loadContent === 'function') {
+                window.loadContent('news', 'media');
+            }
+        } catch (error) {
+            console.error(error);
+            showCustomToast(error?.message || 'Failed to save changes', 'error');
+        }
+    }, true);
+}
+
+// Expose functions globally
+window.initHomepageManagement = initHomepageManagement;
+window.initMediaManagement = initMediaManagement;
