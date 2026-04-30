@@ -12,29 +12,40 @@ Route::get('/login', function () {
 
 // Home page
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// Home page (your existing home.blade)
+Route::view('/', 'home')->name('home');
 
-// About Us pages
-Route::prefix('about')->group(function () {
-    Route::view('/overview', 'about.overview')->name('about.overview');
-    Route::view('/business-introduction', 'about.business-introduction')->name('about.business-introduction');
-    Route::view('/location', 'about.location')->name('about.location');
-    Route::view('/history', 'about.history')->name('about.history');
-    Route::view('/iso-obtained', 'about.iso-obtained')->name('about.iso-obtained');
-    Route::view('/privacy-policy', 'about.privacy-policy')->name('about.privacy-policy');
+// Guest routes
+Route::prefix('guest')->name('guest.')->group(function () {
+    
+    // About Us pages
+    Route::prefix('about')->name('about.')->group(function () {
+        Route::view('/overview', 'guest.about.overview')->name('overview');
+        Route::view('/business-introduction', 'guest.about.business-introduction')->name('business-introduction');
+        Route::view('/location', 'guest.about.location')->name('location');
+        Route::view('/history', 'guest.about.history')->name('history');
+        Route::view('/iso-obtained', 'guest.about.iso-obtained')->name('iso-obtained');
+        Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
+    });
+    
+    // Recruitment pages
+    Route::prefix('recruitment')->name('recruitment.')->group(function () {
+        Route::view('/information', 'guest.recruitment.recruitment-information')->name('information');
+        Route::view('/new-graduate', 'guest.recruitment.new-graduate')->name('new-graduate');
+        Route::view('/career', 'guest.recruitment.career')->name('career');
+    });
+    
+    // News pages
+    Route::prefix('news')->name('news.')->group(function () {
+        Route::view('/media-information', 'guest.news.media-information')->name('media-information');
+        Route::view('/announcements', 'guest.news.announcements')->name('announcements');
+    });
+    
+    // Inquiry page
+    Route::prefix('inquiry')->name('inquiry.')->group(function () {
+        Route::view('/', 'guest.inquiry.inquiry')->name('index');
+    });
 });
-
-// Recruitment page
-Route::view('/recruitment', 'recruitment.recruitment-information')->name('recruitment');
-
-// News pages
-Route::prefix('news')->group(function () {
-    Route::view('/media-information', 'news.media-information')->name('news.media-information');
-    Route::view('/announcements', 'news.announcements')->name('news.announcements');
-});
-
-// Inquiry page
-Route::view('/inquiry', 'inquiry.inquiry')->name('inquiry');
-
 // Admin routes
 Route::prefix('admin')->group(function () {
     // Login routes (accessible only for guests)
