@@ -5,7 +5,7 @@
 @section('content')
 <div class="container py-5">
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold" style="color: #0E334C;">Media Information</h1>
+        <h1 class="display-4 fw-bold" style="color: #0E334C;">Events & Activities</h1>
         <div class="line" style="width: 80px; height: 3px; background: #3988BD; margin: 20px auto;"></div>
     </div>
     
