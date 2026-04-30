@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,9 +45,11 @@ class AdminAuthController extends Controller
             return redirect()->route('admin.login');
         }
         
-        // Pass initial content data to the dashboard
-        $initialTab = 'home';
-        return view('admin.dashboard', compact('initialTab'));
+        // Pass initial content data to the dashboard (supports deep-linking)
+        $initialTab = request()->query('tab', 'home');
+        $initialSubtab = request()->query('subtab');
+
+        return view('admin.dashboard', compact('initialTab', 'initialSubtab'));
     }
 
     public function logout(Request $request)
@@ -115,8 +118,14 @@ class AdminAuthController extends Controller
         if (!view()->exists($view)) {
             return response()->json(['error' => 'Content not found'], 404);
         }
-        
-        $html = view($view)->render();
+
+        // Provide view data for tabs that require it
+        $viewData = [];
+        if ($tab === 'news' && $subtab === 'media') {
+            $viewData['events'] = EventActivity::orderBy('created_at', 'desc')->get();
+        }
+
+        $html = view($view, $viewData)->render();
         
         return response()->json([
             'success' => true,
