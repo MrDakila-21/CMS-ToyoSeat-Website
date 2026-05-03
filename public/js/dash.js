@@ -1,8 +1,14 @@
 // ============================================
-// Sidebar Dropdowns
+// resources/js/dash.js (or public/js/dash.js)
+// ============================================
+
+// ============================================
+// Sidebar Dropdowns and Main Navigation
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initialized');
+    
     // Initialize sidebar dropdowns
     initSidebarDropdowns();
     
@@ -17,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Prevent back button from accessing protected pages
     preventBackButtonAccess();
+    
+    // Load initial content (home tab)
+    loadContent('home');
 });
 
 // Initialize sidebar dropdowns
@@ -69,8 +78,1001 @@ function preventBackButtonAccess() {
     });
 }
 
+// Function to load content via AJAX
+function loadContent(mainTab, subTab = null) {
+    const contentContainer = document.getElementById('dynamic-content');
+    
+    if (!contentContainer) {
+        console.error('Content container not found');
+        return;
+    }
+    
+    // Show loading indicator
+    contentContainer.innerHTML = `
+        <div class="content-loading">
+            <div class="spinner"></div>
+            <p>Loading content...</p>
+        </div>
+    `;
+    
+    // Build URL with parameters
+    let url = `/admin/load-content?tab=${mainTab}`;
+    if (subTab) {
+        url += `&subtab=${subTab}`;
+    }
+    
+    // Fetch content
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            contentContainer.innerHTML = data.html;
+            
+            // Re-initialize any tab-specific JavaScript
+            if (mainTab === 'home') {
+                // Small delay to ensure DOM is fully updated
+                setTimeout(() => {
+                    if (typeof initHomepageManagement !== 'undefined') {
+                        console.log('Calling initHomepageManagement');
+                        initHomepageManagement();
+                    } else {
+                        console.log('initHomepageManagement not defined yet, checking for scripts in loaded content...');
+                        // Try to find and execute the script in the loaded content
+                        const scripts = contentContainer.querySelectorAll('script');
+                        scripts.forEach(script => {
+                            if (script.textContent.includes('initHomepageManagement')) {
+                                eval(script.textContent);
+                                if (typeof initHomepageManagement === 'function') {
+                                    initHomepageManagement();
+                                }
+                            }
+                        });
+                    }
+                }, 100);
+            }
+        } else if (data.error) {
+            contentContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${escapeHtml(data.error)}
+                </div>
+            `;
+        } else {
+            contentContainer.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No content available.
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading content:', error);
+        contentContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Failed to load content. Please try again.
+            </div>
+        `;
+    });
+}
+
+// Tab switching logic
+document.querySelectorAll('[data-tab]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const mainTab = this.getAttribute('data-tab');
+        const subTab = this.getAttribute('data-subtab');
+        
+        // Update active state on sidebar links
+        document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(l => {
+            l.classList.remove('active');
+        });
+        this.classList.add('active');
+        
+        // Load content
+        loadContent(mainTab, subTab);
+    });
+});
+
+// Prevent back button access after logout
+(function() {
+    // Check authentication status periodically
+    function checkAuthStatus() {
+        fetch('/admin/check-auth', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.authenticated) {
+                window.location.href = '/admin/login';
+            }
+        })
+        .catch(error => {
+            console.error('Auth check failed:', error);
+        });
+    }
+    
+    setInterval(checkAuthStatus, 5000);
+    
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            checkAuthStatus();
+        }
+    });
+})();
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // ============================================
-// Homepage Background Image Management
+// Homepage Slideshow Management Functions
+// These are exposed globally and will be used when home tab is loaded
+// ============================================
+
+// Make sure SortableJS is loaded
+function loadSortableScript() {
+    return new Promise((resolve, reject) => {
+        if (typeof Sortable !== 'undefined') {
+            console.log('SortableJS already loaded');
+            resolve();
+            return;
+        }
+        
+        console.log('Loading SortableJS...');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
+        script.onload = () => {
+            console.log('SortableJS loaded successfully');
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('Failed to load SortableJS');
+            reject(new Error('Failed to load SortableJS'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+let sortableInstance = null;
+let allSlides = [];
+
+// Initialize homepage management
+window.initHomepageManagement = function() {
+    console.log('Initializing homepage management...');
+    
+    // Reset the present listener flag when reinitializing
+    presentListenerAttached = false;
+    
+    loadSortableScript()
+        .then(() => {
+            console.log('SortableJS ready, loading slides...');
+            loadSlides();
+            setupMultipleUploadListener();
+            setupPresentListener();
+        })
+        .catch(error => {
+            console.error('Error loading SortableJS:', error);
+            // Still load slides even if Sortable fails
+            loadSlides();
+            setupMultipleUploadListener();
+            setupPresentListener();
+        });
+};
+
+// Load all slides
+function loadSlides() {
+    console.log('Loading slides...');
+    const container = document.getElementById('slidesContainer');
+    if (!container) {
+        console.error('Slides container not found');
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading slides...</p>
+        </div>
+    `;
+    
+    fetch('/admin/homepage/slides', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Slides loaded:', data);
+        if (data.success) {
+            allSlides = data.slides || [];
+            renderSlides(allSlides);
+        } else {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${escapeHtml(data.message || 'Failed to load slides')}
+                    </div>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading slides:', error);
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Network error loading slides. Please refresh the page.
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderSlides(slides) {
+    const container = document.getElementById('slidesContainer');
+    
+    if (!container) return;
+    
+    if (!slides || slides.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No images uploaded yet. Use the upload form above to add images.
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Count active slides
+    const activeCount = slides.filter(slide => slide.is_active).length;
+    const activeMessage = activeCount > 0 
+        ? `<div class="col-12 mb-3"><div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>${activeCount} image(s) are currently active in the slideshow.</div></div>`
+        : `<div class="col-12 mb-3"><div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>No images are active. The homepage will show the default background image. Select images below and click "Present Selected Images" to activate them.</div></div>`;
+    
+    let html = activeMessage;
+    html += '<div class="row">';
+    
+    slides.forEach((slide, index) => {
+        html += `
+            <div class="col-md-3 col-sm-6 mb-3 slide-item" data-id="${slide.id}" data-order="${slide.order}">
+                <div class="card h-100 position-relative">
+                    <div style="position: relative;">
+                        <img src="${slide.image_url}" class="card-img-top" alt="Slide ${index + 1}" style="height: 150px; object-fit: cover; width: 100%;">
+                        <div style="position: absolute; top: 8px; left: 8px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 4px; padding: 4px;">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0;">
+                                <input type="checkbox" class="slide-checkbox" data-id="${slide.id}" style="width: 18px; height: 18px; cursor: pointer; margin: 0;" ${slide.is_active ? 'checked' : ''}>
+                                <span style="font-size: 12px; color: #333;">Select</span>
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 8px; right: 8px; z-index: 10; padding: 4px 8px; font-size: 12px;" onclick="window.deleteSlide(${slide.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        ${slide.is_active ? '<span style="position: absolute; bottom: 8px; left: 8px; background: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; z-index: 10;"><i class="fas fa-play me-1"></i>Active</span>' : ''}
+                    </div>
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted">Order: ${slide.order}</small>
+                        <div class="drag-handle mt-1" style="cursor: grab;">
+                            <i class="fas fa-grip-vertical"></i> Drag to reorder
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Initialize drag and drop
+    if (typeof Sortable !== 'undefined') {
+        if (sortableInstance) {
+            sortableInstance.destroy();
+        }
+        
+        const sortableContainer = document.getElementById('slidesContainer');
+        if (sortableContainer) {
+            sortableInstance = new Sortable(sortableContainer.querySelector('.row'), {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: function() {
+                    const checkedIds = getCheckedSlideIds();
+                    updateOrderFromDragWithState(checkedIds);
+                }
+            });
+            console.log('Sortable initialized');
+        }
+    } else {
+        console.warn('SortableJS not available - drag and drop disabled');
+    }
+}
+
+// New function to handle order update with state preservation
+function updateOrderFromDragWithState(checkedIds) {
+    const items = document.querySelectorAll('.slide-item');
+    const updatedOrders = [];
+    
+    items.forEach((item, index) => {
+        const slideId = parseInt(item.dataset.id);
+        updatedOrders.push({
+            id: slideId,
+            order: index
+        });
+    });
+    
+    console.log('Updating orders:', updatedOrders);
+    
+    // Update orders in database
+    fetch('/admin/homepage/update-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ slides: updatedOrders })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Order update response:', data);
+        if (data.success) {
+            // Update order numbers in UI without reloading
+            updatedOrders.forEach(order => {
+                const slideItem = document.querySelector(`.slide-item[data-id="${order.id}"]`);
+                if (slideItem) {
+                    const orderLabel = slideItem.querySelector('.text-muted');
+                    if (orderLabel) {
+                        orderLabel.textContent = `Order: ${order.order}`;
+                    }
+                    slideItem.dataset.order = order.order;
+                }
+            });
+            // Show success message
+            window.showCustomToast('Order updated successfully!', 'success');
+        } else {
+            window.showCustomToast(data.message || 'Failed to update order', 'error');
+            // Reload slides to restore correct order
+            loadSlides();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating order:', error);
+        window.showCustomToast('Network error updating order.', 'error');
+    });
+}
+
+function updateOrderFromDrag() {
+    const items = document.querySelectorAll('.slide-item');
+    const updatedOrders = [];
+    
+    items.forEach((item, index) => {
+        const slideId = parseInt(item.dataset.id);
+        updatedOrders.push({
+            id: slideId,
+            order: index
+        });
+    });
+    
+    console.log('Updating orders:', updatedOrders);
+    
+    // Don't show toast for order update to avoid confusion
+    // Update orders in database
+    fetch('/admin/homepage/update-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ slides: updatedOrders })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Order update response:', data);
+        if (data.success) {
+            // Only show success toast, don't reload to avoid flicker
+            window.showCustomToast('Order updated successfully!', 'success');
+            // Just update the order numbers in the UI without reloading
+            updateOrderNumbersInUI(updatedOrders);
+        } else {
+            window.showCustomToast(data.message || 'Failed to update order', 'error');
+            // Reload slides to restore correct order on error
+            loadSlides();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating order:', error);
+        window.showCustomToast('Network error updating order. Please refresh the page.', 'error');
+        // Reload slides to restore correct order on error
+        loadSlides();
+    });
+}
+
+// Helper function to update order numbers in UI without reloading
+function updateOrderNumbersInUI(updatedOrders) {
+    updatedOrders.forEach(order => {
+        const slideItem = document.querySelector(`.slide-item[data-id="${order.id}"]`);
+        if (slideItem) {
+            const orderLabel = slideItem.querySelector('.text-muted');
+            if (orderLabel) {
+                orderLabel.textContent = `Order: ${order.order}`;
+            }
+            // Update the data-order attribute
+            slideItem.dataset.order = order.order;
+        }
+    });
+}
+
+// Helper function to get currently checked slide IDs
+function getCheckedSlideIds() {
+    const checkedBoxes = document.querySelectorAll('.slide-checkbox:checked');
+    const checkedIds = [];
+    checkedBoxes.forEach(checkbox => {
+        const id = parseInt(checkbox.getAttribute('data-id'));
+        if (!isNaN(id)) {
+            checkedIds.push(id);
+        }
+    });
+    return checkedIds;
+}
+
+// Helper function to restore checked states after reload
+function restoreCheckedStates(checkedIds) {
+    if (!checkedIds || checkedIds.length === 0) return;
+    
+    // Wait a bit for the DOM to update
+    setTimeout(() => {
+        const checkboxes = document.querySelectorAll('.slide-checkbox');
+        checkboxes.forEach(checkbox => {
+            const id = parseInt(checkbox.getAttribute('data-id'));
+            if (checkedIds.includes(id)) {
+                checkbox.checked = true;
+            }
+        });
+    }, 100);
+}
+
+// Setup multiple image upload listener - FIX for multiple file upload with remove preview
+function setupMultipleUploadListener() {
+    const form = document.getElementById('multipleImagesForm');
+    if (!form) {
+        console.error('Multiple images form not found');
+        return;
+    }
+    
+    console.log('Setting up upload listener');
+    
+    const fileInput = document.getElementById('multipleImages');
+    const previewContainer = document.getElementById('uploadPreviewContainer');
+    
+    // Store selected files for validation
+    let selectedFiles = [];
+    
+    // Important: Set multiple attribute properly
+    if (fileInput) {
+        fileInput.setAttribute('multiple', 'multiple');
+        
+        // Preview selected images with remove buttons
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = files;
+            console.log('Files selected:', files.length);
+            
+            if (files.length === 0) {
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
+                return;
+            }
+            
+            // Validate each file before showing preview
+            const validFiles = [];
+            const errors = [];
+            
+            files.forEach((file, index) => {
+                const validationError = validateUploadFile(file);
+                if (validationError) {
+                    errors.push(`${file.name}: ${validationError}`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            
+            if (errors.length > 0) {
+                window.showCustomToast(errors.join('\n'), 'error');
+                // Remove invalid files from selection
+                selectedFiles = validFiles;
+                // Update file input with valid files only
+                const dataTransfer = new DataTransfer();
+                validFiles.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+            }
+            
+            if (validFiles.length === 0) {
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
+                return;
+            }
+            
+            if (previewContainer) {
+                previewContainer.innerHTML = '<div class="col-12 mb-2"><strong>Preview (' + validFiles.length + ' images):</strong> <button type="button" class="btn btn-sm btn-danger" id="clearAllPreviews">Clear All</button></div>';
+                previewContainer.style.display = 'flex';
+                previewContainer.style.flexWrap = 'wrap';
+                
+                validFiles.forEach((file, idx) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'col-md-2 col-4 mb-2 preview-item';
+                        previewDiv.setAttribute('data-file-index', idx);
+                        previewDiv.setAttribute('data-file-name', file.name);
+                        previewDiv.innerHTML = `
+                            <div class="position-relative">
+                                <img src="${event.target.result}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 inset-end-0 m-1 remove-preview-btn" style="padding: 2px 6px; font-size: 10px;" data-file-name="${escapeHtml(file.name)}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <small class="text-muted d-block text-truncate mt-1">${escapeHtml(file.name.substring(0, 20))}</small>
+                                <small class="text-muted d-block" style="font-size: 10px;">${(file.size / 1024).toFixed(1)} KB</small>
+                            </div>
+                        `;
+                        previewContainer.appendChild(previewDiv);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                // Add clear all button functionality after DOM update
+                setTimeout(() => {
+                    const clearAllBtn = document.getElementById('clearAllPreviews');
+                    if (clearAllBtn) {
+                        clearAllBtn.addEventListener('click', function() {
+                            clearAllPreviews();
+                        });
+                    }
+                    
+                    // Add remove individual preview functionality
+                    document.querySelectorAll('.remove-preview-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const fileName = this.getAttribute('data-file-name');
+                            removePreviewImage(fileName);
+                        });
+                    });
+                }, 100);
+            }
+        });
+    }
+    
+    // Function to clear all previews
+    function clearAllPreviews() {
+        if (fileInput) {
+            fileInput.value = '';
+            selectedFiles = [];
+        }
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        window.showCustomToast('All images cleared', 'info');
+    }
+    
+    // Function to remove individual preview image
+    function removePreviewImage(fileName) {
+        if (!fileInput) return;
+        
+        // Get current files
+        const currentFiles = Array.from(fileInput.files);
+        // Filter out the file to remove
+        const remainingFiles = currentFiles.filter(file => file.name !== fileName);
+        
+        // Update selectedFiles
+        selectedFiles = remainingFiles;
+        
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        remainingFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+        
+        // Re-render preview
+        if (remainingFiles.length === 0) {
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+        } else {
+            // Trigger change event to re-render preview
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+        
+        window.showCustomToast(`Removed ${fileName}`, 'info');
+    }
+    
+    // Function to validate upload file
+    function validateUploadFile(file) {
+        if (!file) {
+            return 'Invalid file';
+        }
+        
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            return `File exceeds the 5MB size limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+        }
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (!allowedTypes.includes(file.type) || !allowedExtensions.includes(fileExtension)) {
+            return 'Invalid file type. Please upload JPG, PNG, GIF, or WEBP images only.';
+        }
+        
+        return null;
+    }
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Form submitted');
+        
+        if (!fileInput) {
+            window.showCustomToast('File input not found', 'error');
+            return;
+        }
+        
+        const files = fileInput.files;
+        console.log('Files to upload:', files.length);
+        
+        if (files.length === 0) {
+            window.showCustomToast('Please select at least one image to upload.', 'error');
+            return;
+        }
+        
+        if (files.length > 10) {
+            window.showCustomToast('You can only upload up to 10 images at once.', 'error');
+            return;
+        }
+        
+        // Validate all files before upload
+        const validationErrors = [];
+        for (let i = 0; i < files.length; i++) {
+            const error = validateUploadFile(files[i]);
+            if (error) {
+                validationErrors.push(`${files[i].name}: ${error}`);
+            }
+        }
+        
+        if (validationErrors.length > 0) {
+            window.showCustomToast(validationErrors.join('\n'), 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images[]', files[i]);
+            console.log('Appending file:', files[i].name);
+        }
+        
+        const token = document.querySelector('input[name="_token"]')?.value;
+        if (token) {
+            formData.append('_token', token);
+        }
+        
+        const uploadBtn = document.getElementById('uploadMultipleBtn');
+        const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading ' + files.length + ' images...';
+        }
+        
+        // Show modal
+        const modalElement = document.getElementById('uploadingModal');
+        let modal = null;
+        if (modalElement) {
+            modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+        
+        try {
+            const response = await fetch('/admin/homepage/upload-multiple', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            console.log('Upload response:', data);
+            
+            if (modal) modal.hide();
+            
+            if (data.success) {
+                window.showCustomToast(data.message, 'success');
+                if (fileInput) fileInput.value = '';
+                selectedFiles = [];
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
+                loadSlides(); // Reload slides
+            } else {
+                window.showCustomToast(data.message || 'Upload failed', 'error');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            if (modal) modal.hide();
+            window.showCustomToast('Upload failed. Please try again.', 'error');
+        } finally {
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = originalText;
+            }
+        }
+    });
+}
+
+// Setup present button listener - FIX for handling no selected images
+let presentListenerAttached = false;
+
+function setupPresentListener() {
+    const presentBtn = document.getElementById('presentSlidesBtn');
+    if (!presentBtn) {
+        console.error('Present button not found');
+        return;
+    }
+    
+    // Remove existing listener by cloning and replacing
+    const newPresentBtn = presentBtn.cloneNode(true);
+    presentBtn.parentNode.replaceChild(newPresentBtn, presentBtn);
+    
+    newPresentBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Get IDs in the order they appear in the DOM (visual order)
+        const slideItems = document.querySelectorAll('.slide-item');
+        const selectedIds = [];
+        
+        slideItems.forEach(item => {
+            const checkbox = item.querySelector('.slide-checkbox');
+            if (checkbox && checkbox.checked) {
+                selectedIds.push(parseInt(item.dataset.id));
+            }
+        });
+        
+        // Handle case when no images are selected
+        if (selectedIds.length === 0) {
+            const confirmMessage = 'No images selected. This will clear the slideshow and use the default background image on the homepage. Are you sure?';
+            
+            if (confirm(confirmMessage)) {
+                newPresentBtn.disabled = true;
+                const originalText = newPresentBtn.innerHTML;
+                newPresentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+                
+                // Send empty array to clear all active slides
+                fetch('/admin/homepage/present', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ slide_ids: [] })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.showCustomToast(data.message, 'success');
+                        loadSlides(); // Reload to show updated states
+                    } else {
+                        window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing slideshow:', error);
+                    window.showCustomToast('Network error. Please try again.', 'error');
+                })
+                .finally(() => {
+                    newPresentBtn.disabled = false;
+                    newPresentBtn.innerHTML = originalText;
+                });
+            }
+            return;
+        }
+        
+        // If images are selected, show normal confirmation
+        const confirmMessage = `Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`;
+        
+        if (confirm(confirmMessage)) {
+            newPresentBtn.disabled = true;
+            const originalText = newPresentBtn.innerHTML;
+            newPresentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            
+            fetch('/admin/homepage/present', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ slide_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.showCustomToast(data.message, 'success');
+                    loadSlides(); // Reload to show updated active states
+                } else {
+                    window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error presenting slides:', error);
+                window.showCustomToast('Network error. Please try again.', 'error');
+            })
+            .finally(() => {
+                newPresentBtn.disabled = false;
+                newPresentBtn.innerHTML = originalText;
+            });
+        }
+    });
+}
+
+function attachPresentListener(button) {
+    console.log('Setting up present listener');
+    presentListenerAttached = true;
+    
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Get IDs in the order they appear in the DOM (visual order)
+        const slideItems = document.querySelectorAll('.slide-item');
+        const selectedIds = [];
+        
+        slideItems.forEach(item => {
+            const checkbox = item.querySelector('.slide-checkbox');
+            if (checkbox && checkbox.checked) {
+                selectedIds.push(parseInt(item.dataset.id));
+            }
+        });
+        
+        if (selectedIds.length === 0) {
+            window.showCustomToast('Please select at least one image to present.', 'error');
+            return;
+        }
+        
+        // Use a simple confirm instead of multiple confirms
+        const confirmMessage = `Are you sure you want to present ${selectedIds.length} image(s) as the slideshow? The order will follow the current visual order of checked images.`;
+        
+        if (confirm(confirmMessage)) {
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            
+            fetch('/admin/homepage/present', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ slide_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.showCustomToast(data.message, 'success');
+                    loadSlides(); // Reload to show updated active states
+                } else {
+                    window.showCustomToast(data.message || 'Failed to update slideshow', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error presenting slides:', error);
+                window.showCustomToast('Network error. Please try again.', 'error');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        }
+    });
+}
+
+// Delete slide function (global for onclick)
+window.deleteSlide = function(slideId) {
+    if (confirm('Are you sure you want to delete this image?')) {
+        fetch(`/admin/homepage/slide/${slideId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.showCustomToast(data.message, 'success');
+                loadSlides(); // Reload slides
+            } else {
+                window.showCustomToast(data.message || 'Failed to delete image', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            window.showCustomToast('Network error deleting image', 'error');
+        });
+    }
+};
+
+// Show toast message (global function)
+window.showCustomToast = function(message, type = 'success') {
+    console.log('Showing toast:', message, type);
+    
+    const existingToast = document.querySelector('.login-toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `login-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : 'info-toast')}`;
+    toast.innerHTML = `
+        <div class="login-toast-content">
+            <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
+            <span>${escapeHtml(message)}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    }, 5000);
+};
+
+// ============================================
+// Legacy Homepage Background Image Management (kept for compatibility)
 // ============================================
 
 let uploadingModal = null;
@@ -127,7 +1129,7 @@ function safelyShowModal() {
     });
 }
 
-function initHomepageManagement() {
+function initHomepageLegacyManagement() {
     const modalElement = document.getElementById('uploadingModal');
     if (modalElement) {
         uploadingModal = new bootstrap.Modal(modalElement, {
@@ -146,7 +1148,7 @@ function initHomepageManagement() {
     }
     
     loadCurrentHomepageImage();
-    setupImageUploadListeners();
+    setupLegacyImageUploadListeners();
 }
 
 function loadCurrentHomepageImage() {
@@ -206,7 +1208,7 @@ function validateImageFile(file) {
     return null;
 }
 
-function setupImageUploadListeners() {
+function setupLegacyImageUploadListeners() {
     const backgroundImageInput = document.getElementById('backgroundImage');
     if (backgroundImageInput) {
         backgroundImageInput.addEventListener('change', function(e) {
@@ -434,220 +1436,3 @@ function setupImageUploadListeners() {
         });
     }
 }
-
-function showCustomToast(message, type = 'success') {
-    const existingToast = document.querySelector('.login-toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = `login-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : 'info-toast')}`;
-    toast.innerHTML = `
-        <div class="login-toast-content">
-            <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
-            <span>${escapeHtml(message)}</span>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    toast.offsetHeight;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 300);
-    }, 5000);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ============================================
-// Media (Events & Activities) Management
-// ============================================
-
-function initMediaManagement() {
-    if (window.__mediaMgmtDelegated) return;
-    window.__mediaMgmtDelegated = true;
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-    async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
-                ...(options.headers || {})
-            }
-        });
-
-        let data = null;
-        try {
-            data = await response.json();
-        } catch {
-            // Non-JSON response
-        }
-
-        if (!response.ok) {
-            const message = data?.message || data?.error || 'Request failed';
-            throw new Error(message);
-        }
-
-        return data;
-    }
-
-    function getModalInstance(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el || typeof bootstrap === 'undefined') return null;
-        return bootstrap.Modal.getOrCreateInstance(el);
-    }
-
-    document.addEventListener('change', async (e) => {
-        const target = e.target;
-        if (!(target instanceof Element)) return;
-        if (!target.classList.contains('status-select')) return;
-
-        const id = target.getAttribute('data-id');
-        const status = target.value;
-        if (!id || !status) return;
-
-        try {
-            const data = await fetchJson(`/admin/media/${id}/status/${status}`, {
-                method: 'PATCH'
-            });
-            showCustomToast(data?.message || 'Status updated successfully', 'success');
-        } catch (error) {
-            console.error(error);
-            showCustomToast(error?.message || 'Error updating status', 'error');
-        }
-    });
-
-    document.addEventListener('click', async (e) => {
-        const target = e.target;
-        if (!(target instanceof Element)) return;
-
-        const editBtn = target.closest('.edit-btn');
-        if (editBtn) {
-            const id = editBtn.getAttribute('data-id');
-            if (!id) return;
-
-            try {
-                const data = await fetchJson(`/admin/media/${id}/edit`, { method: 'GET' });
-
-                const editBody = document.getElementById('mediaEditModalBody');
-                const editForm = document.getElementById('mediaEditForm');
-                if (!editBody || !editForm) return;
-
-                const currentImageHtml = data.image
-                    ? `<img src="/storage/${escapeHtml(data.image)}" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" alt="Current image">`
-                    : `<span class="badge text-bg-secondary">No image</span>`;
-
-                editBody.innerHTML = `
-                    <div class="mb-3">
-                        <label class="form-label">Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" value="${escapeHtml(data.title || '')}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Type <span class="text-danger">*</span></label>
-                        <select name="type" class="form-select" required>
-                            <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                            <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description || '')}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input type="date" name="event_date" class="form-control" value="${escapeHtml(data.event_date || '')}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Current Image</label><br>
-                        ${currentImageHtml}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Replace Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        <div class="form-text">Leave empty to keep current image</div>
-                    </div>
-                `;
-
-                editForm.setAttribute('action', `/admin/media/${id}`);
-                getModalInstance('mediaEditModal')?.show();
-            } catch (error) {
-                console.error(error);
-                showCustomToast(error?.message || 'Failed to load record', 'error');
-            }
-
-            return;
-        }
-
-        const deleteBtn = target.closest('.delete-btn');
-        if (deleteBtn) {
-            const id = deleteBtn.getAttribute('data-id');
-            if (!id) return;
-            if (!confirm('Are you sure you want to delete this item?')) return;
-
-            try {
-                const data = await fetchJson(`/admin/media/${id}`, { method: 'DELETE' });
-                showCustomToast(data?.message || 'Item deleted successfully', 'success');
-                if (typeof window.loadContent === 'function') {
-                    window.loadContent('news', 'media');
-                }
-            } catch (error) {
-                console.error(error);
-                showCustomToast(error?.message || 'Error deleting item', 'error');
-            }
-        }
-    });
-
-    document.addEventListener('submit', async (e) => {
-        const form = e.target;
-        if (!(form instanceof HTMLFormElement)) return;
-
-        if (form.id !== 'mediaAddForm' && form.id !== 'mediaEditForm') return;
-        e.preventDefault();
-
-        const action = form.getAttribute('action');
-        if (!action) return;
-
-        const formData = new FormData(form);
-
-        try {
-            const data = await fetchJson(action, {
-                method: 'POST',
-                body: formData
-            });
-
-            showCustomToast(data?.message || 'Saved successfully', 'success');
-
-            if (form.id === 'mediaAddForm') {
-                getModalInstance('mediaAddModal')?.hide();
-                form.reset();
-            } else {
-                getModalInstance('mediaEditModal')?.hide();
-            }
-
-            if (typeof window.loadContent === 'function') {
-                window.loadContent('news', 'media');
-            }
-        } catch (error) {
-            console.error(error);
-            showCustomToast(error?.message || 'Failed to save changes', 'error');
-        }
-    }, true);
-}
-
-// Expose functions globally
-window.initHomepageManagement = initHomepageManagement;
-window.initMediaManagement = initMediaManagement;

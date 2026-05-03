@@ -38,17 +38,35 @@ class AdminAuthController extends Controller
         ])->onlyInput('email');
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         // Ensure user is authenticated
         if (!Auth::check()) {
             return redirect()->route('admin.login');
         }
         
-        // Pass initial content data to the dashboard (supports deep-linking)
-        $initialTab = request()->query('tab', 'home');
-        $initialSubtab = request()->query('subtab');
-
+        // Get tabs from query parameters
+        $initialTab = $request->query('tab', 'home');
+        $initialSubtab = $request->query('subtab');
+        
+        // Validate that the tab/subtab combination exists
+        $validTabs = ['home', 'about', 'recruitment', 'news', 'inquiry'];
+        $validAboutSubtabs = ['overview', 'business', 'location', 'history', 'iso', 'privacy'];
+        $validNewsSubtabs = ['media', 'announcements'];
+        
+        if (!in_array($initialTab, $validTabs)) {
+            $initialTab = 'home';
+            $initialSubtab = null;
+        }
+        
+        if ($initialTab === 'about' && !in_array($initialSubtab, $validAboutSubtabs)) {
+            $initialSubtab = 'overview';
+        }
+        
+        if ($initialTab === 'news' && !in_array($initialSubtab, $validNewsSubtabs)) {
+            $initialSubtab = 'media';
+        }
+        
         return view('admin.dashboard', compact('initialTab', 'initialSubtab'));
     }
 
@@ -116,20 +134,44 @@ class AdminAuthController extends Controller
         
         // Check if view exists
         if (!view()->exists($view)) {
-            return response()->json(['error' => 'Content not found'], 404);
+            return response()->json(['error' => 'Content not found: ' . $view], 404);
         }
 
         // Provide view data for tabs that require it
         $viewData = [];
+        
+        // IMPORTANT: Fix for media tab - pass events data
         if ($tab === 'news' && $subtab === 'media') {
-            $viewData['events'] = EventActivity::orderBy('created_at', 'desc')->get();
+            try {
+                $viewData['events'] = EventActivity::orderBy('created_at', 'desc')->get();
+            } catch (\Exception $e) {
+                // If table doesn't exist yet, pass empty collection
+                $viewData['events'] = collect([]);
+            }
+        }
+        
+        // For announcements tab
+        if ($tab === 'news' && $subtab === 'announcements') {
+            $viewData['announcements'] = []; // Add your announcements data here
         }
 
-        $html = view($view, $viewData)->render();
-        
-        return response()->json([
-            'success' => true,
-            'html' => $html
-        ]);
+        try {
+            $html = view($view, $viewData)->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Error loading view: ' . $e->getMessage());
+            \Log::error('View: ' . $view);
+            \Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false, 
+                'error' => 'Failed to load content: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -33,6 +33,17 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Active state styling */
+        .sidebar-link.active, .sidebar-dropdown a.active {
+            background: linear-gradient(90deg, #3988BD 0%, #2c6d99 100%);
+            color: white;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .sidebar-dropdown a.active {
+            background: #2c6d99;
+        }
     </style>
 </head>
 <body>
@@ -80,7 +91,7 @@
             <ul class="sidebar-menu">
                 <!-- Home Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link active" data-tab="home" data-main-tab="home">
+                    <a class="sidebar-link" data-tab="home" data-main-tab="home" href="/admin/dashboard?tab=home">
                         <i class="fas fa-home"></i>
                         <span>Home</span>
                     </a>
@@ -94,18 +105,18 @@
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="sidebar-dropdown" id="aboutDropdown">
-                        <li><a data-tab="about" data-subtab="overview">Overview</a></li>
-                        <li><a data-tab="about" data-subtab="business">Business Introduction</a></li>
-                        <li><a data-tab="about" data-subtab="location">Location</a></li>
-                        <li><a data-tab="about" data-subtab="history">History</a></li>
-                        <li><a data-tab="about" data-subtab="iso">ISO Obtained</a></li>
-                        <li><a data-tab="about" data-subtab="privacy">Privacy Policy</a></li>
+                        <li><a data-tab="about" data-subtab="overview" href="/admin/dashboard?tab=about&subtab=overview">Overview</a></li>
+                        <li><a data-tab="about" data-subtab="business" href="/admin/dashboard?tab=about&subtab=business">Business Introduction</a></li>
+                        <li><a data-tab="about" data-subtab="location" href="/admin/dashboard?tab=about&subtab=location">Location</a></li>
+                        <li><a data-tab="about" data-subtab="history" href="/admin/dashboard?tab=about&subtab=history">History</a></li>
+                        <li><a data-tab="about" data-subtab="iso" href="/admin/dashboard?tab=about&subtab=iso">ISO Obtained</a></li>
+                        <li><a data-tab="about" data-subtab="privacy" href="/admin/dashboard?tab=about&subtab=privacy">Privacy Policy</a></li>
                     </ul>
                 </li>
 
                 <!-- Recruitment Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link" data-tab="recruitment" data-main-tab="recruitment">
+                    <a class="sidebar-link" data-tab="recruitment" data-main-tab="recruitment" href="/admin/dashboard?tab=recruitment">
                         <i class="fas fa-briefcase"></i>
                         <span>Recruitment Information</span>
                     </a>
@@ -119,14 +130,14 @@
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="sidebar-dropdown" id="newsDropdown">
-                        <li><a data-tab="news" data-subtab="media">Media Information</a></li>
-                        <li><a data-tab="news" data-subtab="announcements">Announcements</a></li>
+                        <li><a data-tab="news" data-subtab="media" href="/admin/dashboard?tab=news&subtab=media">Media Information</a></li>
+                        <li><a data-tab="news" data-subtab="announcements" href="/admin/dashboard?tab=news&subtab=announcements">Announcements</a></li>
                     </ul>
                 </li>
 
                 <!-- Inquiry Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link" data-tab="inquiry" data-main-tab="inquiry">
+                    <a class="sidebar-link" data-tab="inquiry" data-main-tab="inquiry" href="/admin/dashboard?tab=inquiry">
                         <i class="fas fa-envelope"></i>
                         <span>Inquiry</span>
                     </a>
@@ -173,11 +184,62 @@
     <script src="{{ asset('js/dash.js') }}"></script>
     
     <script>
+        // Get current tab and subtab from URL
+        function getCurrentTabFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                tab: urlParams.get('tab') || 'home',
+                subtab: urlParams.get('subtab') || null
+            };
+        }
+        
+        // Update active state based on current URL
+        function updateActiveState(tab, subtab) {
+            // Remove all active classes
+            document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Find and activate the correct link
+            if (tab === 'about' && subtab) {
+                const link = document.querySelector(`.sidebar-dropdown a[data-tab="about"][data-subtab="${subtab}"]`);
+                if (link) link.classList.add('active');
+                // Also highlight the parent dropdown toggle
+                const parentToggle = document.querySelector('.dropdown-toggle-main[data-dropdown="aboutDropdown"]');
+                if (parentToggle) parentToggle.classList.add('active');
+            } else if (tab === 'news' && subtab) {
+                const link = document.querySelector(`.sidebar-dropdown a[data-tab="news"][data-subtab="${subtab}"]`);
+                if (link) link.classList.add('active');
+                const parentToggle = document.querySelector('.dropdown-toggle-main[data-dropdown="newsDropdown"]');
+                if (parentToggle) parentToggle.classList.add('active');
+            } else {
+                const link = document.querySelector(`.sidebar-link[data-tab="${tab}"]`);
+                if (link) link.classList.add('active');
+            }
+        }
+        
         // Initialize dashboard with dynamic content loading
         document.addEventListener('DOMContentLoaded', function() {
-            const initialTab = @json($initialTab ?? 'home');
-            const initialSubtab = @json($initialSubtab ?? null);
-            loadContent(initialTab, initialSubtab);
+            const { tab, subtab } = getCurrentTabFromUrl();
+            updateActiveState(tab, subtab);
+            loadContent(tab, subtab);
+            
+            // Update URL when content changes without page reload
+            window.updateUrl = function(tab, subtab) {
+                let url = `/admin/dashboard?tab=${tab}`;
+                if (subtab) {
+                    url += `&subtab=${subtab}`;
+                }
+                window.history.pushState({ tab, subtab }, '', url);
+                updateActiveState(tab, subtab);
+            };
+        });
+        
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            const { tab, subtab } = getCurrentTabFromUrl();
+            updateActiveState(tab, subtab);
+            loadContent(tab, subtab);
         });
         
         // Function to load content via AJAX
@@ -213,7 +275,9 @@
                     contentContainer.innerHTML = data.html;
                     // Re-initialize any tab-specific JavaScript
                     if (mainTab === 'home') {
-                        initHomepageManagement();
+                        if (typeof initHomepageManagement === 'function') {
+                            initHomepageManagement();
+                        }
                     }
                     if (mainTab === 'news' && subTab === 'media' && typeof window.initMediaManagement === 'function') {
                         window.initMediaManagement();
@@ -222,7 +286,7 @@
                     contentContainer.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${data.error}
+                            ${escapeHtml(data.error)}
                         </div>
                     `;
                 }
@@ -238,17 +302,30 @@
             });
         }
 
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Expose loader for other scripts
         window.loadContent = loadContent;
         
-        // Tab switching logic
+        // Tab switching logic with URL updates
         document.querySelectorAll('[data-tab]').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const mainTab = this.getAttribute('data-tab');
                 const subTab = this.getAttribute('data-subtab');
                 
-                // Update active state on sidebar links
+                // Update URL without page reload
+                if (typeof window.updateUrl === 'function') {
+                    window.updateUrl(mainTab, subTab);
+                }
+                
+                // Update active state
                 document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(l => {
                     l.classList.remove('active');
                 });
