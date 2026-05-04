@@ -243,64 +243,88 @@
         });
         
         // Function to load content via AJAX
-        function loadContent(mainTab, subTab = null) {
-            const contentContainer = document.getElementById('dynamic-content');
+        // Function to load content via AJAX
+function loadContent(mainTab, subTab = null) {
+    const contentContainer = document.getElementById('dynamic-content');
+    
+    // Show loading indicator
+    contentContainer.innerHTML = `
+        <div class="content-loading">
+            <div class="spinner"></div>
+            <p>Loading content...</p>
+        </div>
+    `;
+    
+    // Build URL with parameters
+    let url = `/admin/load-content?tab=${mainTab}`;
+    if (subTab) {
+        url += `&subtab=${subTab}`;
+    }
+    
+    // Fetch content
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            contentContainer.innerHTML = data.html;
             
-            // Show loading indicator
-            contentContainer.innerHTML = `
-                <div class="content-loading">
-                    <div class="spinner"></div>
-                    <p>Loading content...</p>
-                </div>
-            `;
-            
-            // Build URL with parameters
-            let url = `/admin/load-content?tab=${mainTab}`;
-            if (subTab) {
-                url += `&subtab=${subTab}`;
+            // Re-initialize any tab-specific JavaScript
+            if (mainTab === 'home') {
+                if (typeof initHomepageManagement === 'function') {
+                    initHomepageManagement();
+                }
             }
             
-            // Fetch content
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    contentContainer.innerHTML = data.html;
-                    // Re-initialize any tab-specific JavaScript
-                    if (mainTab === 'home') {
-                        if (typeof initHomepageManagement === 'function') {
-                            initHomepageManagement();
-                        }
-                    }
-                    if (mainTab === 'news' && subTab === 'media' && typeof window.initMediaManagement === 'function') {
+            // Handle media tab - THIS IS THE IMPORTANT PART
+            if (mainTab === 'news' && subTab === 'media') {
+                // Small delay to ensure DOM is ready
+                setTimeout(function() {
+                    if (typeof window.initMediaManagement === 'function') {
+                        console.log('Re-initializing media management');
                         window.initMediaManagement();
+                    } else {
+                        // Load the script dynamically
+                        console.log('Loading media.js dynamically');
+                        const script = document.createElement('script');
+                        script.src = '/js/admin/media.js';
+                        script.onload = function() {
+                            if (typeof window.initMediaManagement === 'function') {
+                                window.initMediaManagement();
+                            }
+                        };
+                        script.onerror = function() {
+                            console.error('Failed to load media.js');
+                        };
+                        document.head.appendChild(script);
                     }
-                } else if (data.error) {
-                    contentContainer.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${escapeHtml(data.error)}
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading content:', error);
-                contentContainer.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Failed to load content. Please try again.
-                    </div>
-                `;
-            });
+                }, 100);
+            }
+        } else if (data.error) {
+            contentContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${escapeHtml(data.error)}
+                </div>
+            `;
         }
+    })
+    .catch(error => {
+        console.error('Error loading content:', error);
+        contentContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Failed to load content. Please try again.
+            </div>
+        `;
+    });
+}
 
         // Helper function to escape HTML
         function escapeHtml(text) {

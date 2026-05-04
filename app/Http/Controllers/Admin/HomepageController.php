@@ -180,43 +180,47 @@ class HomepageController extends Controller
     }
 
     /**
-     * Present selected images (activate slideshow)
-     */
-    public function presentSlides(Request $request)
-    {
-        try {
-            $validator = validator($request->all(), [
-                'slide_ids' => 'required|array',
-                'slide_ids.*' => 'exists:homepage_slides,id',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please select at least one image to present.',
-                ], 422);
-            }
-
-            // Deactivate all slides first
-            HomepageSlide::query()->update(['is_active' => false]);
+ * Present selected images (activate slideshow)
+ */
+public function presentSlides(Request $request)
+{
+    try {
+        $slideIds = $request->slide_ids ?? [];
+        
+        // Deactivate all slides first
+        HomepageSlide::query()->update(['is_active' => false]);
+        
+        // If there are selected slides, activate them
+        if (!empty($slideIds) && count($slideIds) > 0) {
+            // Validate that the IDs exist
+            $validIds = HomepageSlide::whereIn('id', $slideIds)->pluck('id')->toArray();
             
-            // Activate selected slides
-            HomepageSlide::whereIn('id', $request->slide_ids)
-                ->update(['is_active' => true]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Slideshow updated successfully! The selected images will now be displayed on the homepage.'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error presenting slides: '.$e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update slideshow: ' . $e->getMessage(),
-            ], 500);
+            if (count($validIds) > 0) {
+                // Activate selected slides
+                HomepageSlide::whereIn('id', $validIds)
+                    ->update(['is_active' => true]);
+                
+                $message = count($validIds) . ' image(s) are now active in the slideshow.';
+            } else {
+                $message = 'No valid images found. The homepage will use the default background image.';
+            }
+        } else {
+            $message = 'Slideshow cleared. The homepage will now use the default background image.';
         }
+        
+        return response()->json([
+            'success' => true,
+            'message' => $message
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error presenting slides: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update slideshow: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Delete individual slide
