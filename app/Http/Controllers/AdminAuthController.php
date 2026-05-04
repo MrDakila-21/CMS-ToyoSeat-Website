@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EventActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\OverviewContent;
 class AdminAuthController extends Controller
 {
     public function showLoginForm()

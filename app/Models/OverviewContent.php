@@ -22,12 +22,14 @@ class OverviewContent extends Model
         'president_representative',
         'business_description',
         'employees',
-        'dynamic_categories'  // Add this
+        'dynamic_categories',
+        'category_metadata'   // Add this
     ];
     
     protected $casts = [
         'business_principles' => 'array',
-        'dynamic_categories' => 'array'  // Add this
+        'dynamic_categories' => 'array',
+        'category_metadata' => 'array'   // Add this
     ];
     
     public static function getContent()
@@ -46,7 +48,8 @@ class OverviewContent extends Model
                 'president_representative' => 'Mr. John Doe',
                 'business_description' => 'Manufacturing and sales of automotive seats',
                 'employees' => 1000,
-                'dynamic_categories' => []  // Add this
+                'dynamic_categories' => [],
+                'category_metadata' => []  // Add this
             ]);
         }
         return $content;

@@ -161,19 +161,23 @@
                             @endif
                             
                             <!-- Dynamic Categories from Database -->
-                            @if($content->dynamic_categories && count($content->dynamic_categories) > 0)
-                                @foreach($content->dynamic_categories as $key => $value)
-                                    @if(!in_array($key, ['established_date', 'capital', 'president_representative', 'business_description', 'employees']) && !empty($value))
-                                    <div class="data-row">
-                                        <div class="data-label">
-                                            <i class="fas fa-tag"></i>
-                                            <span>{{ ucfirst(str_replace('_', ' ', $key)) }}</span>
-                                        </div>
-                                        <div class="data-value">{{ $value }}</div>
-                                    </div>
-                                    @endif
-                                @endforeach
-                            @endif
+                            <!-- Dynamic Categories from Database -->
+@if($content->dynamic_categories && count($content->dynamic_categories) > 0)
+    @foreach($content->dynamic_categories as $key => $value)
+        @if(!in_array($key, ['established_date', 'capital', 'president_representative', 'business_description', 'employees']) && !empty($value))
+            @php
+                $metadata = $content->category_metadata[$key] ?? ['label' => ucfirst(str_replace('_', ' ', $key)), 'icon' => 'fa-tag'];
+            @endphp
+            <div class="data-row">
+                <div class="data-label">
+                    <i class="fas {{ $metadata['icon'] }}"></i>
+                    <span>{{ $metadata['label'] }}</span>
+                </div>
+                <div class="data-value">{{ $value }}</div>
+            </div>
+        @endif
+    @endforeach
+@endif
                         </div>
                         
                         @if($content->company_profile)

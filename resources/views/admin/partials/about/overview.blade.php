@@ -94,7 +94,7 @@
                                         <label class="form-label small text-muted">New Image Preview:</label>
                                         <div class="position-relative d-inline-block">
                                             <img id="presidentImagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
-                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-new-image-preview" data-target="president_image" style="padding: 2px 6px; font-size: 10px;">
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 inset-e-0 remove-new-image-preview" data-target="president_image" style="padding: 2px 6px; font-size: 10px;">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -173,7 +173,7 @@
                                         <label class="form-label small text-muted">New Image Preview:</label>
                                         <div class="position-relative d-inline-block">
                                             <img id="companyImagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
-                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-new-image-preview" data-target="company_profile_image" style="padding: 2px 6px; font-size: 10px;">
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 inset-e-0 remove-new-image-preview" data-target="company_profile_image" style="padding: 2px 6px; font-size: 10px;">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -202,7 +202,7 @@
                                 @foreach($categories as $key => $category)
                                     <div class="category-item mb-3" data-category-key="{{ $key }}">
                                         <div class="d-flex align-items-start gap-2">
-                                            <div class="flex-grow-1">
+                                            <div class="grow">
                                                 <label class="form-label">
                                                     <i class="fas {{ $category['icon'] }} me-1"></i>{{ $category['label'] }}
                                                 </label>
@@ -221,26 +221,35 @@
                                     </div>
                                 @endforeach
                                 
-                                <!-- Dynamic categories from database -->
-                                @if($content->dynamic_categories && count($content->dynamic_categories) > 0)
-                                    @foreach($content->dynamic_categories as $key => $value)
-                                        @if(!in_array($key, ['established_date', 'capital', 'president_representative', 'business_description', 'employees']))
-                                            <div class="category-item mb-3" data-category-key="{{ $key }}">
-                                                <div class="d-flex align-items-start gap-2">
-                                                    <div class="flex-grow-1">
-                                                        <label class="form-label">
-                                                            <i class="fas fa-tag me-1"></i>{{ ucfirst(str_replace('_', ' ', $key)) }}
-                                                        </label>
-                                                        <input type="text" class="form-control" name="{{ $key }}" value="{{ $value }}" disabled>
-                                                    </div>
-                                                    <button type="button" class="btn btn-sm btn-danger remove-category-btn mt-4" data-category-key="{{ $key }}" style="display: none;">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                @endif
+                               <!-- Dynamic categories from database -->
+@if($content->dynamic_categories && count($content->dynamic_categories) > 0)
+    @foreach($content->dynamic_categories as $key => $value)
+        @if(!in_array($key, ['established_date', 'capital', 'president_representative', 'business_description', 'employees']))
+            @php
+                $metadata = $content->category_metadata[$key] ?? ['label' => ucfirst(str_replace('_', ' ', $key)), 'icon' => 'fa-tag', 'field_type' => 'text'];
+            @endphp
+            <div class="category-item mb-3" data-category-key="{{ $key }}">
+                <div class="d-flex align-items-start gap-2">
+                    <div class="grow">
+                        <label class="form-label">
+                            <i class="fas {{ $metadata['icon'] }} me-1"></i>{{ $metadata['label'] }}
+                        </label>
+                        @if(isset($metadata['field_type']) && $metadata['field_type'] === 'textarea')
+                            <textarea class="form-control auto-expand" name="{{ $key }}" rows="3" disabled>{{ $value }}</textarea>
+                        @elseif(isset($metadata['field_type']) && $metadata['field_type'] === 'number')
+                            <input type="number" class="form-control" name="{{ $key }}" value="{{ $value }}" disabled>
+                        @else
+                            <input type="text" class="form-control" name="{{ $key }}" value="{{ $value }}" disabled>
+                        @endif
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger remove-category-btn mt-4" data-category-key="{{ $key }}" style="display: none;">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+        @endif
+    @endforeach
+@endif
                             </div>
                             
                             <div class="mb-3">
@@ -1123,86 +1132,125 @@ function updateCompanySectionDynamically(data) {
         new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
     });
     
-    document.getElementById('save-category-btn')?.addEventListener('click', function() {
-        const form = document.getElementById('add-category-form');
-        const categoryKey = form.querySelector('[name="category_key"]').value.trim();
-        const categoryLabel = form.querySelector('[name="category_label"]').value.trim();
-        const categoryIcon = form.querySelector('[name="category_icon"]').value.trim() || 'fa-tag';
-        const fieldType = form.querySelector('[name="field_type"]').value;
-        const initialValue = form.querySelector('[name="initial_value"]').value;
-        
-        if (!categoryKey || !categoryLabel) {
-            showFloatingToast('Please fill in all required fields', 'error');
-            return;
-        }
-        
-        // Validate category key format
-        if (!/^[a-z_]+$/.test(categoryKey)) {
-            showFloatingToast('Category key must be lowercase with underscores only', 'error');
-            return;
-        }
-        
-        // Check if category already exists
-        if (document.querySelector(`.category-item[data-category-key="${categoryKey}"]`)) {
-            showFloatingToast('Category with this key already exists', 'error');
-            return;
-        }
-        
-        // Create new category HTML
-        const container = document.getElementById('dynamic-categories-container');
-        const categoryHtml = `
-            <div class="category-item mb-3" data-category-key="${categoryKey}">
-                <div class="d-flex align-items-start gap-2">
-                    <div class="flex-grow-1">
-                        <label class="form-label">
-                            <i class="fas ${categoryIcon} me-1"></i>${escapeHtml(categoryLabel)}
-                        </label>
-                        ${fieldType === 'textarea' ? 
-                            `<textarea class="form-control auto-expand" name="${categoryKey}" rows="3" disabled>${escapeHtml(initialValue)}</textarea>` :
-                            fieldType === 'number' ?
-                            `<input type="number" class="form-control" name="${categoryKey}" value="${escapeHtml(initialValue)}" disabled>` :
-                            `<input type="text" class="form-control" name="${categoryKey}" value="${escapeHtml(initialValue)}" disabled>`
-                        }
+    // Replace the existing 'save-category-btn' click handler with this:
+
+document.getElementById('save-category-btn')?.addEventListener('click', function() {
+    const form = document.getElementById('add-category-form');
+    const categoryKey = form.querySelector('[name="category_key"]').value.trim();
+    const categoryLabel = form.querySelector('[name="category_label"]').value.trim();
+    const categoryIcon = form.querySelector('[name="category_icon"]').value.trim() || 'fa-tag';
+    const fieldType = form.querySelector('[name="field_type"]').value;
+    const initialValue = form.querySelector('[name="initial_value"]').value;
+    
+    if (!categoryKey || !categoryLabel) {
+        showFloatingToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Validate category key format
+    if (!/^[a-z_]+$/.test(categoryKey)) {
+        showFloatingToast('Category key must be lowercase with underscores only', 'error');
+        return;
+    }
+    
+    // Check if category already exists in DOM or database
+    if (document.querySelector(`.category-item[data-category-key="${categoryKey}"]`)) {
+        showFloatingToast('Category with this key already exists', 'error');
+        return;
+    }
+    
+    // Create FormData for AJAX request
+    const saveData = new FormData();
+    saveData.append('section', 'company');
+    saveData.append('category_key', categoryKey);
+    saveData.append('category_label', categoryLabel);
+    saveData.append('category_icon', categoryIcon);
+    saveData.append('field_type', fieldType);
+    saveData.append('initial_value', initialValue);
+    saveData.append('_token', csrfToken);
+    
+    // Store original button text and disable
+    const saveBtn = this;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    
+    // Send AJAX request to save category directly
+    fetch('{{ route("admin.overview.addCategory") }}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: saveData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFloatingToast(data.message, 'success');
+            
+            // Add the category to the DOM
+            const container = document.getElementById('dynamic-categories-container');
+            const categoryHtml = `
+                <div class="category-item mb-3" data-category-key="${categoryKey}">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="flex-grow-1">
+                            <label class="form-label">
+                                <i class="fas ${categoryIcon} me-1"></i>${escapeHtml(categoryLabel)}
+                            </label>
+                            ${fieldType === 'textarea' ? 
+                                `<textarea class="form-control auto-expand" name="${categoryKey}" rows="3" disabled>${escapeHtml(initialValue)}</textarea>` :
+                                fieldType === 'number' ?
+                                `<input type="number" class="form-control" name="${categoryKey}" value="${escapeHtml(initialValue)}" disabled>` :
+                                `<input type="text" class="form-control" name="${categoryKey}" value="${escapeHtml(initialValue)}" disabled>`
+                            }
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger remove-category-btn mt-4" data-category-key="${categoryKey}" style="display: none;">
+                            <i class="fas fa-minus"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-sm btn-danger remove-category-btn mt-4" data-category-key="${categoryKey}" style="display: none;">
-                        <i class="fas fa-minus"></i>
-                    </button>
                 </div>
-            </div>
-        `;
-        
-        container.insertAdjacentHTML('beforeend', categoryHtml);
-        
-        // Auto-expand new textarea if any
-        const newTextarea = container.querySelector(`.category-item[data-category-key="${categoryKey}"] textarea`);
-        if (newTextarea) {
-            newTextarea.classList.add('auto-expand');
-            autoExpandTextarea(newTextarea);
-            newTextarea.addEventListener('input', function() { autoExpandTextarea(this); });
-        }
-        
-        // Hide the modal and reset form
-        bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
-        form.reset();
-        
-        showFloatingToast('Category added successfully. Click Save Changes to persist.', 'info');
-        
-        // Mark that the form needs saving
-        const saveBtn = document.querySelector('.save-section-btn[data-section="company"]');
-        const editBtn = document.querySelector('.edit-section-btn[data-section="company"]');
-        if (saveBtn && editBtn && editBtn.style.display !== 'none') {
-            // Keep edit mode active
-            const newInput = container.querySelector(`.category-item[data-category-key="${categoryKey}"] input, .category-item[data-category-key="${categoryKey}"] textarea`);
-            if (newInput) {
-                newInput.disabled = false;
+            `;
+            
+            container.insertAdjacentHTML('beforeend', categoryHtml);
+            
+            // Auto-expand new textarea if any
+            const newTextarea = container.querySelector(`.category-item[data-category-key="${categoryKey}"] textarea`);
+            if (newTextarea) {
+                newTextarea.classList.add('auto-expand');
+                autoExpandTextarea(newTextarea);
+                newTextarea.addEventListener('input', function() { autoExpandTextarea(this); });
             }
             
-            const removeBtn = container.querySelector(`.remove-category-btn[data-category-key="${categoryKey}"]`);
-            if (removeBtn) {
-                removeBtn.style.display = 'block';
+            // If we're in edit mode, enable the new input
+            const editBtn = document.querySelector('.edit-section-btn[data-section="company"]');
+            if (editBtn && editBtn.style.display === 'none') {
+                const newInput = container.querySelector(`.category-item[data-category-key="${categoryKey}"] input, .category-item[data-category-key="${categoryKey}"] textarea`);
+                if (newInput) {
+                    newInput.disabled = false;
+                }
+                const removeBtn = container.querySelector(`.remove-category-btn[data-category-key="${categoryKey}"]`);
+                if (removeBtn) {
+                    removeBtn.style.display = 'block';
+                }
             }
+            
+            // Hide the modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+            form.reset();
+        } else {
+            showFloatingToast(data.message || 'Failed to add category', 'error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFloatingToast('An error occurred while adding the category', 'error');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
     });
+});
     
     // ============================================
     // Remove category functionality
@@ -1232,47 +1280,122 @@ function updateCompanySectionDynamically(data) {
         }
     });
     
-    // ============================================
-    // Business Principles CRUD
-    // ============================================
+   // ============================================
+// Business Principles CRUD with AJAX (No Page Reload)
+// ============================================
+
+// Helper function to generate consistent icon for principles
+function getPrincipleIcon(index) {
+    const icons = ['briefcase', 'chart-line', 'handshake', 'globe', 'users', 'medal'];
+    return icons[index % icons.length];
+}
+
+// Function to create principle HTML for the list
+function createPrincipleHTML(principle, index) {
+    const icon = getPrincipleIcon(index);
+    return `
+        <div class="principle-item card mb-3" data-id="${principle.id}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="principle-title">${escapeHtml(principle.title || '')}</h5>
+                        <p class="principle-description text-muted">${escapeHtml(principle.description)}</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-warning edit-principle me-2" 
+                            data-id="${principle.id}"
+                            data-title="${escapeHtml(principle.title || '')}"
+                            data-description="${escapeHtml(principle.description)}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger delete-principle" 
+                            data-id="${principle.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Add Principle - AJAX with dynamic update
+document.getElementById('save-principle-btn')?.addEventListener('click', function() {
+    const form = document.getElementById('add-principle-form');
+    const title = form.querySelector('input[name="title"]').value;
+    const description = form.querySelector('textarea[name="description"]').value;
     
-    document.getElementById('save-principle-btn')?.addEventListener('click', function() {
-        const form = document.getElementById('add-principle-form');
-        const description = form.querySelector('textarea[name="description"]').value;
-        
-        if (!description.trim()) {
-            showFloatingToast('Please enter a description', 'error');
-            return;
-        }
-        
-        const formData = new FormData(form);
-        
-        fetch('{{ route("admin.overview.addPrinciple") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showFloatingToast(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showFloatingToast('Failed to add principle', 'error');
+    if (!description.trim()) {
+        showFloatingToast('Please enter a description', 'error');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const saveBtn = this;
+    const originalText = saveBtn.innerHTML;
+    
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    
+    fetch('{{ route("admin.overview.addPrinciple") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFloatingToast(data.message, 'success');
+            
+            // Get current principles count for icon index
+            const principlesList = document.getElementById('business-principles-list');
+            const currentPrinciples = principlesList.querySelectorAll('.principle-item');
+            const newIndex = currentPrinciples.length;
+            
+            // Create new principle HTML
+            const newPrincipleHTML = createPrincipleHTML(data.principle, newIndex);
+            
+            // Remove "no principles" alert if exists
+            const alertInfo = principlesList.querySelector('.alert-info');
+            if (alertInfo) {
+                alertInfo.remove();
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showFloatingToast('An error occurred', 'error');
-        });
+            
+            // Append new principle
+            principlesList.insertAdjacentHTML('beforeend', newPrincipleHTML);
+            
+            // Add event listeners to new buttons
+            const newPrinciple = principlesList.lastElementChild;
+            attachPrincipleEventListeners(newPrinciple);
+            
+            // Reset and close modal
+            form.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addPrincipleModal')).hide();
+        } else {
+            showFloatingToast(data.message || 'Failed to add principle', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFloatingToast('An error occurred', 'error');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
     });
-    
-    document.querySelectorAll('.edit-principle')?.forEach(btn => {
-        btn.addEventListener('click', function() {
+});
+
+// Function to attach event listeners to principle buttons
+function attachPrincipleEventListeners(principleElement) {
+    // Edit button
+    const editBtn = principleElement.querySelector('.edit-principle');
+    if (editBtn) {
+        editBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             const id = this.dataset.id;
             const title = this.dataset.title;
             const description = this.dataset.description;
@@ -1283,44 +1406,137 @@ function updateCompanySectionDynamically(data) {
             
             new bootstrap.Modal(document.getElementById('editPrincipleModal')).show();
         });
-    });
+    }
     
-    document.getElementById('update-principle-btn')?.addEventListener('click', function() {
-        const id = document.getElementById('edit_principle_id').value;
-        const form = document.getElementById('edit-principle-form');
-        const description = form.querySelector('textarea[name="description"]').value;
-        
-        if (!description.trim()) {
-            showFloatingToast('Please enter a description', 'error');
-            return;
-        }
-        
-        const formData = new FormData(form);
-        
-        fetch(`{{ url('admin/overview/business-principle') }}/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-HTTP-Method-Override': 'PUT'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showFloatingToast(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showFloatingToast('Failed to update principle', 'error');
+    // Delete button
+    const deleteBtn = principleElement.querySelector('.delete-principle');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to delete this business principle?')) {
+                const id = this.dataset.id;
+                const principleItem = document.querySelector(`.principle-item[data-id="${id}"]`);
+                
+                fetch(`{{ url('admin/overview/business-principle') }}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showFloatingToast(data.message, 'success');
+                        // Animate and remove
+                        principleItem.style.transition = 'all 0.3s ease';
+                        principleItem.style.opacity = '0';
+                        principleItem.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            principleItem.remove();
+                            
+                            // If no principles left, show alert
+                            const principlesList = document.getElementById('business-principles-list');
+                            if (principlesList.children.length === 0) {
+                                principlesList.innerHTML = '<div class="alert alert-info">No business principles added yet. Click "Add Principle" to get started.</div>';
+                            } else {
+                                // Re-index remaining principles to update icons
+                                const remainingPrinciples = principlesList.querySelectorAll('.principle-item');
+                                remainingPrinciples.forEach((item, newIndex) => {
+                                    const principleId = item.dataset.id;
+                                    const titleElem = item.querySelector('.principle-title');
+                                    const descElem = item.querySelector('.principle-description');
+                                    const icon = getPrincipleIcon(newIndex);
+                                    // Icons are in the guest view, not in admin - so no need to update icons here
+                                });
+                            }
+                        }, 300);
+                    } else {
+                        showFloatingToast('Failed to delete principle', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFloatingToast('An error occurred', 'error');
+                });
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showFloatingToast('An error occurred', 'error');
         });
+    }
+}
+    
+// Update Principle - AJAX with dynamic update
+document.getElementById('update-principle-btn')?.addEventListener('click', function() {
+    const id = document.getElementById('edit_principle_id').value;
+    const form = document.getElementById('edit-principle-form');
+    const title = form.querySelector('input[name="title"]').value;
+    const description = form.querySelector('textarea[name="description"]').value;
+    
+    if (!description.trim()) {
+        showFloatingToast('Please enter a description', 'error');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const updateBtn = this;
+    const originalText = updateBtn.innerHTML;
+    
+    updateBtn.disabled = true;
+    updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+    
+    fetch(`{{ url('admin/overview/business-principle') }}/${id}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFloatingToast(data.message, 'success');
+            
+            // Update the principle in the DOM
+            const principleItem = document.querySelector(`.principle-item[data-id="${id}"]`);
+            if (principleItem && data.principle) {
+                const titleElem = principleItem.querySelector('.principle-title');
+                const descElem = principleItem.querySelector('.principle-description');
+                
+                if (titleElem) titleElem.textContent = data.principle.title || '';
+                if (descElem) descElem.textContent = data.principle.description;
+                
+                // Update data attributes on edit button
+                const editBtn = principleItem.querySelector('.edit-principle');
+                if (editBtn) {
+                    editBtn.dataset.title = data.principle.title || '';
+                    editBtn.dataset.description = data.principle.description;
+                }
+            }
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editPrincipleModal')).hide();
+        } else {
+            showFloatingToast(data.message || 'Failed to update principle', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFloatingToast('An error occurred', 'error');
+    })
+    .finally(() => {
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = originalText;
     });
+});
+
+// Attach event listeners to existing principles on page load
+document.querySelectorAll('.principle-item').forEach(principle => {
+    attachPrincipleEventListeners(principle);
+});
     
     document.querySelectorAll('.delete-principle')?.forEach(btn => {
         btn.addEventListener('click', function() {
