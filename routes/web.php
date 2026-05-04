@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\EventActivityController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController; // ADD THIS LINE
+use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
 use Illuminate\Support\Facades\Route;
 
 // Add this at the beginning of your routes file
@@ -37,7 +37,6 @@ Route::prefix('guest')->name('guest.')->group(function () {
     
     // News pages
     Route::prefix('news')->name('news.')->group(function () {
-        // CHANGE THIS LINE - use controller instead of view
         Route::get('/media-information', [GuestEventActivityController::class, 'index'])->name('media-information');
         Route::view('/announcements', 'guest.news.announcements')->name('announcements');
     });
@@ -63,6 +62,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
         Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
 
+        // IMPORTANT: Make sure these routes are correctly defined
         // Homepage slideshow management routes
         Route::get('/homepage/slides', [HomepageController::class, 'getSlides'])->name('admin.homepage.slides');
         Route::post('/homepage/upload-multiple', [HomepageController::class, 'uploadMultipleImages'])->name('admin.homepage.uploadMultiple');
@@ -79,6 +79,11 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+        
+        // Add a test route to verify JSON responses work
+        Route::get('/test-json', function() {
+            return response()->json(['success' => true, 'message' => 'JSON test successful']);
+        });
     });
 });
 
