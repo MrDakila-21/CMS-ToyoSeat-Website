@@ -81,6 +81,8 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+
+        Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
         
         // Overview management routes
         Route::get('/overview', [OverviewController::class, 'index'])->name('admin.overview');
