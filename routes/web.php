@@ -78,6 +78,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/homepage/remove-image', [HomepageController::class, 'removeImage'])->name('admin.homepage.remove');
 
         // Event/Activity management routes
+        Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
         
@@ -91,6 +92,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/overview/update-section', [OverviewController::class, 'updateSection'])->name('admin.overview.updateSection');
         Route::post('/overview/remove-image', [OverviewController::class, 'removeImage'])->name('admin.overview.removeImage');
         
+        // NEW: Additional routes for folder image management
+        Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
+        Route::post('media/sync-images', [EventActivityController::class, 'syncAllImages'])->name('admin.media.syncImages');
+        Route::post('media/batch-upload', [EventActivityController::class, 'batchUploadToFolder'])->name('admin.media.batchUpload');
+
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function() {
             return response()->json(['success' => true, 'message' => 'JSON test successful']);

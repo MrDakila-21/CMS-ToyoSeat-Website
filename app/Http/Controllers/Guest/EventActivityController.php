@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guest;
 use App\Http\Controllers\Controller;
 use App\Models\EventActivity;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 
 class EventActivityController extends Controller
 {
@@ -45,4 +46,8 @@ class EventActivityController extends Controller
         $event = EventActivity::where('status', 'published')->findOrFail($id);
         return response()->json($event);
     }
+    public function boot()
+{
+    Paginator::useBootstrapFive(); // or useBootstrapFour()
+}
 }
