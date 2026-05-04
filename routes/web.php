@@ -1,10 +1,10 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\EventActivityController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController; // ADD THIS LINE
 use Illuminate\Support\Facades\Route;
 
 // Add this at the beginning of your routes file
@@ -37,7 +37,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
     
     // News pages
     Route::prefix('news')->name('news.')->group(function () {
-        Route::view('/media-information', 'guest.news.media-information')->name('media-information');
+        // CHANGE THIS LINE - use controller instead of view
+        Route::get('/media-information', [GuestEventActivityController::class, 'index'])->name('media-information');
         Route::view('/announcements', 'guest.news.announcements')->name('announcements');
     });
     
