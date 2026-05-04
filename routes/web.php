@@ -80,6 +80,11 @@ Route::prefix('admin')->group(function () {
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
         
+        // NEW: Additional routes for folder image management
+        Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
+        Route::post('media/sync-images', [EventActivityController::class, 'syncAllImages'])->name('admin.media.syncImages');
+        Route::post('media/batch-upload', [EventActivityController::class, 'batchUploadToFolder'])->name('admin.media.batchUpload');
+
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function() {
             return response()->json(['success' => true, 'message' => 'JSON test successful']);
