@@ -76,6 +76,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/homepage/remove-image', [HomepageController::class, 'removeImage'])->name('admin.homepage.remove');
 
         // Event/Activity management routes
+        Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
     });
