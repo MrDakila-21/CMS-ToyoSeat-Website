@@ -149,6 +149,55 @@
     </div>
 </div>
 
+<!-- Batch Upload Modal -->
+<div class="modal fade" id="batchUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-layer-group me-2"></i>
+                    Batch Upload Images to Folder
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Instructions:</strong><br>
+                    Upload multiple images at once. Each image filename must be the ID of an existing event/activity.<br>
+                    Example: <code>1.jpg</code>, <code>2.png</code>, <code>15.webp</code>
+                </div>
+                
+                <form id="batchUploadForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">Select Images</label>
+                        <input type="file" name="images[]" id="batchImages" class="form-control" accept="image/*" multiple required>
+                        <div class="form-text">You can select multiple images at once. Max size per image: 2MB</div>
+                    </div>
+                    
+                    <div id="batchUploadPreview" class="mt-3" style="display: none;">
+                        <h6>Selected Files:</h6>
+                        <div id="fileList" class="small"></div>
+                    </div>
+                </form>
+                
+                <div id="batchUploadProgress" style="display: none;">
+                    <div class="progress mt-3">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+                    </div>
+                    <p id="uploadStatus" class="mt-2 small text-muted"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="batchUploadBtn" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i> Upload All
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
     .table-responsive {
         overflow-x: auto;

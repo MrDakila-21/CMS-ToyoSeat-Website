@@ -668,3 +668,109 @@
     window.loadMediaData = loadDataFromServer;
     console.log('Media.js initialized successfully');
 })();
+
+function initBatchUpload() {
+    const batchModal = document.getElementById('batchUploadModal');
+    if (!batchModal) return;
+    
+    // Preview selected files
+    const batchImages = document.getElementById('batchImages');
+    const batchUploadPreview = document.getElementById('batchUploadPreview');
+    const fileList = document.getElementById('fileList');
+    
+    if (batchImages) {
+        batchImages.addEventListener('change', function() {
+            const files = this.files;
+            if (files.length > 0) {
+                batchUploadPreview.style.display = 'block';
+                fileList.innerHTML = '';
+                for (let i = 0; i < files.length; i++) {
+                    fileList.innerHTML += `<div>📄 ${files[i].name} (${(files[i].size / 1024).toFixed(2)} KB)</div>`;
+                }
+            } else {
+                batchUploadPreview.style.display = 'none';
+            }
+        });
+    }
+    
+    // Handle batch upload
+    const batchUploadBtn = document.getElementById('batchUploadBtn');
+    if (batchUploadBtn) {
+        batchUploadBtn.addEventListener('click', async function() {
+            const files = document.getElementById('batchImages').files;
+            if (files.length === 0) {
+                showCustomToast('Please select files to upload', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images[]', files[i]);
+            }
+            
+            const progressDiv = document.getElementById('batchUploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            progressDiv.style.display = 'block';
+            batchUploadBtn.disabled = true;
+            batchUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+            
+            try {
+                const response = await fetch('/admin/media/batch-upload', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showCustomToast(data.message, 'success');
+                    
+                    // Close modal and reload data
+                    const modal = bootstrap.Modal.getInstance(batchModal);
+                    if (modal) modal.hide();
+                    
+                    await loadDataFromServer();
+                    
+                    // Reset form
+                    document.getElementById('batchUploadForm').reset();
+                    batchUploadPreview.style.display = 'none';
+                } else {
+                    showCustomToast(data.message, 'error');
+                    if (data.failed && data.failed.length > 0) {
+                        console.error('Failed uploads:', data.failed);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showCustomToast('Network error during batch upload', 'error');
+            } finally {
+                progressDiv.style.display = 'none';
+                batchUploadBtn.disabled = false;
+                batchUploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload All';
+                progressBar.style.width = '0%';
+            }
+        });
+    }
+}
+
+// Add to your initMediaManagement function
+function initMediaManagement() {
+    console.log('Initializing media management...');
+    
+    const editModalElement = document.getElementById('mediaEditModal');
+    if (editModalElement && typeof bootstrap !== 'undefined') {
+        editModal = new bootstrap.Modal(editModalElement);
+    }
+    
+    loadDataFromServer();
+    attachEventHandlers();
+    initDirectUploadModal(); // From previous implementation
+    initBatchUpload(); // Add this line
+}
