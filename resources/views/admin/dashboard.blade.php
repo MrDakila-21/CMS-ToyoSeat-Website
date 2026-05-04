@@ -12,46 +12,102 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/dash.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Hind:wght@300;400;500;600;700&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* Add loading indicator styles */
-        .content-loading {
-            text-align: center;
-            padding: 60px;
+        /* Additional floating toast styles if not in dash.css */
+        .floating-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 250px;
+            max-width: 350px;
             background: white;
-            border-radius: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
         }
-        .content-loading .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3988BD;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+
+        .floating-toast-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 6px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .floating-toast.success-toast .floating-toast-content {
+            background-color: #d4edda;
+            border-left: 3px solid #28a745;
+            color: #155724;
         }
-        
-        /* Active state styling */
-        .sidebar-link.active, .sidebar-dropdown a.active {
-            background: linear-gradient(90deg, #3988BD 0%, #2c6d99 100%);
-            color: white;
-            border-left: 4px solid #ffd700;
+
+        .floating-toast.error-toast .floating-toast-content {
+            background-color: #f8d7da;
+            border-left: 3px solid #dc3545;
+            color: #721c24;
         }
-        
-        .sidebar-dropdown a.active {
-            background: #2c6d99;
+
+        .floating-toast.warning-toast .floating-toast-content {
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            color: #856404;
+        }
+
+        .floating-toast.info-toast .floating-toast-content {
+            background-color: #d1ecf1;
+            border-left: 3px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .floating-toast .floating-toast-content i {
+            font-size: 18px;
+        }
+
+        .floating-toast .floating-toast-content span {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .floating-toast.hide {
+            animation: slideOut 0.3s ease-in forwards;
         }
     </style>
 </head>
 <body>
+    <!-- Flash Messages -->
     @if(session('success'))
         <div id="dashboard-success-toast" class="login-toast success-toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="login-toast-content">
                 <i class="fas fa-circle-check"></i>
                 <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+    
+    @if(session('error'))
+        <div id="dashboard-error-toast" class="login-toast error-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-circle-exclamation"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+    
+    @if(session('warning'))
+        <div id="dashboard-warning-toast" class="login-toast warning-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>{{ session('warning') }}</span>
+            </div>
+        </div>
+    @endif
+    
+    @if(session('info'))
+        <div id="dashboard-info-toast" class="login-toast info-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="login-toast-content">
+                <i class="fas fa-info-circle"></i>
+                <span>{{ session('info') }}</span>
             </div>
         </div>
     @endif
@@ -91,7 +147,8 @@
             <ul class="sidebar-menu">
                 <!-- Home Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link" data-tab="home" data-main-tab="home" href="/admin/dashboard?tab=home">
+                    <a class="sidebar-link {{ $tab === 'home' ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard', ['tab' => 'home']) }}">
                         <i class="fas fa-home"></i>
                         <span>Home</span>
                     </a>
@@ -99,24 +156,26 @@
 
                 <!-- About Us Dropdown -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="aboutDropdown">
+                    <a class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['about']) ? 'active' : '' }}" 
+                       data-dropdown="aboutDropdown">
                         <i class="fas fa-info-circle"></i>
                         <span>About Us</span>
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
-                    <ul class="sidebar-dropdown" id="aboutDropdown">
-                        <li><a data-tab="about" data-subtab="overview" href="/admin/dashboard?tab=about&subtab=overview">Overview</a></li>
-                        <li><a data-tab="about" data-subtab="business" href="/admin/dashboard?tab=about&subtab=business">Business Introduction</a></li>
-                        <li><a data-tab="about" data-subtab="location" href="/admin/dashboard?tab=about&subtab=location">Location</a></li>
-                        <li><a data-tab="about" data-subtab="history" href="/admin/dashboard?tab=about&subtab=history">History</a></li>
-                        <li><a data-tab="about" data-subtab="iso" href="/admin/dashboard?tab=about&subtab=iso">ISO Obtained</a></li>
-                        <li><a data-tab="about" data-subtab="privacy" href="/admin/dashboard?tab=about&subtab=privacy">Privacy Policy</a></li>
+                    <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && $subtab === 'history' ? 'active' : '' }}">History</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'privacy']) }}" class="{{ $tab === 'about' && $subtab === 'privacy' ? 'active' : '' }}">Privacy Policy</a></li>
                     </ul>
                 </li>
 
                 <!-- Recruitment Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link" data-tab="recruitment" data-main-tab="recruitment" href="/admin/dashboard?tab=recruitment">
+                    <a class="sidebar-link {{ $tab === 'recruitment' ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard', ['tab' => 'recruitment']) }}">
                         <i class="fas fa-briefcase"></i>
                         <span>Recruitment Information</span>
                     </a>
@@ -124,20 +183,22 @@
 
                 <!-- News Dropdown -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link dropdown-toggle-main" data-dropdown="newsDropdown">
+                    <a class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['news']) ? 'active' : '' }}" 
+                       data-dropdown="newsDropdown">
                         <i class="fas fa-newspaper"></i>
                         <span>News</span>
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
-                    <ul class="sidebar-dropdown" id="newsDropdown">
-                        <li><a data-tab="news" data-subtab="media" href="/admin/dashboard?tab=news&subtab=media">Media Information</a></li>
-                        <li><a data-tab="news" data-subtab="announcements" href="/admin/dashboard?tab=news&subtab=announcements">Announcements</a></li>
+                    <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && $subtab === 'media' ? 'active' : '' }}">Media Information</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
                     </ul>
                 </li>
 
                 <!-- Inquiry Tab -->
                 <li class="sidebar-item">
-                    <a class="sidebar-link" data-tab="inquiry" data-main-tab="inquiry" href="/admin/dashboard?tab=inquiry">
+                    <a class="sidebar-link {{ $tab === 'inquiry' ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard', ['tab' => 'inquiry']) }}">
                         <i class="fas fa-envelope"></i>
                         <span>Inquiry</span>
                     </a>
@@ -147,12 +208,26 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <div id="dynamic-content" class="content-panel active">
-                <!-- Content will be loaded dynamically here -->
-                <div class="content-loading">
-                    <div class="spinner"></div>
-                    <p>Loading content...</p>
-                </div>
+            <div class="content-panel active">
+                @if($tab === 'home')
+                    @include('admin.partials.home')
+                @elseif($tab === 'about')
+                    @include("admin.partials.about.{$subtab}")
+                @elseif($tab === 'recruitment')
+                    @include('admin.partials.recruitment')
+                @elseif($tab === 'news')
+                    @include("admin.partials.news.{$subtab}", [
+                        'events' => $events ?? null, 
+                        'announcements' => $announcements ?? null
+                    ])
+                @elseif($tab === 'inquiry')
+                    @include('admin.partials.inquiry')
+                @else
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Content not found.
+                    </div>
+                @endif
             </div>
         </main>
     </div>
@@ -170,7 +245,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
+                    <form method="POST" action="{{ route('admin.logout') }}">
                         @csrf
                         <button type="submit" class="btn btn-danger">Yes, Logout</button>
                     </form>
@@ -181,189 +256,90 @@
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('js/dash.js') }}"></script>
     
     <script>
-        // Get current tab and subtab from URL
-        function getCurrentTabFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return {
-                tab: urlParams.get('tab') || 'home',
-                subtab: urlParams.get('subtab') || null
-            };
-        }
-        
-        // Update active state based on current URL
-        function updateActiveState(tab, subtab) {
-            // Remove all active classes
-            document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Find and activate the correct link
-            if (tab === 'about' && subtab) {
-                const link = document.querySelector(`.sidebar-dropdown a[data-tab="about"][data-subtab="${subtab}"]`);
-                if (link) link.classList.add('active');
-                // Also highlight the parent dropdown toggle
-                const parentToggle = document.querySelector('.dropdown-toggle-main[data-dropdown="aboutDropdown"]');
-                if (parentToggle) parentToggle.classList.add('active');
-            } else if (tab === 'news' && subtab) {
-                const link = document.querySelector(`.sidebar-dropdown a[data-tab="news"][data-subtab="${subtab}"]`);
-                if (link) link.classList.add('active');
-                const parentToggle = document.querySelector('.dropdown-toggle-main[data-dropdown="newsDropdown"]');
-                if (parentToggle) parentToggle.classList.add('active');
-            } else {
-                const link = document.querySelector(`.sidebar-link[data-tab="${tab}"]`);
-                if (link) link.classList.add('active');
-            }
-        }
-        
-        // Initialize dashboard with dynamic content loading
+        // Initialize sidebar dropdowns
         document.addEventListener('DOMContentLoaded', function() {
-            const { tab, subtab } = getCurrentTabFromUrl();
-            updateActiveState(tab, subtab);
-            loadContent(tab, subtab);
+            // Setup dropdown toggles
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle-main');
             
-            // Update URL when content changes without page reload
-            window.updateUrl = function(tab, subtab) {
-                let url = `/admin/dashboard?tab=${tab}`;
-                if (subtab) {
-                    url += `&subtab=${subtab}`;
-                }
-                window.history.pushState({ tab, subtab }, '', url);
-                updateActiveState(tab, subtab);
-            };
-        });
-        
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', function(event) {
-            const { tab, subtab } = getCurrentTabFromUrl();
-            updateActiveState(tab, subtab);
-            loadContent(tab, subtab);
-        });
-        
-        // Function to load content via AJAX
-        function loadContent(mainTab, subTab = null) {
-            const contentContainer = document.getElementById('dynamic-content');
-            
-            // Show loading indicator
-            contentContainer.innerHTML = `
-                <div class="content-loading">
-                    <div class="spinner"></div>
-                    <p>Loading content...</p>
-                </div>
-            `;
-            
-            // Build URL with parameters
-            let url = `/admin/load-content?tab=${mainTab}`;
-            if (subTab) {
-                url += `&subtab=${subTab}`;
-            }
-            
-            // Fetch content
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    contentContainer.innerHTML = data.html;
-                    // Re-initialize any tab-specific JavaScript
-                    if (mainTab === 'home') {
-                        if (typeof initHomepageManagement === 'function') {
-                            initHomepageManagement();
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const dropdownId = this.getAttribute('data-dropdown');
+                    const dropdown = document.getElementById(dropdownId);
+                    const chevron = this.querySelector('.chevron-icon');
+                    
+                    if (dropdown) {
+                        dropdown.classList.toggle('open');
+                        if (chevron) {
+                            chevron.style.transform = dropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
                         }
                     }
-                    if (mainTab === 'news' && subTab === 'media' && typeof window.initMediaManagement === 'function') {
+                });
+            });
+            
+            // Auto-hide toast messages after 5 seconds
+            const toasts = document.querySelectorAll('.login-toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => {
+                        if (toast.parentNode) toast.remove();
+                    }, 300);
+                }, 5000);
+            });
+            
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert:not(.alert-info)');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.classList.add('fade');
+                    setTimeout(() => {
+                        if (alert.parentNode) alert.remove();
+                    }, 500);
+                }, 5000);
+            });
+            
+            // If we're on media tab, initialize media management
+            @if($tab === 'news' && $subtab === 'media')
+                setTimeout(function() {
+                    if (typeof window.initMediaManagement === 'function') {
                         window.initMediaManagement();
                     }
-                } else if (data.error) {
-                    contentContainer.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${escapeHtml(data.error)}
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading content:', error);
-                contentContainer.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Failed to load content. Please try again.
-                    </div>
-                `;
-            });
-        }
-
-        // Helper function to escape HTML
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Expose loader for other scripts
-        window.loadContent = loadContent;
-        
-        // Tab switching logic with URL updates
-        document.querySelectorAll('[data-tab]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const mainTab = this.getAttribute('data-tab');
-                const subTab = this.getAttribute('data-subtab');
-                
-                // Update URL without page reload
-                if (typeof window.updateUrl === 'function') {
-                    window.updateUrl(mainTab, subTab);
-                }
-                
-                // Update active state
-                document.querySelectorAll('.sidebar-link, .sidebar-dropdown a').forEach(l => {
-                    l.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                // Load content
-                loadContent(mainTab, subTab);
-            });
+                }, 100);
+            @endif
         });
         
         // Prevent back button access after logout
         (function() {
-            // Check authentication status periodically
-            function checkAuthStatus() {
+            // Push a new state to prevent back button from accessing protected pages
+            history.pushState(null, null, location.href);
+            
+            window.addEventListener('popstate', function(event) {
+                // Check if we're still authenticated
                 fetch('/admin/check-auth', {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    cache: 'no-store'
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (!data.authenticated) {
-                        window.location.href = '/admin/login';
+                        window.location.replace('/admin/login');
+                    } else {
+                        // Push state again to prevent back navigation
+                        history.pushState(null, null, location.href);
                     }
                 })
-                .catch(error => {
-                    console.error('Auth check failed:', error);
+                .catch(() => {
+                    window.location.replace('/admin/login');
                 });
-            }
-            
-            setInterval(checkAuthStatus, 5000);
-            
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    checkAuthStatus();
-                }
             });
         })();
     </script>

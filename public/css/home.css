@@ -213,6 +213,179 @@
     color: #80CCFF;
 }
 
+/* ===== NEST HUB (1024x600) SPECIFIC FIXES ===== */
+/* Target devices with 1024x600 resolution (Nest Hub) */
+@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 600px) and (max-height: 600px),
+       (min-width: 1024px) and (max-width: 1024px) and (min-height: 598px) and (max-height: 602px) {
+    
+    /* Override hero-wrapper height for proper scrolling */
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding-bottom: 90px;
+    }
+    
+    /* Adjust text container position - move up to balance with cards */
+    .text-container {
+        position: relative;
+        top: 0;
+        left: 30px;
+        transform: none;
+        padding-top: 45px;
+        padding-bottom: 20px;
+        margin-bottom: 0;
+    }
+    
+    /* Fix the spacing between title elements */
+    .shaping-title {
+        font-size: 16px;
+        margin-bottom: 8px;
+        line-height: 24px;
+    }
+    
+    .line-10 {
+        width: 70px;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+    
+    /* Keep Lead.Move.Motivate properly sized */
+    .lead-move-motivate {
+        font-size: 38px;
+        line-height: 1.2;
+        margin-bottom: 8px;
+    }
+    
+    .lead-move-motivate div {
+        margin-bottom: 2px;
+    }
+    
+    /* Quote text styling */
+    .quote-text {
+        width: 380px;
+        font-size: 14px;
+        line-height: 22px;
+        margin-bottom: 12px;
+    }
+    
+    /* Fix the together wrapper positioning - bring up closer */
+    .together-wrapper {
+        margin-top: 0;
+        gap: 8px;
+    }
+    
+    .line-11 {
+        width: 45px;
+        margin-right: 8px;
+    }
+    
+    .together-text {
+        font-size: 14px;
+        line-height: 20px;
+    }
+    
+    /* Bottom cards - properly positioned and spaced */
+    .bottom-cards {
+        position: relative;
+        bottom: auto;
+        margin-top: 15px;
+        margin-bottom: 30px;
+        gap: 35px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Card styling for Nest Hub */
+    .card-icon-circle {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 6px;
+    }
+    
+    .card-icon-img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .card-title {
+        font-size: 11px;
+        line-height: 16px;
+    }
+    
+    /* Ensure section2 doesn't overlap weirdly */
+    .section2 {
+        margin-top: 0;
+        clear: both;
+    }
+}
+
+/* Fallback for any device with similar dimensions */
+@media (max-width: 1024px) and (max-height: 620px) and (min-height: 580px) {
+    /* Apply same fixes for any device in this range */
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 80px;
+    }
+    
+    .text-container {
+        position: relative;
+        top: 0;
+        left: 30px;
+        transform: none;
+        padding-top: 40px;
+        padding-bottom: 15px;
+    }
+    
+    .shaping-title {
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+    
+    .line-10 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 34px;
+    }
+    
+    .quote-text {
+        width: 350px;
+        font-size: 13px;
+        line-height: 20px;
+    }
+    
+    .together-wrapper {
+        margin-top: 0;
+    }
+    
+    .bottom-cards {
+        position: relative;
+        bottom: auto;
+        margin-top: 20px;
+        margin-bottom: 25px;
+        gap: 30px;
+    }
+    
+    .card-icon-circle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .card-icon-img {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .card-title {
+        font-size: 10px;
+    }
+}
+
 /* Responsive Design - Enhanced */
 @media (max-width: 1200px) {
     .bottom-cards {
@@ -960,3 +1133,4 @@
     margin-left: 10px;
     font-size: 12px;
 }
+

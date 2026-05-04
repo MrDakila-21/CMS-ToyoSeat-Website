@@ -1,69 +1,81 @@
 <div class="card content-card">
-    <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h5 class="mb-0"><i class="fas fa-photo-film me-2"></i>Events &amp; Activities Management</h5>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mediaAddModal">
             <i class="fas fa-plus me-1"></i> Add New
         </button>
     </div>
     <div class="card-body">
-        @if(isset($events) && $events->count() > 0)
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th style="width: 70px;">ID</th>
-                        <th style="width: 90px;">Image</th>
-                        <th>Title</th>
-                        <th style="width: 110px;">Type</th>
-                        <th style="width: 120px;">Date</th>
-                        <th style="width: 140px;">Status</th>
-                        <th style="width: 170px;">Created At</th>
-                        <th style="width: 150px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($events as $item)
-                        <tr>
-                            <td>{{ $item->id }}</td>
-                            <td>
-                                @if($item->image && Storage::disk('public')->exists($item->image))
-                                    <img src="{{ Storage::url($item->image) }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
-                                @else
-                                    <span class="badge bg-secondary">No Image</span>
-                                @endif
-                            </td>
-                            <td>{{ $item->title }}</td>
-                            <td>
-                                @if($item->type === 'event')
-                                    <span class="badge bg-primary">Event</span>
-                                @else
-                                    <span class="badge bg-success">Activity</span>
-                                @endif
-                            </td>
-                            <td>{{ optional($item->event_date)->format('Y-m-d') }}</td>
-                            <td>
-                                <select class="form-select form-select-sm status-select" data-id="{{ $item->id }}">
-                                    <option value="published" {{ $item->status === 'published' ? 'selected' : '' }}>Published</option>
-                                    <option value="draft" {{ $item->status === 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="archived" {{ $item->status === 'archived' ? 'selected' : '' }}>Archived</option>
-                                </select>
-                            </td>
-                            <td>{{ optional($item->created_at)->format('Y-m-d H:i') }}</td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="{{ $item->id }}">Edit</button>
-                                <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="{{ $item->id }}">Delete</button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Search and Filter Section -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" 
+                           id="tableSearchInput" 
+                           class="form-control" 
+                           placeholder="Search by title or description...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="typeFilter" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="event">Events Only</option>
+                    <option value="activity">Activities Only</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="published">Published</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button id="resetFilters" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-redo me-1"></i> Reset
+                </button>
+            </div>
         </div>
-        @else
-        <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle me-2"></i>
-            No events or activities found. Click "Add New" to create your first entry.
+
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading data...</p>
         </div>
-        @endif
+
+        <!-- Table container -->
+        <div id="tableContainer">
+            <!-- Table will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Section - MOVED OUTSIDE card-body but still in card -->
+<div class="card-footer bg-white border-top">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="text-muted small">
+            <i class="fas fa-info-circle me-1"></i>
+            Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> entries
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0" id="tablePagination">
+                <!-- Pagination will be generated by JavaScript -->
+            </ul>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <label class="text-muted small mb-0">Rows per page:</label>
+            <select id="rowsPerPage" class="form-select form-select-sm" style="width: 75px;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
     </div>
 </div>
 
@@ -137,172 +149,138 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize media management
-    initMediaManagement();
-});
-
-function initMediaManagement() {
-    // Status change handler
-    document.querySelectorAll('.status-select').forEach(select => {
-        select.removeEventListener('change', handleStatusChange);
-        select.addEventListener('change', handleStatusChange);
-    });
-    
-    // Edit button handler
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.removeEventListener('click', handleEditClick);
-        btn.addEventListener('click', handleEditClick);
-    });
-    
-    // Delete button handler
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.removeEventListener('click', handleDeleteClick);
-        btn.addEventListener('click', handleDeleteClick);
-    });
-}
-
-function handleStatusChange(e) {
-    const select = e.target;
-    const id = select.dataset.id;
-    const status = select.value;
-    
-    fetch(`/admin/media/${id}/status/${status}`, {
-        method: 'PATCH',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showCustomToast(data.message, 'success');
-        } else {
-            showCustomToast('Failed to update status', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showCustomToast('Network error updating status', 'error');
-    });
-}
-
-function handleEditClick(e) {
-    const id = e.currentTarget.dataset.id;
-    
-    fetch(`/admin/media/${id}/edit`, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const modalBody = document.getElementById('mediaEditModalBody');
-        modalBody.innerHTML = `
-            <input type="hidden" name="id" value="${data.id}">
-            <div class="mb-3">
-                <label class="form-label">Title <span class="text-danger">*</span></label>
-                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
+<!-- Batch Upload Modal -->
+<div class="modal fade" id="batchUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-layer-group me-2"></i>
+                    Batch Upload Images to Folder
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Type <span class="text-danger">*</span></label>
-                <select name="type" class="form-select" required>
-                    <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                    <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-                </select>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Instructions:</strong><br>
+                    Upload multiple images at once. Each image filename must be the ID of an existing event/activity.<br>
+                    Example: <code>1.jpg</code>, <code>2.png</code>, <code>15.webp</code>
+                </div>
+                
+                <form id="batchUploadForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">Select Images</label>
+                        <input type="file" name="images[]" id="batchImages" class="form-control" accept="image/*" multiple required>
+                        <div class="form-text">You can select multiple images at once. Max size per image: 2MB</div>
+                    </div>
+                    
+                    <div id="batchUploadPreview" class="mt-3" style="display: none;">
+                        <h6>Selected Files:</h6>
+                        <div id="fileList" class="small"></div>
+                    </div>
+                </form>
+                
+                <div id="batchUploadProgress" style="display: none;">
+                    <div class="progress mt-3">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+                    </div>
+                    <p id="uploadStatus" class="mt-2 small text-muted"></p>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Description <span class="text-danger">*</span></label>
-                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="batchUploadBtn" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i> Upload All
+                </button>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Date <span class="text-danger">*</span></label>
-                <input type="date" name="event_date" class="form-control" value="${data.event_date}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Current Image</label>
-                ${data.image ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px;">` : '<p>No image uploaded</p>'}
-                <label class="form-label">Change Image</label>
-                <input type="file" name="image" class="form-control" accept="image/*">
-                <div class="form-text">Max size: 2MB. Leave empty to keep current image.</div>
-            </div>
-        `;
-        
-        const form = document.getElementById('mediaEditForm');
-        form.action = `/admin/media/${data.id}`;
-        
-        const modal = new bootstrap.Modal(document.getElementById('mediaEditModal'));
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showCustomToast('Failed to load data', 'error');
-    });
-}
-
-function handleDeleteClick(e) {
-    const id = e.currentTarget.dataset.id;
-    
-    if (confirm('Are you sure you want to delete this item?')) {
-        fetch(`/admin/media/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showCustomToast(data.message, 'success');
-                // Reload the content
-                window.loadContent('news', 'media');
-            } else {
-                showCustomToast('Failed to delete item', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showCustomToast('Network error deleting item', 'error');
-        });
-    }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showCustomToast(message, type = 'success') {
-    const existingToast = document.querySelector('.login-toast');
-    if (existingToast) existingToast.remove();
-    
-    const toast = document.createElement('div');
-    toast.className = `login-toast ${type === 'success' ? 'success-toast' : 'error-toast'}`;
-    toast.innerHTML = `
-        <div class="login-toast-content">
-            <i class="fas ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
-            <span>${escapeHtml(message)}</span>
         </div>
-    `;
-    document.body.appendChild(toast);
+    </div>
+</div>
+<style>
+    .table-responsive {
+        overflow-x: auto;
+        min-height: 400px;
+    }
     
-    setTimeout(() => {
-        toast.classList.add('hide');
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 300);
-    }, 5000);
-}
+    #mediaTable {
+        min-width: 800px;
+        margin-bottom: 0;
+    }
+    
+    #mediaTable tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    #mediaTable tbody tr:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    .status-select {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        width: 120px;
+    }
+    
+    .btn-sm i {
+        font-size: 12px;
+    }
+    
+    /* Pagination styling */
+    .pagination {
+        gap: 5px;
+        margin: 0;
+    }
+    
+    .pagination .page-item .page-link {
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: #0E334C;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #3988BD;
+        border-color: #3988BD;
+        color: white;
+    }
+    
+    .pagination .page-item .page-link:hover:not(.active) {
+        background: #f8f9fa;
+        border-color: #3988BD;
+        color: #3988BD;
+    }
+    
+    .card-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    @media (max-width: 768px) {
+        .pagination .page-item .page-link {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: center !important;
+            gap: 10px;
+        }
+    }
+</style>
 
-window.initMediaManagement = initMediaManagement;
+<!-- Include the external JavaScript file -->
+<script src="{{ asset('js/admin/media.js') }}"></script>
+
+<script>
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof loadMediaData === 'function') {
+            loadMediaData();
+        }
+    });
 </script>
