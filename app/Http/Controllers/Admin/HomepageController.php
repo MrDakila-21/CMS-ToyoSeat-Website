@@ -52,16 +52,30 @@ class HomepageController extends Controller
         try {
             Log::info('Upload multiple images request received');
             
+            // Check if request expects JSON
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type. AJAX request required.'
+                ], 400);
+            }
+            
             // Validate the request
             if (!$request->hasFile('images')) {
-                return redirect()->back()->with('error', 'No files were uploaded. Please select at least one image.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No files were uploaded. Please select at least one image.'
+                ], 400);
             }
             
             $files = $request->file('images');
             
             // Custom validation
             if (count($files) > 10) {
-                return redirect()->back()->with('error', 'You can only upload up to 10 images at once.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only upload up to 10 images at once.'
+                ], 400);
             }
             
             $uploadedCount = 0;
@@ -83,8 +97,9 @@ class HomepageController extends Controller
                     continue;
                 }
                 
-                if ($image->getSize() > 5 * 1024 * 1024) {
-                    $errors[] = $image->getClientOriginalName() . ' exceeds 5MB limit.';
+                // 10MB max size
+                if ($image->getSize() > 10 * 1024 * 1024) {
+                    $errors[] = $image->getClientOriginalName() . ' exceeds 10MB limit.';
                     continue;
                 }
                 
@@ -108,23 +123,34 @@ class HomepageController extends Controller
             
             if ($uploadedCount === 0) {
                 $errorMessage = 'No valid images were uploaded. ' . implode(' ', $errors);
-                return redirect()->back()->with('error', $errorMessage);
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 400);
             }
             
             $successMessage = $uploadedCount . ' image(s) uploaded successfully!';
             if (!empty($errors)) {
                 $successMessage .= ' However, some files failed: ' . implode(' ', $errors);
-                return redirect()->back()->with('warning', $successMessage);
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMessage,
+                    'warnings' => $errors
+                ]);
             }
             
             Log::info('Successfully uploaded ' . $uploadedCount . ' images');
-            return redirect()->back()->with('success', $successMessage);
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage
+            ]);
             
         } catch (\Exception $e) {
             Log::error('Error uploading multiple images: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
-            return redirect()->back()->with('error', 'Failed to upload images: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload images: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -134,6 +160,14 @@ class HomepageController extends Controller
     public function updateSlidesOrder(Request $request)
     {
         try {
+            // Check if request expects JSON
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type. AJAX request required.'
+                ], 400);
+            }
+            
             $validator = validator($request->all(), [
                 'slides' => 'required|array',
                 'slides.*.id' => 'required|exists:homepage_slides,id',
@@ -172,6 +206,14 @@ class HomepageController extends Controller
     public function presentSlides(Request $request)
     {
         try {
+            // Check if request expects JSON
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type. AJAX request required.'
+                ], 400);
+            }
+            
             $slideIds = $request->slide_ids ?? [];
             
             // Deactivate all slides first
@@ -188,51 +230,84 @@ class HomepageController extends Controller
                         ->update(['is_active' => true]);
                     
                     $message = count($validIds) . ' image(s) are now active in the slideshow.';
-                    return redirect()->back()->with('success', $message);
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message
+                    ]);
                 } else {
                     $message = 'No valid images found. The homepage will use the default background image.';
-                    return redirect()->back()->with('info', $message);
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message
+                    ]);
                 }
             } else {
                 $message = 'Slideshow cleared. The homepage will now use the default background image.';
-                return redirect()->back()->with('info', $message);
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
             }
             
         } catch (\Exception $e) {
             Log::error('Error presenting slides: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update slideshow: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update slideshow: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     /**
- * Delete individual slide
- */
-public function deleteSlide($id)
-{
-    try {
-        $slide = HomepageSlide::findOrFail($id);
-        
-        // Delete the file from storage
-        if (Storage::disk('public')->exists($slide->image_path)) {
-            Storage::disk('public')->delete($slide->image_path);
+     * Delete individual slide
+     */
+    public function deleteSlide(Request $request, $id)
+    {
+        try {
+            // Check if request expects JSON
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type. AJAX request required.'
+                ], 400);
+            }
+            
+            $slide = HomepageSlide::findOrFail($id);
+            
+            // Delete the file from storage
+            if (Storage::disk('public')->exists($slide->image_path)) {
+                Storage::disk('public')->delete($slide->image_path);
+            }
+            
+            $slide->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting slide: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete image: ' . $e->getMessage()
+            ], 500);
         }
-        
-        $slide->delete();
-
-        return redirect()->back()->with('success', 'Image deleted successfully!');
-
-    } catch (\Exception $e) {
-        Log::error('Error deleting slide: '.$e->getMessage());
-        return redirect()->back()->with('error', 'Failed to delete image: ' . $e->getMessage());
     }
-}
 
     /**
      * Get current homepage background image (legacy - keep for compatibility)
      */
-    public function getImage()
+    public function getImage(Request $request)
     {
         try {
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type.'
+                ], 400);
+            }
+            
             $image = Homepage::where('key', 'hero_background')->first();
 
             if ($image && $image->image_data && !empty($image->image_data)) {
@@ -263,6 +338,13 @@ public function deleteSlide($id)
     public function uploadImage(Request $request)
     {
         try {
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type.'
+                ], 400);
+            }
+            
             $request->validate([
                 'background_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             ]);
@@ -298,6 +380,13 @@ public function deleteSlide($id)
     public function removeImage(Request $request)
     {
         try {
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request type.'
+                ], 400);
+            }
+            
             Homepage::where('key', 'hero_background')->delete();
 
             return response()->json([

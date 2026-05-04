@@ -12,76 +12,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/dash.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Hind:wght@300;400;500;600;700&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* Manual loading indicator (only for initial page load) */
-        .content-loading {
-            text-align: center;
-            padding: 60px;
+        /* Additional floating toast styles if not in dash.css */
+        .floating-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 250px;
+            max-width: 350px;
             background: white;
-            border-radius: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
         }
-        .content-loading .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3988BD;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+
+        .floating-toast-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 6px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .floating-toast.success-toast .floating-toast-content {
+            background-color: #d4edda;
+            border-left: 3px solid #28a745;
+            color: #155724;
         }
-        
-        /* Active state styling */
-        .sidebar-link.active, .sidebar-dropdown a.active {
-            background: linear-gradient(90deg, #3988BD 0%, #2c6d99 100%);
-            color: white;
-            border-left: 4px solid #ffd700;
+
+        .floating-toast.error-toast .floating-toast-content {
+            background-color: #f8d7da;
+            border-left: 3px solid #dc3545;
+            color: #721c24;
         }
-        
-        .sidebar-dropdown a.active {
-            background: #2c6d99;
+
+        .floating-toast.warning-toast .floating-toast-content {
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            color: #856404;
         }
-        
-        /* Dropdown styles */
-        .sidebar-dropdown {
-            display: none;
-            list-style: none;
-            padding-left: 40px;
-            margin: 0;
+
+        .floating-toast.info-toast .floating-toast-content {
+            background-color: #d1ecf1;
+            border-left: 3px solid #17a2b8;
+            color: #0c5460;
         }
-        
-        .sidebar-dropdown.open {
-            display: block;
+
+        .floating-toast .floating-toast-content i {
+            font-size: 18px;
         }
-        
-        .dropdown-toggle-main {
-            cursor: pointer;
-            position: relative;
+
+        .floating-toast .floating-toast-content span {
+            font-size: 13px;
+            line-height: 1.4;
         }
-        
-        .chevron-icon {
-            position: absolute;
-            right: 15px;
-            transition: transform 0.3s ease;
-        }
-        
-        /* Alert animations */
-        .alert {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .floating-toast.hide {
+            animation: slideOut 0.3s ease-in forwards;
         }
     </style>
 </head>
@@ -219,62 +208,26 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <div class="container-fluid">
-                <!-- Display flash messages at the top of content area -->
-                @if(session('success') || session('error') || session('warning') || session('info'))
-                    <div class="mt-3">
-                        @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
-                        
-                        @if(session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
-                        
-                        @if(session('warning'))
-                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
-                        
-                        @if(session('info'))
-                            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
+            <div class="content-panel active">
+                @if($tab === 'home')
+                    @include('admin.partials.home')
+                @elseif($tab === 'about')
+                    @include("admin.partials.about.{$subtab}")
+                @elseif($tab === 'recruitment')
+                    @include('admin.partials.recruitment')
+                @elseif($tab === 'news')
+                    @include("admin.partials.news.{$subtab}", [
+                        'events' => $events ?? null, 
+                        'announcements' => $announcements ?? null
+                    ])
+                @elseif($tab === 'inquiry')
+                    @include('admin.partials.inquiry')
+                @else
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Content not found.
                     </div>
                 @endif
-                
-                <!-- Dynamic Content Area - Direct include (no AJAX) -->
-                <div class="content-panel active mt-3">
-                    @if($tab === 'home')
-                        @include('admin.partials.home')
-                    @elseif($tab === 'about')
-                        @include("admin.partials.about.{$subtab}")
-                    @elseif($tab === 'recruitment')
-                        @include('admin.partials.recruitment')
-                    @elseif($tab === 'news')
-                        @include("admin.partials.news.{$subtab}", [
-                            'events' => $events ?? null, 
-                            'announcements' => $announcements ?? null
-                        ])
-                    @elseif($tab === 'inquiry')
-                        @include('admin.partials.inquiry')
-                    @else
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Content not found.
-                        </div>
-                    @endif
-                </div>
             </div>
         </main>
     </div>
@@ -339,7 +292,7 @@
             });
             
             // Auto-hide alerts after 5 seconds
-            const alerts = document.querySelectorAll('.alert');
+            const alerts = document.querySelectorAll('.alert:not(.alert-info)');
             alerts.forEach(alert => {
                 setTimeout(() => {
                     alert.classList.add('fade');
