@@ -15,6 +15,21 @@ class EventActivityController extends Controller
         return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']);
     }
 
+    // ADD THIS NEW METHOD - Get ALL records for AJAX
+    public function getAll()
+    {
+        $events = EventActivity::orderBy('event_date', 'desc')->get();
+        
+        // Add image_url for each event
+        $events->each(function($event) {
+            if ($event->image) {
+                $event->image_url = Storage::url($event->image);
+            }
+        });
+        
+        return response()->json($events);
+    }
+
     // Store new record
     public function store(Request $request)
     {
@@ -56,6 +71,12 @@ class EventActivityController extends Controller
     public function edit($id)
     {
         $eventActivity = EventActivity::findOrFail($id);
+        
+        // Add image_url for display
+        if ($eventActivity->image) {
+            $eventActivity->image_url = Storage::url($eventActivity->image);
+        }
+        
         return response()->json($eventActivity);
     }
 
@@ -123,7 +144,7 @@ class EventActivityController extends Controller
             ->with('success', 'Event/Activity deleted successfully!');
     }
 
-    // Update status (published/draft/archived)
+    // Update status (published/archived) - REMOVED DRAFT
     public function updateStatus($id, $status)
     {
         $eventActivity = EventActivity::findOrFail($id);
