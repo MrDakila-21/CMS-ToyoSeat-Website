@@ -116,7 +116,7 @@
                     <div class="mb-3">
                         <label class="form-label">Image</label>
                         <input type="file" name="image" class="form-control" accept="image/*">
-                        <div class="form-text">Max size: 2MB. Allowed: JPG, PNG, GIF, WEBP</div>
+                        <div class="form-text">Max size: 5MB. Allowed: JPG, PNG, GIF, WEBP</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -173,7 +173,7 @@
                     <div class="mb-3">
                         <label class="form-label">Select Images</label>
                         <input type="file" name="images[]" id="batchImages" class="form-control" accept="image/*" multiple required>
-                        <div class="form-text">You can select multiple images at once. Max size per image: 2MB</div>
+                        <div class="form-text">You can select multiple images at once. Max size per image: 5MB</div>
                     </div>
                     
                     <div id="batchUploadPreview" class="mt-3" style="display: none;">
