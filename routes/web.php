@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\EventActivityController;
+use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
@@ -62,6 +63,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
         Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
+        
 
         // IMPORTANT: Make sure these routes are correctly defined
         // Homepage slideshow management routes
@@ -77,9 +79,27 @@ Route::prefix('admin')->group(function () {
         Route::delete('/homepage/remove-image', [HomepageController::class, 'removeImage'])->name('admin.homepage.remove');
 
         // Event/Activity management routes
+        Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+
+        Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
         
+        // Overview management routes
+        Route::get('/overview', [OverviewController::class, 'index'])->name('admin.overview');
+        Route::post('/overview/update', [OverviewController::class, 'update'])->name('admin.overview.update');
+        Route::post('/overview/business-principle/add', [OverviewController::class, 'addBusinessPrinciple'])->name('admin.overview.addPrinciple');
+        Route::put('/overview/business-principle/{id}', [OverviewController::class, 'updateBusinessPrinciple'])->name('admin.overview.updatePrinciple');
+        Route::delete('/overview/business-principle/{id}', [OverviewController::class, 'deleteBusinessPrinciple'])->name('admin.overview.deletePrinciple');
+        // Add these routes inside the admin middleware group
+        Route::post('/overview/update-section', [OverviewController::class, 'updateSection'])->name('admin.overview.updateSection');
+        Route::post('/overview/remove-image', [OverviewController::class, 'removeImage'])->name('admin.overview.removeImage');
+        
+        // NEW: Additional routes for folder image management
+        Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
+        Route::post('media/sync-images', [EventActivityController::class, 'syncAllImages'])->name('admin.media.syncImages');
+        Route::post('media/batch-upload', [EventActivityController::class, 'batchUploadToFolder'])->name('admin.media.batchUpload');
+
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function() {
             return response()->json(['success' => true, 'message' => 'JSON test successful']);

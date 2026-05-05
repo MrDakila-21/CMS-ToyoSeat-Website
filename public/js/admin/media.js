@@ -6,10 +6,16 @@
 (function() {
     'use strict';
     
-    // Store modal instances
     let editModal = null;
+    let allData = [];
+    let currentPage = 1;
+    let rowsPerPage = 10;
+    let currentFilters = {
+        search: '',
+        type: '',
+        status: ''
+    };
     
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMediaManagement);
     } else {
@@ -19,75 +25,337 @@
     function initMediaManagement() {
         console.log('Initializing media management...');
         
-        // Initialize modal instances
         const editModalElement = document.getElementById('mediaEditModal');
         if (editModalElement && typeof bootstrap !== 'undefined') {
             editModal = new bootstrap.Modal(editModalElement);
         }
         
-        // Attach all handlers
+        loadDataFromServer();
         attachEventHandlers();
     }
     
-    function attachEventHandlers() {
-        // Use event delegation for dynamic elements
-        const container = document.querySelector('.card.content-card');
+    async function loadDataFromServer() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const tableContainer = document.getElementById('tableContainer');
         
-        if (!container) {
-            console.warn('Container not found, retrying in 500ms...');
-            setTimeout(attachEventHandlers, 500);
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
+        
+        try {
+            const response = await fetch('/admin/media/all', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+            
+            allData = await response.json();
+            console.log(`Loaded ${allData.length} records`);
+            
+            renderTable();
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (tableContainer) tableContainer.style.display = 'block';
+            
+        } catch (error) {
+            console.error('Error loading data:', error);
+            if (loadingIndicator) {
+                loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+            }
+        }
+    }
+    
+    // Helper function to format date
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Helper function to format datetime
+    function formatDateTime(dateString) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+    
+    function renderTable() {
+        // Filter data
+        let filteredData = [...allData];
+        
+        if (currentFilters.search) {
+            filteredData = filteredData.filter(item => 
+                item.title.toLowerCase().includes(currentFilters.search) || 
+                (item.description && item.description.toLowerCase().includes(currentFilters.search))
+            );
+        }
+        
+        if (currentFilters.type) {
+            filteredData = filteredData.filter(item => item.type === currentFilters.type);
+        }
+        
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(item => item.status === currentFilters.status);
+        }
+        
+        // Paginate
+        const totalRecords = filteredData.length;
+        const totalPages = Math.ceil(totalRecords / rowsPerPage);
+        
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        if (currentPage < 1) currentPage = 1;
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = filteredData.slice(start, end);
+        
+        // Build table HTML
+        let tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="mediaTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Image</th>
+                            <th>Title</th>
+                            <th style="width: 100px;">Type</th>
+                            <th style="width: 110px;">Date</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created At</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (pageData.length === 0) {
+            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td></tr>';
+        } else {
+            pageData.forEach(item => {
+                const imageHtml = item.image_url 
+                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">`
+                    : '<span class="badge bg-secondary">No Image</span>';
+                
+                const typeBadge = item.type === 'event' 
+                    ? '<span class="badge bg-primary">Event</span>'
+                    : '<span class="badge bg-success">Activity</span>';
+                
+                const statusSelect = `
+                    <select class="form-select form-select-sm status-select" data-id="${item.id}">
+                        <option value="published" ${item.status === 'published' ? 'selected' : ''}>Published</option>
+                        <option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option>
+                    </select>
+                `;
+                
+                const actions = `
+                    <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="${item.id}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                `;
+                
+                // Format dates properly
+                const formattedEventDate = formatDate(item.event_date);
+                const formattedCreatedAt = formatDateTime(item.created_at);
+                
+                tableHtml += `
+                    <tr data-id="${item.id}" data-type="${item.type}" data-status="${item.status}">
+                        <td>${imageHtml}</td>
+                        <td>${escapeHtml(item.title)}</td>
+                        <td>${typeBadge}</td>
+                        <td>${formattedEventDate}</td>
+                        <td>${statusSelect}</td>
+                        <td>${formattedCreatedAt}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('tableContainer').innerHTML = tableHtml;
+        
+        // Update pagination info
+        document.getElementById('showingStart').textContent = totalRecords === 0 ? 0 : start + 1;
+        document.getElementById('showingEnd').textContent = Math.min(end, totalRecords);
+        document.getElementById('totalRecords').textContent = totalRecords;
+        
+        // Render pagination
+        renderPagination(currentPage, totalPages);
+        
+        // Attach event handlers to new elements
+        attachDynamicHandlers();
+    }
+    
+    function renderPagination(currentPage, totalPages) {
+        const paginationUl = document.getElementById('tablePagination');
+        if (!paginationUl) return;
+        
+        if (totalPages <= 1) {
+            paginationUl.innerHTML = '';
             return;
         }
         
-        // Status change handler (direct binding works because selects are static)
+        let html = '';
+        
+        // Previous button
+        html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}" data-pagination-link="true">&laquo; Previous</a>
+        </li>`;
+        
+        // Page numbers - show limited pages
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        // First page button if needed
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="1" data-pagination-link="true">1</a></li>`;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}" data-pagination-link="true">${i}</a>
+            </li>`;
+        }
+        
+        // Last page button if needed
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}" data-pagination-link="true">${totalPages}</a></li>`;
+        }
+        
+        // Next button
+        html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}" data-pagination-link="true">Next &raquo;</a>
+        </li>`;
+        
+        paginationUl.innerHTML = html;
+        
+        // Attach click handlers to pagination links
+        attachPaginationHandlers();
+    }
+    
+    function attachPaginationHandlers() {
+        // Get all pagination links
+        const paginationLinks = document.querySelectorAll('#tablePagination .page-link[data-pagination-link="true"]');
+        
+        paginationLinks.forEach(link => {
+            // Remove any existing listeners to avoid duplicates
+            link.removeEventListener('click', handlePaginationClick);
+            // Add new click listener
+            link.addEventListener('click', handlePaginationClick);
+        });
+        
+        console.log(`Attached pagination handlers to ${paginationLinks.length} links`);
+    }
+    
+    function handlePaginationClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const page = parseInt(this.getAttribute('data-page'));
+        
+        // Get current total pages
+        let filteredData = [...allData];
+        
+        if (currentFilters.search) {
+            filteredData = filteredData.filter(item => 
+                item.title.toLowerCase().includes(currentFilters.search) || 
+                (item.description && item.description.toLowerCase().includes(currentFilters.search))
+            );
+        }
+        
+        if (currentFilters.type) {
+            filteredData = filteredData.filter(item => item.type === currentFilters.type);
+        }
+        
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(item => item.status === currentFilters.status);
+        }
+        
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+        
+        // Validate page number
+        if (isNaN(page)) return;
+        if (page < 1 || page > totalPages) return;
+        if (page === currentPage) return;
+        
+        console.log(`Changing page from ${currentPage} to ${page}`);
+        
+        // Update current page and re-render
+        currentPage = page;
+        renderTable();
+    }
+    
+    function attachDynamicHandlers() {
+        // Status change handlers
         document.querySelectorAll('.status-select').forEach(select => {
             select.removeEventListener('change', handleStatusChange);
             select.addEventListener('change', handleStatusChange);
         });
         
-        // Use event delegation for edit and delete buttons
-        container.removeEventListener('click', handleContainerClick);
-        container.addEventListener('click', handleContainerClick);
-        
-        // Form handlers
-        attachFormHandlers();
-        
-        console.log('Event handlers attached successfully');
+        // Edit/Delete buttons (using event delegation on container)
+        const container = document.getElementById('tableContainer');
+        if (container) {
+            container.removeEventListener('click', handleTableClick);
+            container.addEventListener('click', handleTableClick);
+        }
     }
     
-    function handleContainerClick(e) {
-        // Handle edit button clicks
+    function handleTableClick(e) {
         const editBtn = e.target.closest('.edit-btn');
         if (editBtn) {
             e.preventDefault();
-            const id = editBtn.dataset.id;
-            if (id) {
-                console.log('Edit button clicked for ID:', id);
-                handleEditClick(id);
-            }
+            handleEditClick(editBtn.dataset.id);
         }
         
-        // Handle delete button clicks
         const deleteBtn = e.target.closest('.delete-btn');
         if (deleteBtn) {
             e.preventDefault();
-            const id = deleteBtn.dataset.id;
-            if (id) {
-                console.log('Delete button clicked for ID:', id);
-                handleDeleteClick(id);
-            }
+            handleDeleteClick(deleteBtn.dataset.id);
         }
     }
     
-    // Status change handler
     async function handleStatusChange(e) {
         const select = e.target;
         const id = select.dataset.id;
         const status = select.value;
         
-        if (!id) return;
-        
-        // Show loading state
         select.disabled = true;
         
         try {
@@ -105,214 +373,183 @@
             
             if (data.success) {
                 showCustomToast(data.message, 'success');
+                // Update data in allData array
+                const itemIndex = allData.findIndex(item => item.id == id);
+                if (itemIndex !== -1) {
+                    allData[itemIndex].status = status;
+                }
+                renderTable();
             } else {
                 showCustomToast(data.message || 'Failed to update status', 'error');
+                await loadDataFromServer();
             }
         } catch (error) {
             console.error('Error:', error);
             showCustomToast('Network error updating status', 'error');
+            await loadDataFromServer();
         } finally {
             select.disabled = false;
         }
     }
     
-    // Edit handler
     async function handleEditClick(id) {
-        console.log('Editing item with ID:', id);
-        
-        // Show loading state in modal
         const modalBody = document.getElementById('mediaEditModalBody');
         if (modalBody) {
-            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3">Loading data...</p></div>';
+            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
         }
         
-        // Show modal immediately with loading state
-        if (editModal) {
-            editModal.show();
-        } else {
-            console.error('Edit modal not initialized');
-            showCustomToast('Error initializing edit form', 'error');
-            return;
-        }
+        editModal.show();
         
         try {
             const response = await fetch(`/admin/media/${id}/edit`, {
                 method: 'GET',
                 headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'Accept': 'application/json'
                 }
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            populateEditModal(data);
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Failed to load data', 'error');
+            editModal.hide();
+        }
+    }
+    
+    function populateEditModal(data) {
+        const modalBody = document.getElementById('mediaEditModalBody');
+        // Format date for input field (YYYY-MM-DD)
+        let formattedDate = '';
+        if (data.event_date) {
+            const date = new Date(data.event_date);
+            if (!isNaN(date.getTime())) {
+                formattedDate = date.toISOString().split('T')[0];
             }
+        }
+        
+        modalBody.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Type <span class="text-danger">*</span></label>
+                <select name="type" class="form-select" required>
+                    <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
+                    <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" name="event_date" class="form-control" value="${formattedDate}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Current Image</label>
+                ${data.image_url ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
+                <label class="form-label mt-2">Change Image</label>
+                <input type="file" name="image" class="form-control" accept="image/*">
+                <small class="form-text text-muted">Max size: 2MB. Leave empty to keep current image.</small>
+            </div>
+        `;
+        
+        const form = document.getElementById('mediaEditForm');
+        form.action = `/admin/media/${data.id}`;
+        form.enctype = 'multipart/form-data';
+    }
+    
+    async function handleDeleteClick(id) {
+        if (!confirm('⚠️ Are you sure you want to delete this item?\n\nThis action cannot be undone!')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/admin/media/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
             
             const data = await response.json();
-            console.log('Received data:', data);
             
-            if (data && data.id) {
-                populateEditModal(data);
+            if (data.success) {
+                showCustomToast(data.message, 'error');
+                await loadDataFromServer();
             } else {
-                throw new Error('Invalid data received');
+                showCustomToast(data.message || 'Failed to delete item', 'error');
             }
         } catch (error) {
-            console.error('Error loading edit data:', error);
-            showCustomToast('Failed to load data: ' + error.message, 'error');
-            if (editModal) {
-                editModal.hide();
-            }
+            console.error('Error:', error);
+            showCustomToast('Network error deleting item', 'error');
         }
     }
     
-function populateEditModal(data) {
-    const modalBody = document.getElementById('mediaEditModalBody');
-    if (!modalBody) return;
-    
-    // Format date for input field (YYYY-MM-DD)
-    let formattedDate = '';
-    if (data.event_date) {
-        const date = new Date(data.event_date);
-        if (!isNaN(date.getTime())) {
-            formattedDate = date.toISOString().split('T')[0];
+    function attachEventHandlers() {
+        // Search input
+        const searchInput = document.getElementById('tableSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                currentFilters.search = this.value.toLowerCase();
+                currentPage = 1;
+                renderTable();
+            });
         }
-    }
-    
-    console.log('Populating edit modal with data:', data);
-    console.log('Formatted date:', formattedDate);
-    
-    modalBody.innerHTML = `
-        <div class="mb-3">
-            <label class="form-label">Title <span class="text-danger">*</span></label>
-            <input type="text" name="title" class="form-control" value="${escapeHtml(data.title || '')}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Type <span class="text-danger">*</span></label>
-            <select name="type" class="form-select" required>
-                <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Description <span class="text-danger">*</span></label>
-            <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description || '')}</textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Date <span class="text-danger">*</span></label>
-            <input type="date" name="event_date" class="form-control" value="${escapeHtml(formattedDate)}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Current Image</label>
-            ${data.image_url ? `<img src="${escapeHtml(data.image_url)}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
-            <label class="form-label mt-2">Change Image</label>
-            <input type="file" name="image" class="form-control" accept="image/*">
-            <small class="form-text text-muted">Max size: 2MB. Leave empty to keep current image.</small>
-        </div>
-    `;
-    
-    // Update form action and ensure method is set correctly
-    const form = document.getElementById('mediaEditForm');
-    if (form) {
-        // Clear any existing method inputs
-        const existingMethodInputs = form.querySelectorAll('input[name="_method"]');
-        existingMethodInputs.forEach(input => input.remove());
         
-        // Set the form action
-        form.action = `/admin/media/${data.id}`;
-        
-        // Add the PUT method input
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'PUT';
-        form.appendChild(methodInput);
-        
-        // Also ensure the form has enctype for file uploads
-        form.enctype = 'multipart/form-data';
-        
-        console.log('Form setup complete:');
-        console.log('- Action:', form.action);
-        console.log('- Method input:', methodInput.value);
-        console.log('- Enctype:', form.enctype);
-    }
-}
-    
-    // Delete handler
-// Delete handler
-async function handleDeleteClick(id) {
-    console.log('Deleting item with ID:', id);
-    
-    // Use custom confirmation dialog
-    if (!confirm('⚠️ Are you sure you want to delete this item?\n\nThis action cannot be undone!')) {
-        return;
-    }
-    
-    // Show loading indication on the button
-    const deleteBtn = document.querySelector(`.delete-btn[data-id="${id}"]`);
-    let originalText = '';
-    
-    if (deleteBtn) {
-        originalText = deleteBtn.innerHTML;
-        deleteBtn.disabled = true;
-        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
-    }
-    
-    try {
-        const response = await fetch(`/admin/media/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Show RED toast for deletion (using error type)
-            showCustomToast(data.message || 'Item deleted successfully', 'error');
-            
-            // Remove the row from table with animation
-            const row = deleteBtn ? deleteBtn.closest('tr') : document.querySelector(`button.delete-btn[data-id="${id}"]`).closest('tr');
-            if (row) {
-                row.style.opacity = '0.5';
-                row.style.transition = 'opacity 0.3s';
-                setTimeout(() => {
-                    row.remove();
-                    // Check if table is empty and show message
-                    const tbody = document.querySelector('.table tbody');
-                    if (tbody && tbody.children.length === 0) {
-                        location.reload(); // Reload to show empty state message
-                    }
-                }, 300);
-            } else {
-                // Reload the page if we can't find the row
-                setTimeout(() => location.reload(), 1000);
-            }
-        } else {
-            showCustomToast(data.message || 'Failed to delete item', 'error');
-            if (deleteBtn) {
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = originalText;
-            }
+        // Type filter
+        const typeFilter = document.getElementById('typeFilter');
+        if (typeFilter) {
+            typeFilter.addEventListener('change', function() {
+                currentFilters.type = this.value;
+                currentPage = 1;
+                renderTable();
+            });
         }
-    } catch (error) {
-        console.error('Error deleting item:', error);
-        showCustomToast('Network error deleting item. Please try again.', 'error');
-        if (deleteBtn) {
-            deleteBtn.disabled = false;
-            deleteBtn.innerHTML = originalText;
+        
+        // Status filter
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                currentFilters.status = this.value;
+                currentPage = 1;
+                renderTable();
+            });
         }
-    }
-}
-    
-    // Form handlers
-    function attachFormHandlers() {
+        
+        // Reset button
+        const resetBtn = document.getElementById('resetFilters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                document.getElementById('tableSearchInput').value = '';
+                document.getElementById('typeFilter').value = '';
+                document.getElementById('statusFilter').value = '';
+                currentFilters = { search: '', type: '', status: '' };
+                currentPage = 1;
+                renderTable();
+            });
+        }
+        
+        // Rows per page
+        const rowsPerPageSelect = document.getElementById('rowsPerPage');
+        if (rowsPerPageSelect) {
+            rowsPerPageSelect.addEventListener('change', function() {
+                rowsPerPage = parseInt(this.value);
+                currentPage = 1;
+                renderTable();
+            });
+        }
+        
+        // Form submissions
         const addForm = document.getElementById('mediaAddForm');
         if (addForm) {
-            // Remove existing listener to avoid duplicates
             addForm.removeEventListener('submit', handleFormSubmit);
             addForm.addEventListener('submit', handleFormSubmit);
         }
@@ -324,187 +561,216 @@ async function handleDeleteClick(id) {
         }
     }
     
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    
-    console.log('Form submission started');
-    console.log('Form action:', form.action);
-    
-    // Show loading state on submit button
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
-    if (submitBtn) {
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
-    }
-    
-    try {
-        let url = form.action;
-        let method = form.method || 'POST';
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
         
-        // Check if this is an update (PUT request)
-        const methodInput = form.querySelector('input[name="_method"]');
-        let isUpdate = false;
-        
-        if (methodInput && methodInput.value === 'PUT') {
-            isUpdate = true;
-            method = 'POST'; // Laravel expects POST with _method=PUT
-        }
-        
-        // Create FormData from the form
-        const formData = new FormData(form);
-        
-        // Debug: Log all form data being sent
-        console.log('Form data being sent:');
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ': ' + pair[1]);
-        }
-        
-        // For updates, ensure we have the _method field
-        if (isUpdate && !formData.has('_method')) {
-            formData.append('_method', 'PUT');
-            console.log('Added _method=PUT to form data');
-        }
-        
-        // Send the request
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
-        
-        const data = await response.json();
-        console.log('Server response:', data);
-        
-        if (response.ok && data.success) {
-            showCustomToast(data.message || 'Saved successfully', 'success');
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
             
-            // Close modal
-            const modal = form.closest('.modal');
-            if (modal) {
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                
+                // Close modal
+                const modal = form.closest('.modal');
                 const modalInstance = bootstrap.Modal.getInstance(modal);
-                if (modalInstance) {
-                    modalInstance.hide();
+                if (modalInstance) modalInstance.hide();
+                
+                // Reload data
+                await loadDataFromServer();
+            } else {
+                let errorMessage = data.message || 'Failed to save';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).flat().join('\n');
                 }
+                showCustomToast(errorMessage, 'error');
             }
-            
-            // Reload the content
-            setTimeout(() => {
-                if (typeof window.loadContent === 'function') {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const tab = urlParams.get('tab') || 'news';
-                    const subtab = urlParams.get('subtab') || 'media';
-                    window.loadContent(tab, subtab);
-                } else {
-                    location.reload();
-                }
-            }, 500);
-        } else {
-            // Display error message
-            let errorMessage = data.message || 'Failed to save data';
-            if (data.errors) {
-                const errorList = Object.values(data.errors).flat();
-                errorMessage = errorList.join('\n');
-                console.error('Validation errors:', data.errors);
-            }
-            showCustomToast(errorMessage, 'error');
-            
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        }
-    } catch (error) {
-        console.error('Error saving data:', error);
-        showCustomToast('Network error saving data. Please try again.', 'error');
-        
-        if (submitBtn) {
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
+            submitBtn.innerHTML = originalText;
         }
     }
-}
     
-    // Utility functions
     function getCsrfToken() {
-        const metaTag = document.querySelector('meta[name="csrf-token"]');
-        if (!metaTag) {
-            console.warn('CSRF token meta tag not found');
-            return '';
-        }
-        return metaTag.content;
+        const token = document.querySelector('meta[name="csrf-token"]');
+        return token ? token.content : '';
     }
     
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
-        div.textContent = String(text);
+        div.textContent = text;
         return div.innerHTML;
     }
     
-function showCustomToast(message, type = 'success') {
-    // Remove existing toast
-    const existingToast = document.querySelector('.login-toast');
-    if (existingToast) existingToast.remove();
-    
-    // Set icon based on type
-    let icon = 'fa-circle-check';
-    if (type === 'error') {
-        icon = 'fa-circle-exclamation';
-    } else if (type === 'warning') {
-        icon = 'fa-triangle-exclamation';
-    } else if (type === 'info') {
-        icon = 'fa-info-circle';
-    }
-    
-    // Create toast container
-    const toast = document.createElement('div');
-    toast.className = `login-toast ${type === 'success' ? 'success-toast' : 'error-toast'}`;
-    
-    // Create toast content with compact styling
-    toast.innerHTML = `
-        <div class="login-toast-content" style="padding: 10px 16px; gap: 10px;">
-            <i class="fas ${icon}" style="font-size: 18px;"></i>
-            <span style="font-size: 13px; line-height: 1.4; flex: 1;">${escapeHtml(message)}</span>
-            <button type="button" class="toast-close" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 0; margin-left: 8px; opacity: 0.6;">&times;</button>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // Add close button functionality
-    const closeBtn = toast.querySelector('.toast-close');
-    closeBtn.onclick = function() {
-        toast.classList.add('hide');
+    function showCustomToast(message, type = 'success') {
+        const existingToast = document.querySelector('.custom-toast');
+        if (existingToast) existingToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = `custom-toast alert alert-${type === 'error' ? 'danger' : 'success'} position-fixed top-0 end-0 m-3`;
+        toast.style.zIndex = '9999';
+        toast.style.minWidth = '250px';
+        toast.style.animation = 'slideInRight 0.3s ease-out';
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} me-2"></i>
+                <span>${escapeHtml(message)}</span>
+                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
         setTimeout(() => {
             if (toast.parentNode) toast.remove();
-        }, 300);
-    };
+        }, 3000);
+    }
     
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.classList.add('hide');
-            setTimeout(() => {
-                if (toast.parentNode) toast.remove();
-            }, 300);
+    // Add CSS animation for toast
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
-    }, 3000);
-}
+        .custom-toast {
+            animation: slideInRight 0.3s ease-out;
+        }
+    `;
+    document.head.appendChild(style);
     
-    // Expose functions globally for dynamic content
-    window.initMediaManagement = initMediaManagement;
-    window.refreshMediaHandlers = function() {
-        attachEventHandlers();
-    };
-    
-    // Log successful initialization
+    window.loadMediaData = loadDataFromServer;
     console.log('Media.js initialized successfully');
 })();
 
-window.initMediaManagement = initMediaManagement;
+function initBatchUpload() {
+    const batchModal = document.getElementById('batchUploadModal');
+    if (!batchModal) return;
+    
+    // Preview selected files
+    const batchImages = document.getElementById('batchImages');
+    const batchUploadPreview = document.getElementById('batchUploadPreview');
+    const fileList = document.getElementById('fileList');
+    
+    if (batchImages) {
+        batchImages.addEventListener('change', function() {
+            const files = this.files;
+            if (files.length > 0) {
+                batchUploadPreview.style.display = 'block';
+                fileList.innerHTML = '';
+                for (let i = 0; i < files.length; i++) {
+                    fileList.innerHTML += `<div>📄 ${files[i].name} (${(files[i].size / 1024).toFixed(2)} KB)</div>`;
+                }
+            } else {
+                batchUploadPreview.style.display = 'none';
+            }
+        });
+    }
+    
+    // Handle batch upload
+    const batchUploadBtn = document.getElementById('batchUploadBtn');
+    if (batchUploadBtn) {
+        batchUploadBtn.addEventListener('click', async function() {
+            const files = document.getElementById('batchImages').files;
+            if (files.length === 0) {
+                showCustomToast('Please select files to upload', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images[]', files[i]);
+            }
+            
+            const progressDiv = document.getElementById('batchUploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            progressDiv.style.display = 'block';
+            batchUploadBtn.disabled = true;
+            batchUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+            
+            try {
+                const response = await fetch('/admin/media/batch-upload', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showCustomToast(data.message, 'success');
+                    
+                    // Close modal and reload data
+                    const modal = bootstrap.Modal.getInstance(batchModal);
+                    if (modal) modal.hide();
+                    
+                    await loadDataFromServer();
+                    
+                    // Reset form
+                    document.getElementById('batchUploadForm').reset();
+                    batchUploadPreview.style.display = 'none';
+                } else {
+                    showCustomToast(data.message, 'error');
+                    if (data.failed && data.failed.length > 0) {
+                        console.error('Failed uploads:', data.failed);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showCustomToast('Network error during batch upload', 'error');
+            } finally {
+                progressDiv.style.display = 'none';
+                batchUploadBtn.disabled = false;
+                batchUploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload All';
+                progressBar.style.width = '0%';
+            }
+        });
+    }
+}
+
+// Add to your initMediaManagement function
+function initMediaManagement() {
+    console.log('Initializing media management...');
+    
+    const editModalElement = document.getElementById('mediaEditModal');
+    if (editModalElement && typeof bootstrap !== 'undefined') {
+        editModal = new bootstrap.Modal(editModalElement);
+    }
+    
+    loadDataFromServer();
+    attachEventHandlers();
+    initDirectUploadModal(); // From previous implementation
+    initBatchUpload(); // Add this line
+}
