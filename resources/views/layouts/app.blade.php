@@ -332,6 +332,8 @@
 
         .footer-brand-name {
             font-weight: 800;
+            font-family: 'Cinzel', serif;
+            font-style: italic;
             font-size: 1.3rem;
             letter-spacing: 1px;
             color: white;
@@ -341,6 +343,8 @@
         .footer-brand-sub {
             font-weight: 500;
             font-size: 0.7rem;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
             color: rgba(255, 255, 255, 0.8);
         }
 
