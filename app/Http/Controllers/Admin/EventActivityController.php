@@ -23,7 +23,7 @@ class EventActivityController extends Controller
         
         // Add image_url for each event using the accessor
         $events->each(function($event) {
-            // The accessor will automatically check for folder images
+            // The accessor will automatically check for folder images first
             $event->image_url = $event->image_url;
         });
         
@@ -38,7 +38,7 @@ class EventActivityController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'event_date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'type' => 'required|in:event,activity'
         ]);
 
@@ -55,7 +55,7 @@ class EventActivityController extends Controller
 
         // Handle image upload if present
         if ($request->hasFile('image')) {
-            // Store with ID as filename
+            // Store with ID as filename in storage
             $extension = $request->file('image')->getClientOriginalExtension();
             $filename = "{$eventActivity->id}.{$extension}";
             $imagePath = $request->file('image')->storeAs('events-activities', $filename, 'public');
@@ -63,6 +63,7 @@ class EventActivityController extends Controller
             $eventActivity->save();
         } else {
             // Check if there's an image in the folder with matching ID
+            // This will clear the database path if folder image exists
             $eventActivity->syncImageFromFolder();
         }
 
@@ -95,7 +96,7 @@ class EventActivityController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'event_date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'type' => 'required|in:event,activity'
         ]);
 
@@ -107,7 +108,10 @@ class EventActivityController extends Controller
 
         // Handle image upload if present
         if ($request->hasFile('image')) {
-            // Delete old image if exists in storage
+            // Delete any existing folder image first
+            $eventActivity->deleteFolderImage();
+            
+            // Delete old database image if exists in storage
             if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
                 Storage::disk('public')->delete($eventActivity->image);
             }
@@ -117,6 +121,10 @@ class EventActivityController extends Controller
             $filename = "{$eventActivity->id}.{$extension}";
             $imagePath = $request->file('image')->storeAs('events-activities', $filename, 'public');
             $eventActivity->image = $imagePath;
+        } else {
+            // If no new image uploaded, check if folder image exists
+            // This ensures folder images take priority
+            $eventActivity->syncImageFromFolder();
         }
 
         // Save updates
@@ -135,12 +143,13 @@ class EventActivityController extends Controller
     {
         $eventActivity = EventActivity::findOrFail($id);
         
-        // Delete image file if exists in storage
+        // Delete database image file if exists in storage
         if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
             Storage::disk('public')->delete($eventActivity->image);
         }
         
-        // Note: We don't delete images from the public/images folder as they might be used elsewhere
+        // Delete folder image if exists
+        $eventActivity->deleteFolderImage();
         
         // Delete record from database
         $eventActivity->delete();
@@ -163,63 +172,75 @@ class EventActivityController extends Controller
         return response()->json(['success' => true, 'message' => 'Status updated successfully']);
     }
     
-    // NEW METHOD: Upload image directly to folder by ID
+    // Upload image directly to EventActivity folder by ID
     public function uploadDirectImage(Request $request)
     {
         $request->validate([
             'id' => 'required|exists:events_activities,id',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
         
         $eventActivity = EventActivity::find($request->id);
         
-        // Store the image directly in public/images folder with ID as filename
+        // Delete any existing folder image first (to replace it)
+        $eventActivity->deleteFolderImage();
+        
+        // Delete any database stored image if exists
+        if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
+            Storage::disk('public')->delete($eventActivity->image);
+        }
+        
+        // Store the image directly in public/images/EventActivity folder with ID as filename
         $extension = $request->file('image')->getClientOriginalExtension();
         $filename = "{$eventActivity->id}.{$extension}";
         
-        // Create images directory if it doesn't exist
-        $imagesPath = public_path('images');
-        if (!file_exists($imagesPath)) {
-            mkdir($imagesPath, 0755, true);
+        // Create EventActivity directory if it doesn't exist
+        $eventActivityPath = public_path('images/EventActivity');
+        if (!file_exists($eventActivityPath)) {
+            mkdir($eventActivityPath, 0755, true);
         }
         
         // Move the uploaded file
-        $request->file('image')->move($imagesPath, $filename);
+        $request->file('image')->move($eventActivityPath, $filename);
         
-        // Clear the database image path if exists (so it uses the folder image)
-        if ($eventActivity->image) {
-            $eventActivity->image = null;
-            $eventActivity->save();
-        }
+        // Clear the database image path (so it uses the folder image)
+        $eventActivity->image = null;
+        $eventActivity->save();
         
         return response()->json([
             'success' => true,
-            'message' => 'Image uploaded successfully to folder!',
+            'message' => 'Image uploaded successfully to images/EventActivity folder! The folder image will now take priority.',
             'image_url' => $eventActivity->fresh()->image_url
         ]);
     }
     
-    // NEW METHOD: Sync all images from folder
+    // Sync all images from EventActivity folder
     public function syncAllImages()
     {
         $updated = EventActivity::syncAllImagesFromFolder();
         
         return response()->json([
             'success' => true,
-            'message' => "Synced {$updated} items successfully!"
+            'message' => "Synced {$updated} items successfully! Images from images/EventActivity folder will now take priority."
         ]);
     }
     
-    // NEW METHOD: Upload multiple images at once to folder (batch upload)
+    // Upload multiple images at once to EventActivity folder (batch upload)
     public function batchUploadToFolder(Request $request)
     {
         $request->validate([
             'images' => 'required|array',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
         
         $uploaded = [];
         $failed = [];
+        
+        // Create EventActivity directory if it doesn't exist
+        $eventActivityPath = public_path('images/EventActivity');
+        if (!file_exists($eventActivityPath)) {
+            mkdir($eventActivityPath, 0755, true);
+        }
         
         foreach ($request->file('images') as $file) {
             // Get the original filename without extension
@@ -231,21 +252,22 @@ class EventActivityController extends Controller
                 $eventActivity = EventActivity::find($id);
                 
                 if ($eventActivity) {
+                    // Delete any existing folder image for this ID
+                    $eventActivity->deleteFolderImage();
+                    
+                    // Delete any database stored image
+                    if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
+                        Storage::disk('public')->delete($eventActivity->image);
+                    }
+                    
                     $extension = $file->getClientOriginalExtension();
                     $filename = "{$id}.{$extension}";
                     
-                    $imagesPath = public_path('images');
-                    if (!file_exists($imagesPath)) {
-                        mkdir($imagesPath, 0755, true);
-                    }
-                    
-                    $file->move($imagesPath, $filename);
+                    $file->move($eventActivityPath, $filename);
                     
                     // Clear database image path
-                    if ($eventActivity->image) {
-                        $eventActivity->image = null;
-                        $eventActivity->save();
-                    }
+                    $eventActivity->image = null;
+                    $eventActivity->save();
                     
                     $uploaded[] = [
                         'id' => $id,
@@ -268,9 +290,67 @@ class EventActivityController extends Controller
         
         return response()->json([
             'success' => count($uploaded) > 0,
-            'message' => "Uploaded: " . count($uploaded) . " files, Failed: " . count($failed),
+            'message' => "Uploaded: " . count($uploaded) . " files, Failed: " . count($failed) . ". Images saved to images/EventActivity folder.",
             'uploaded' => $uploaded,
             'failed' => $failed
+        ]);
+    }
+    
+    // Remove folder image and revert to database image
+    public function removeFolderImage($id)
+    {
+        $eventActivity = EventActivity::findOrFail($id);
+        
+        // Delete the folder image
+        $deleted = $eventActivity->deleteFolderImage();
+        
+        if ($deleted) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Folder image removed from images/EventActivity folder. System will now use the database image (if any) or default image.',
+                'image_url' => $eventActivity->fresh()->image_url
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'No folder image found for this item in images/EventActivity folder.'
+            ], 404);
+        }
+    }
+    
+    // NEW METHOD: Get all folder images info
+    public function getFolderImagesInfo()
+    {
+        $eventActivityPath = public_path('images/EventActivity');
+        $images = [];
+        
+        if (file_exists($eventActivityPath)) {
+            $files = scandir($eventActivityPath);
+            foreach ($files as $file) {
+                if ($file !== '.' && $file !== '..') {
+                    $extension = pathinfo($file, PATHINFO_EXTENSION);
+                    $id = pathinfo($file, PATHINFO_FILENAME);
+                    
+                    if (is_numeric($id)) {
+                        $eventActivity = EventActivity::find($id);
+                        $images[] = [
+                            'filename' => $file,
+                            'id' => $id,
+                            'title' => $eventActivity ? $eventActivity->title : 'Unknown',
+                            'exists_in_db' => $eventActivity ? true : false,
+                            'size' => filesize($eventActivityPath . '/' . $file),
+                            'modified' => date('Y-m-d H:i:s', filemtime($eventActivityPath . '/' . $file))
+                        ];
+                    }
+                }
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'folder' => 'images/EventActivity',
+            'total_images' => count($images),
+            'images' => $images
         ]);
     }
 }

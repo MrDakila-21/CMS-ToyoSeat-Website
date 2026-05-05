@@ -28,33 +28,42 @@ class EventActivity extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - Modified to check folder by ID
+    // Helper to get full image URL - Organized in EventActivity folder
     public function getImageUrlAttribute()
     {
-        // Priority 1: Check if there's a stored image path in database (from upload)
+        // PRIORITY 1: Check for image in public/images/EventActivity folder with ID as filename
+        $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        
+        foreach ($imageExtensions as $ext) {
+            // Check in public/images/EventActivity directory
+            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            if (file_exists($eventActivityImagePath)) {
+                return asset("images/EventActivity/{$this->id}.{$ext}");
+            }
+        }
+        
+        // PRIORITY 2: Check if there's a stored image path in database (from upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
             return Storage::url($this->image);
         }
         
-        // Priority 2: Check for image in public/images with ID as filename
+        // PRIORITY 3: Return default image if no image found
+        return asset('images/default-image.png');
+    }
+    
+    // Method to check if folder image exists
+    public function hasFolderImage()
+    {
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            // Check in public/images directory
-            $directImagePath = public_path("images/{$this->id}.{$ext}");
-            if (file_exists($directImagePath)) {
-                return asset("images/{$this->id}.{$ext}");
-            }
-            
-            // Also check in public/images/events-activities directory if needed
-            $folderImagePath = public_path("images/events-activities/{$this->id}.{$ext}");
-            if (file_exists($folderImagePath)) {
-                return asset("images/events-activities/{$this->id}.{$ext}");
+            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            if (file_exists($eventActivityImagePath)) {
+                return true;
             }
         }
         
-        // Priority 3: Return default image if no image found
-        return asset('images/default-image.png');
+        return false;
     }
     
     // Method to sync image from folder by ID
@@ -63,22 +72,51 @@ class EventActivity extends Model
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            // Check in public/images directory
-            $directImagePath = public_path("images/{$this->id}.{$ext}");
-            if (file_exists($directImagePath)) {
-                // If found, optionally move to storage or just use it
-                // The getImageUrlAttribute will handle displaying it
-                return true;
-            }
-            
-            // Check in public/images/events-activities directory
-            $folderImagePath = public_path("images/events-activities/{$this->id}.{$ext}");
-            if (file_exists($folderImagePath)) {
+            // Check in public/images/EventActivity directory
+            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            if (file_exists($eventActivityImagePath)) {
+                // If folder image exists, clear database image path to prioritize folder
+                if ($this->image) {
+                    $this->image = null;
+                    $this->save();
+                }
                 return true;
             }
         }
         
         return false;
+    }
+    
+    // Method to delete folder image if exists
+    public function deleteFolderImage()
+    {
+        $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        $deleted = false;
+        
+        foreach ($imageExtensions as $ext) {
+            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            if (file_exists($eventActivityImagePath)) {
+                unlink($eventActivityImagePath);
+                $deleted = true;
+            }
+        }
+        
+        return $deleted;
+    }
+    
+    // Get the folder image path if exists
+    public function getFolderImagePath()
+    {
+        $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        
+        foreach ($imageExtensions as $ext) {
+            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            if (file_exists($eventActivityImagePath)) {
+                return $eventActivityImagePath;
+            }
+        }
+        
+        return null;
     }
     
     // Static method to sync all images
