@@ -7,6 +7,8 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InquiryController;
+use App\Http\Controllers\Guest\LocationController as GuestLocationController;
 
 // Add this at the beginning of your routes file
 Route::get('/login', function () {
@@ -23,7 +25,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::prefix('about')->name('about.')->group(function () {
         Route::view('/overview', 'guest.about.overview')->name('overview');
         Route::view('/business-introduction', 'guest.about.business-introduction')->name('business-introduction');
-        Route::view('/location', 'guest.about.location')->name('location');
+        Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
         Route::view('/history', 'guest.about.history')->name('history');
         Route::view('/iso-obtained', 'guest.about.iso-obtained')->name('iso-obtained');
         Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
@@ -45,6 +47,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     // Inquiry page
     Route::prefix('inquiry')->name('inquiry.')->group(function () {
         Route::view('/', 'guest.inquiry.inquiry')->name('index');
+        Route::post('/send', [InquiryController::class, 'store'])->name('store');
     });
 
 });
@@ -94,6 +97,14 @@ Route::prefix('admin')->group(function () {
         // Add these routes inside the admin middleware group
         Route::post('/overview/update-section', [OverviewController::class, 'updateSection'])->name('admin.overview.updateSection');
         Route::post('/overview/remove-image', [OverviewController::class, 'removeImage'])->name('admin.overview.removeImage');
+
+        Route::prefix('location')->name('admin.location.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LocationController::class, 'index'])->name('index');
+            Route::post('/store', [\App\Http\Controllers\Admin\LocationController::class, 'store'])->name('store');
+            Route::put('/update/{id}', [\App\Http\Controllers\Admin\LocationController::class, 'update'])->name('update');
+            Route::get('/get', [\App\Http\Controllers\Admin\LocationController::class, 'getLocation'])->name('get');
+            Route::delete('/delete/{id}', [\App\Http\Controllers\Admin\LocationController::class, 'destroy'])->name('delete');
+        });
         
         // NEW: Additional routes for folder image management
         Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
@@ -114,13 +125,3 @@ Route::fallback(function () {
     }
 });
 
-use App\Http\Controllers\InquiryController;
-
-Route::prefix('guest')->name('guest.')->group(function () {
-
-    Route::prefix('inquiry')->name('inquiry.')->group(function () {
-        Route::view('/', 'guest.inquiry.inquiry')->name('index');
-        Route::post('/send', [InquiryController::class, 'store'])->name('store');
-    });
-
-});
