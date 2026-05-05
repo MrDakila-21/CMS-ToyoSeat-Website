@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\EventActivityController;
+use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
@@ -45,6 +46,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::prefix('inquiry')->name('inquiry.')->group(function () {
         Route::view('/', 'guest.inquiry.inquiry')->name('index');
     });
+
 });
 
 // Admin routes
@@ -61,6 +63,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
         Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
+        
 
         // IMPORTANT: Make sure these routes are correctly defined
         // Homepage slideshow management routes
@@ -79,6 +82,18 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+
+        Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
+        
+        // Overview management routes
+        Route::get('/overview', [OverviewController::class, 'index'])->name('admin.overview');
+        Route::post('/overview/update', [OverviewController::class, 'update'])->name('admin.overview.update');
+        Route::post('/overview/business-principle/add', [OverviewController::class, 'addBusinessPrinciple'])->name('admin.overview.addPrinciple');
+        Route::put('/overview/business-principle/{id}', [OverviewController::class, 'updateBusinessPrinciple'])->name('admin.overview.updatePrinciple');
+        Route::delete('/overview/business-principle/{id}', [OverviewController::class, 'deleteBusinessPrinciple'])->name('admin.overview.deletePrinciple');
+        // Add these routes inside the admin middleware group
+        Route::post('/overview/update-section', [OverviewController::class, 'updateSection'])->name('admin.overview.updateSection');
+        Route::post('/overview/remove-image', [OverviewController::class, 'removeImage'])->name('admin.overview.removeImage');
         
         // NEW: Additional routes for folder image management
         Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
@@ -97,4 +112,15 @@ Route::fallback(function () {
     if (request()->is('admin/*') && !Auth::check()) {
         return redirect()->route('admin.login');
     }
+});
+
+use App\Http\Controllers\InquiryController;
+
+Route::prefix('guest')->name('guest.')->group(function () {
+
+    Route::prefix('inquiry')->name('inquiry.')->group(function () {
+        Route::view('/', 'guest.inquiry.inquiry')->name('index');
+        Route::post('/send', [InquiryController::class, 'store'])->name('store');
+    });
+
 });

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EventActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\OverviewContent;
 class AdminAuthController extends Controller
 {
     public function showLoginForm()
@@ -37,69 +37,72 @@ class AdminAuthController extends Controller
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
     }
-
-    public function dashboard(Request $request)
-    {
-        // Ensure user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('admin.login');
-        }
-        
-        // Get tab from query parameters
-        $tab = $request->query('tab', 'home');
-        $subtab = $request->query('subtab');
-        
-        // Validate that the tab/subtab combination exists
-        $validTabs = ['home', 'about', 'recruitment', 'news', 'inquiry'];
-        $validAboutSubtabs = ['overview', 'business', 'location', 'history', 'iso', 'privacy'];
-        $validNewsSubtabs = ['media', 'announcements'];
-        
-        if (!in_array($tab, $validTabs)) {
-            $tab = 'home';
-            $subtab = null;
-        }
-        
-        if ($tab === 'about' && !in_array($subtab, $validAboutSubtabs)) {
-            $subtab = 'overview';
-        }
-        
-        if ($tab === 'news' && !in_array($subtab, $validNewsSubtabs)) {
-            $subtab = 'media';
-        }
-        
-        // Prepare data for views that need it
-        $events = null;
-        $announcements = null;
-        
-        if ($tab === 'news' && $subtab === 'media') {
-            try {
-                $events = EventActivity::orderBy('created_at', 'desc')->get();
-            } catch (\Exception $e) {
-                $events = collect([]);
-            }
-        }
-        
-        if ($tab === 'news' && $subtab === 'announcements') {
-            $announcements = []; // Add your announcements data here
-        }
-        
-        // Return the appropriate view directly (no AJAX)
-        $viewPath = "admin.partials.{$tab}";
-        
-        if ($tab === 'about') {
-            $viewPath = "admin.partials.about.{$subtab}";
-        } elseif ($tab === 'news') {
-            $viewPath = "admin.partials.news.{$subtab}";
-        }
-        
-        // Check if view exists
-        if (!view()->exists($viewPath)) {
-            abort(404, "View not found: {$viewPath}");
-        }
-        
-        return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements'));
+public function dashboard(Request $request)
+{
+    // Ensure user is authenticated
+    if (!Auth::check()) {
+        return redirect()->route('admin.login');
     }
-
+    
+    // Get tab from query parameters
+    $tab = $request->query('tab', 'home');
+    $subtab = $request->query('subtab');
+    
+    // Validate that the tab/subtab combination exists
+    $validTabs = ['home', 'about', 'recruitment', 'news', 'inquiry'];
+    $validAboutSubtabs = ['overview', 'business', 'location', 'history', 'iso', 'privacy'];
+    $validNewsSubtabs = ['media', 'announcements'];
+    
+    if (!in_array($tab, $validTabs)) {
+        $tab = 'home';
+        $subtab = null;
+    }
+    
+    if ($tab === 'about' && !in_array($subtab, $validAboutSubtabs)) {
+        $subtab = 'overview';
+    }
+    
+    if ($tab === 'news' && !in_array($subtab, $validNewsSubtabs)) {
+        $subtab = 'media';
+    }
+    
+    // Prepare data for views that need it
+    $events = null;
+    $announcements = null;
+    $content = null; // Add this line
+    
+    if ($tab === 'about' && $subtab === 'overview') {
+        $content = \App\Models\OverviewContent::getContent(); // Add this line
+    }
+    
+    if ($tab === 'news' && $subtab === 'media') {
+        try {
+            $events = EventActivity::orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            $events = collect([]);
+        }
+    }
+    
+    if ($tab === 'news' && $subtab === 'announcements') {
+        $announcements = []; // Add your announcements data here
+    }
+    
+    // Return the appropriate view directly (no AJAX)
+    $viewPath = "admin.partials.{$tab}";
+    
+    if ($tab === 'about') {
+        $viewPath = "admin.partials.about.{$subtab}";
+    } elseif ($tab === 'news') {
+        $viewPath = "admin.partials.news.{$subtab}";
+    }
+    
+    // Check if view exists
+    if (!view()->exists($viewPath)) {
+        abort(404, "View not found: {$viewPath}");
+    }
+    
+    return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content')); // Add 'content' to compact
+}
     public function logout(Request $request)
     {
         // Clear all session data
