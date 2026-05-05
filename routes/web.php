@@ -46,6 +46,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::prefix('inquiry')->name('inquiry.')->group(function () {
         Route::view('/', 'guest.inquiry.inquiry')->name('index');
     });
+
 });
 
 // Admin routes
@@ -111,4 +112,15 @@ Route::fallback(function () {
     if (request()->is('admin/*') && !Auth::check()) {
         return redirect()->route('admin.login');
     }
+});
+
+use App\Http\Controllers\InquiryController;
+
+Route::prefix('guest')->name('guest.')->group(function () {
+
+    Route::prefix('inquiry')->name('inquiry.')->group(function () {
+        Route::view('/', 'guest.inquiry.inquiry')->name('index');
+        Route::post('/send', [InquiryController::class, 'store'])->name('store');
+    });
+
 });
