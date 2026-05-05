@@ -79,8 +79,8 @@
     </div>
 </div>
 
-<!-- Add Modal -->
-<div class="modal fade" id="mediaAddModal" tabindex="-1" aria-hidden="true">
+<!-- Add Modal - Updated with static backdrop and keyboard false -->
+<div class="modal fade" id="mediaAddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <form id="mediaAddForm" action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data">
@@ -128,8 +128,8 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
-<div class="modal fade" id="mediaEditModal" tabindex="-1" aria-hidden="true">
+<!-- Edit Modal - Updated with static backdrop and keyboard false -->
+<div class="modal fade" id="mediaEditModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <form id="mediaEditForm" method="POST" enctype="multipart/form-data">
@@ -149,8 +149,8 @@
     </div>
 </div>
 
-<!-- Batch Upload Modal -->
-<div class="modal fade" id="batchUploadModal" tabindex="-1" aria-hidden="true">
+<!-- Batch Upload Modal - Updated with static backdrop and keyboard false for consistency -->
+<div class="modal fade" id="batchUploadModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -198,6 +198,7 @@
         </div>
     </div>
 </div>
+
 <style>
     .table-responsive {
         overflow-x: auto;
@@ -270,6 +271,15 @@
             align-items: center !important;
             gap: 10px;
         }
+    }
+
+    /* Modal styling - Using Bootstrap's static backdrop instead of custom CSS */
+    .modal {
+        z-index: 1050;
+    }
+
+    .modal-backdrop {
+        z-index: 1040;
     }
 </style>
 

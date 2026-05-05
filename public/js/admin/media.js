@@ -6,6 +6,7 @@
 (function() {
     'use strict';
     
+    let addModal = null;
     let editModal = null;
     let allData = [];
     let currentPage = 1;
@@ -25,13 +26,63 @@
     function initMediaManagement() {
         console.log('Initializing media management...');
         
+        // Initialize Add Modal with static backdrop
+        const addModalElement = document.getElementById('mediaAddModal');
+        if (addModalElement && typeof bootstrap !== 'undefined') {
+            addModal = new bootstrap.Modal(addModalElement, {
+                backdrop: 'static',  // Prevents closing when clicking outside
+                keyboard: false      // Prevents closing with ESC key
+            });
+            
+            // Reset form when modal is closed
+            addModalElement.addEventListener('hidden.bs.modal', function() {
+                const form = document.getElementById('mediaAddForm');
+                if (form) {
+                    form.reset();
+                    // Remove any error highlights
+                    form.querySelectorAll('.is-invalid').forEach(el => {
+                        el.classList.remove('is-invalid');
+                    });
+                }
+            });
+        }
+        
+        // Initialize Edit Modal with static backdrop
         const editModalElement = document.getElementById('mediaEditModal');
         if (editModalElement && typeof bootstrap !== 'undefined') {
-            editModal = new bootstrap.Modal(editModalElement);
+            editModal = new bootstrap.Modal(editModalElement, {
+                backdrop: 'static',  // Prevents closing when clicking outside
+                keyboard: false      // Prevents closing with ESC key
+            });
+            
+            // Reset form when modal is closed
+            editModalElement.addEventListener('hidden.bs.modal', function() {
+                const form = document.getElementById('mediaEditForm');
+                if (form) {
+                    form.reset();
+                }
+            });
         }
         
         loadDataFromServer();
         attachEventHandlers();
+        initDirectUploadModal();
+        initBatchUpload();
+        
+        // Global Enter key prevention for all modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.closest('.modal')) {
+                const activeElement = document.activeElement;
+                // Allow Enter in textareas (for new lines)
+                if (activeElement && activeElement.tagName.toLowerCase() === 'textarea') {
+                    return; // Allow Enter for new lines
+                }
+                // Prevent Enter in all other inputs
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
     }
     
     async function loadDataFromServer() {
@@ -67,7 +118,6 @@
         }
     }
     
-    // Helper function to format date
     function formatDate(dateString) {
         if (!dateString) return '-';
         
@@ -81,7 +131,6 @@
         return `${year}-${month}-${day}`;
     }
     
-    // Helper function to format datetime
     function formatDateTime(dateString) {
         if (!dateString) return '-';
         
@@ -98,7 +147,6 @@
     }
     
     function renderTable() {
-        // Filter data
         let filteredData = [...allData];
         
         if (currentFilters.search) {
@@ -116,7 +164,6 @@
             filteredData = filteredData.filter(item => item.status === currentFilters.status);
         }
         
-        // Paginate
         const totalRecords = filteredData.length;
         const totalPages = Math.ceil(totalRecords / rowsPerPage);
         
@@ -127,12 +174,12 @@
         const end = start + rowsPerPage;
         const pageData = filteredData.slice(start, end);
         
-        // Build table HTML
         let tableHtml = `
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle" id="mediaTable">
                     <thead>
                         <tr>
+                            <th style="width: 50px;">ID</th>
                             <th style="width: 80px;">Image</th>
                             <th>Title</th>
                             <th style="width: 100px;">Type</th>
@@ -146,7 +193,7 @@
         `;
         
         if (pageData.length === 0) {
-            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td></tr>';
+            tableHtml += '<tr><td colspan="8" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
                 const imageHtml = item.image_url 
@@ -173,12 +220,12 @@
                     </button>
                 `;
                 
-                // Format dates properly
                 const formattedEventDate = formatDate(item.event_date);
                 const formattedCreatedAt = formatDateTime(item.created_at);
                 
                 tableHtml += `
                     <tr data-id="${item.id}" data-type="${item.type}" data-status="${item.status}">
+                        <td class="text-center">${item.id}</td>
                         <td>${imageHtml}</td>
                         <td>${escapeHtml(item.title)}</td>
                         <td>${typeBadge}</td>
@@ -199,15 +246,11 @@
         
         document.getElementById('tableContainer').innerHTML = tableHtml;
         
-        // Update pagination info
         document.getElementById('showingStart').textContent = totalRecords === 0 ? 0 : start + 1;
         document.getElementById('showingEnd').textContent = Math.min(end, totalRecords);
         document.getElementById('totalRecords').textContent = totalRecords;
         
-        // Render pagination
         renderPagination(currentPage, totalPages);
-        
-        // Attach event handlers to new elements
         attachDynamicHandlers();
     }
     
@@ -222,12 +265,10 @@
         
         let html = '';
         
-        // Previous button
         html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
             <a class="page-link" href="#" data-page="${currentPage - 1}" data-pagination-link="true">&laquo; Previous</a>
         </li>`;
         
-        // Page numbers - show limited pages
         const maxVisible = 5;
         let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -236,7 +277,6 @@
             startPage = Math.max(1, endPage - maxVisible + 1);
         }
         
-        // First page button if needed
         if (startPage > 1) {
             html += `<li class="page-item"><a class="page-link" href="#" data-page="1" data-pagination-link="true">1</a></li>`;
             if (startPage > 2) {
@@ -244,14 +284,12 @@
             }
         }
         
-        // Page numbers
         for (let i = startPage; i <= endPage; i++) {
             html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
                 <a class="page-link" href="#" data-page="${i}" data-pagination-link="true">${i}</a>
             </li>`;
         }
         
-        // Last page button if needed
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
@@ -259,29 +297,21 @@
             html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}" data-pagination-link="true">${totalPages}</a></li>`;
         }
         
-        // Next button
         html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
             <a class="page-link" href="#" data-page="${currentPage + 1}" data-pagination-link="true">Next &raquo;</a>
         </li>`;
         
         paginationUl.innerHTML = html;
-        
-        // Attach click handlers to pagination links
         attachPaginationHandlers();
     }
     
     function attachPaginationHandlers() {
-        // Get all pagination links
         const paginationLinks = document.querySelectorAll('#tablePagination .page-link[data-pagination-link="true"]');
         
         paginationLinks.forEach(link => {
-            // Remove any existing listeners to avoid duplicates
             link.removeEventListener('click', handlePaginationClick);
-            // Add new click listener
             link.addEventListener('click', handlePaginationClick);
         });
-        
-        console.log(`Attached pagination handlers to ${paginationLinks.length} links`);
     }
     
     function handlePaginationClick(e) {
@@ -290,7 +320,6 @@
         
         const page = parseInt(this.getAttribute('data-page'));
         
-        // Get current total pages
         let filteredData = [...allData];
         
         if (currentFilters.search) {
@@ -310,26 +339,20 @@
         
         const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         
-        // Validate page number
         if (isNaN(page)) return;
         if (page < 1 || page > totalPages) return;
         if (page === currentPage) return;
         
-        console.log(`Changing page from ${currentPage} to ${page}`);
-        
-        // Update current page and re-render
         currentPage = page;
         renderTable();
     }
     
     function attachDynamicHandlers() {
-        // Status change handlers
         document.querySelectorAll('.status-select').forEach(select => {
             select.removeEventListener('change', handleStatusChange);
             select.addEventListener('change', handleStatusChange);
         });
         
-        // Edit/Delete buttons (using event delegation on container)
         const container = document.getElementById('tableContainer');
         if (container) {
             container.removeEventListener('click', handleTableClick);
@@ -373,7 +396,6 @@
             
             if (data.success) {
                 showCustomToast(data.message, 'success');
-                // Update data in allData array
                 const itemIndex = allData.findIndex(item => item.id == id);
                 if (itemIndex !== -1) {
                     allData[itemIndex].status = status;
@@ -421,7 +443,7 @@
     
     function populateEditModal(data) {
         const modalBody = document.getElementById('mediaEditModalBody');
-        // Format date for input field (YYYY-MM-DD)
+        
         let formattedDate = '';
         if (data.event_date) {
             const date = new Date(data.event_date);
@@ -462,6 +484,9 @@
         const form = document.getElementById('mediaEditForm');
         form.action = `/admin/media/${data.id}`;
         form.enctype = 'multipart/form-data';
+        
+        // Prevent Enter key on this form
+        preventEnterKeyOnForm(form);
     }
     
     async function handleDeleteClick(id) {
@@ -497,72 +522,67 @@
         // Search input
         const searchInput = document.getElementById('tableSearchInput');
         if (searchInput) {
-            searchInput.addEventListener('keyup', function() {
-                currentFilters.search = this.value.toLowerCase();
-                currentPage = 1;
-                renderTable();
-            });
+            searchInput.removeEventListener('keyup', handleSearch);
+            searchInput.addEventListener('keyup', handleSearch);
         }
         
         // Type filter
         const typeFilter = document.getElementById('typeFilter');
         if (typeFilter) {
-            typeFilter.addEventListener('change', function() {
-                currentFilters.type = this.value;
-                currentPage = 1;
-                renderTable();
-            });
+            typeFilter.removeEventListener('change', handleTypeFilter);
+            typeFilter.addEventListener('change', handleTypeFilter);
         }
         
         // Status filter
         const statusFilter = document.getElementById('statusFilter');
         if (statusFilter) {
-            statusFilter.addEventListener('change', function() {
-                currentFilters.status = this.value;
-                currentPage = 1;
-                renderTable();
-            });
+            statusFilter.removeEventListener('change', handleStatusFilter);
+            statusFilter.addEventListener('change', handleStatusFilter);
         }
         
         // Reset button
         const resetBtn = document.getElementById('resetFilters');
         if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                document.getElementById('tableSearchInput').value = '';
-                document.getElementById('typeFilter').value = '';
-                document.getElementById('statusFilter').value = '';
-                currentFilters = { search: '', type: '', status: '' };
-                currentPage = 1;
-                renderTable();
-            });
+            resetBtn.removeEventListener('click', handleReset);
+            resetBtn.addEventListener('click', handleReset);
         }
         
         // Rows per page
         const rowsPerPageSelect = document.getElementById('rowsPerPage');
         if (rowsPerPageSelect) {
-            rowsPerPageSelect.addEventListener('change', function() {
-                rowsPerPage = parseInt(this.value);
-                currentPage = 1;
-                renderTable();
+            rowsPerPageSelect.removeEventListener('change', handleRowsPerPageChange);
+            rowsPerPageSelect.addEventListener('change', handleRowsPerPageChange);
+        }
+        
+        // Add Form - Prevent Enter key and handle submit
+        const addForm = document.getElementById('mediaAddForm');
+        if (addForm) {
+            addForm.removeEventListener('submit', handleAddFormSubmit);
+            addForm.addEventListener('submit', handleAddFormSubmit);
+            preventEnterKeyOnForm(addForm);
+            
+            // Add close button handlers for add modal
+            const addModalCloseBtns = document.querySelectorAll('#mediaAddModal [data-bs-dismiss="modal"]');
+            addModalCloseBtns.forEach(btn => {
+                btn.removeEventListener('click', handleAddModalClose);
+                btn.addEventListener('click', handleAddModalClose);
             });
         }
         
-        // Form submissions
-        const addForm = document.getElementById('mediaAddForm');
-        if (addForm) {
-            addForm.removeEventListener('submit', handleFormSubmit);
-            addForm.addEventListener('submit', handleFormSubmit);
-        }
-        
+        // Edit Form - Prevent Enter key and handle submit
         const editForm = document.getElementById('mediaEditForm');
         if (editForm) {
-            editForm.removeEventListener('submit', handleFormSubmit);
-            editForm.addEventListener('submit', handleFormSubmit);
+            editForm.removeEventListener('submit', handleEditFormSubmit);
+            editForm.addEventListener('submit', handleEditFormSubmit);
+            preventEnterKeyOnForm(editForm);
         }
     }
     
-    async function handleFormSubmit(e) {
+    // Handle Add Form Submit
+    async function handleAddFormSubmit(e) {
         e.preventDefault();
+        e.stopPropagation();
+        
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
@@ -572,6 +592,7 @@
         
         try {
             const formData = new FormData(form);
+            
             const response = await fetch(form.action, {
                 method: 'POST',
                 headers: {
@@ -588,9 +609,12 @@
                 showCustomToast(data.message, 'success');
                 
                 // Close modal
-                const modal = form.closest('.modal');
-                const modalInstance = bootstrap.Modal.getInstance(modal);
-                if (modalInstance) modalInstance.hide();
+                if (addModal) {
+                    addModal.hide();
+                }
+                
+                // Reset form
+                form.reset();
                 
                 // Reload data
                 await loadDataFromServer();
@@ -610,6 +634,300 @@
         }
     }
     
+    // Handle Edit Form Submit
+    async function handleEditFormSubmit(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                
+                // Close modal
+                if (editModal) {
+                    editModal.hide();
+                }
+                
+                // Reset form
+                form.reset();
+                
+                // Reload data
+                await loadDataFromServer();
+            } else {
+                let errorMessage = data.message || 'Failed to save';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).flat().join('\n');
+                }
+                showCustomToast(errorMessage, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    // Prevent Enter key from submitting forms
+    function preventEnterKeyOnForm(form) {
+        if (!form) return;
+        
+        const inputs = form.querySelectorAll('input, textarea, select');
+        
+        inputs.forEach(input => {
+            input.removeEventListener('keypress', handleEnterKeyPress);
+            input.addEventListener('keypress', handleEnterKeyPress);
+        });
+    }
+    
+    function handleEnterKeyPress(e) {
+        // Allow Enter in textareas (for new lines)
+        if (e.target.tagName.toLowerCase() === 'textarea') {
+            return true;
+        }
+        
+        // Prevent Enter in all other inputs
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }
+    
+    function handleAddModalClose(e) {
+        if (addModal) {
+            addModal.hide();
+        }
+    }
+    
+    function handleSearch(e) {
+        currentFilters.search = e.target.value.toLowerCase();
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleTypeFilter(e) {
+        currentFilters.type = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleStatusFilter(e) {
+        currentFilters.status = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleReset(e) {
+        document.getElementById('tableSearchInput').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        currentFilters = { search: '', type: '', status: '' };
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleRowsPerPageChange(e) {
+        rowsPerPage = parseInt(e.target.value);
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function initDirectUploadModal() {
+        const directModal = document.getElementById('directImageUploadModal');
+        if (!directModal) return;
+        
+        directModal.addEventListener('show.bs.modal', function() {
+            const select = document.getElementById('directImageId');
+            if (select) {
+                select.innerHTML = '<option value="">Loading...</option>';
+                
+                fetch('/admin/media/all', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">Choose an item...</option>';
+                    data.forEach(item => {
+                        select.innerHTML += `<option value="${item.id}">${item.id} - ${escapeHtml(item.title)} (${item.type})</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading items:', error);
+                    select.innerHTML = '<option value="">Error loading items</option>';
+                });
+            }
+        });
+        
+        const form = document.getElementById('directImageUploadForm');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('directImageId').value;
+                const file = document.getElementById('directImageFile').files[0];
+                
+                if (!id || !file) {
+                    showCustomToast('Please select an item and an image', 'error');
+                    return;
+                }
+                
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/admin/media/upload-direct', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showCustomToast('Image uploaded and assigned successfully!', 'success');
+                        
+                        const modal = bootstrap.Modal.getInstance(directModal);
+                        if (modal) modal.hide();
+                        
+                        form.reset();
+                        await loadDataFromServer();
+                    } else {
+                        showCustomToast(data.message || 'Upload failed', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCustomToast('Network error uploading image', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+    }
+    
+    function initBatchUpload() {
+        const batchModal = document.getElementById('batchUploadModal');
+        if (!batchModal) return;
+        
+        const batchImages = document.getElementById('batchImages');
+        const batchUploadPreview = document.getElementById('batchUploadPreview');
+        const fileList = document.getElementById('fileList');
+        
+        if (batchImages) {
+            batchImages.addEventListener('change', function() {
+                const files = this.files;
+                if (files.length > 0) {
+                    batchUploadPreview.style.display = 'block';
+                    fileList.innerHTML = '';
+                    for (let i = 0; i < files.length; i++) {
+                        fileList.innerHTML += `<div>📄 ${files[i].name} (${(files[i].size / 1024).toFixed(2)} KB)</div>`;
+                    }
+                } else {
+                    batchUploadPreview.style.display = 'none';
+                }
+            });
+        }
+        
+        const batchUploadBtn = document.getElementById('batchUploadBtn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', async function() {
+                const files = document.getElementById('batchImages').files;
+                if (files.length === 0) {
+                    showCustomToast('Please select files to upload', 'error');
+                    return;
+                }
+                
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('images[]', files[i]);
+                }
+                
+                const progressDiv = document.getElementById('batchUploadProgress');
+                const progressBar = document.getElementById('uploadProgressBar');
+                const uploadStatus = document.getElementById('uploadStatus');
+                
+                progressDiv.style.display = 'block';
+                batchUploadBtn.disabled = true;
+                batchUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                
+                try {
+                    const response = await fetch('/admin/media/batch-upload', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showCustomToast(data.message, 'success');
+                        
+                        const modal = bootstrap.Modal.getInstance(batchModal);
+                        if (modal) modal.hide();
+                        
+                        await loadDataFromServer();
+                        
+                        document.getElementById('batchUploadForm').reset();
+                        batchUploadPreview.style.display = 'none';
+                    } else {
+                        showCustomToast(data.message, 'error');
+                        if (data.failed && data.failed.length > 0) {
+                            console.error('Failed uploads:', data.failed);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCustomToast('Network error during batch upload', 'error');
+                } finally {
+                    progressDiv.style.display = 'none';
+                    batchUploadBtn.disabled = false;
+                    batchUploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload All';
+                    progressBar.style.width = '0%';
+                }
+            });
+        }
+    }
+    
     function getCsrfToken() {
         const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.content : '';
@@ -623,154 +941,34 @@
     }
     
     function showCustomToast(message, type = 'success') {
-        const existingToast = document.querySelector('.custom-toast');
-        if (existingToast) existingToast.remove();
-        
+        const existingToasts = document.querySelectorAll('.floating-toast');
+        existingToasts.forEach(toast => toast.remove());
+
         const toast = document.createElement('div');
-        toast.className = `custom-toast alert alert-${type === 'error' ? 'danger' : 'success'} position-fixed top-0 end-0 m-3`;
-        toast.style.zIndex = '9999';
-        toast.style.minWidth = '250px';
-        toast.style.animation = 'slideInRight 0.3s ease-out';
+        toast.className = `floating-toast ${type === 'success' ? 'success-toast' : (type === 'error' ? 'error-toast' : (type === 'warning' ? 'warning-toast' : 'info-toast'))}`;
+
+        let icon = 'fa-circle-check';
+        if (type === 'error') icon = 'fa-circle-exclamation';
+        else if (type === 'warning') icon = 'fa-exclamation-triangle';
+        else if (type === 'info') icon = 'fa-info-circle';
+
         toast.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} me-2"></i>
+            <div class="floating-toast-content">
+                <i class="fas ${icon}"></i>
                 <span>${escapeHtml(message)}</span>
-                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
             </div>
         `;
-        
+
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 3000);
+            toast.classList.add('hide');
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, 5000);
     }
-    
-    // Add CSS animation for toast
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        .custom-toast {
-            animation: slideInRight 0.3s ease-out;
-        }
-    `;
-    document.head.appendChild(style);
     
     window.loadMediaData = loadDataFromServer;
     console.log('Media.js initialized successfully');
 })();
-
-function initBatchUpload() {
-    const batchModal = document.getElementById('batchUploadModal');
-    if (!batchModal) return;
-    
-    // Preview selected files
-    const batchImages = document.getElementById('batchImages');
-    const batchUploadPreview = document.getElementById('batchUploadPreview');
-    const fileList = document.getElementById('fileList');
-    
-    if (batchImages) {
-        batchImages.addEventListener('change', function() {
-            const files = this.files;
-            if (files.length > 0) {
-                batchUploadPreview.style.display = 'block';
-                fileList.innerHTML = '';
-                for (let i = 0; i < files.length; i++) {
-                    fileList.innerHTML += `<div>📄 ${files[i].name} (${(files[i].size / 1024).toFixed(2)} KB)</div>`;
-                }
-            } else {
-                batchUploadPreview.style.display = 'none';
-            }
-        });
-    }
-    
-    // Handle batch upload
-    const batchUploadBtn = document.getElementById('batchUploadBtn');
-    if (batchUploadBtn) {
-        batchUploadBtn.addEventListener('click', async function() {
-            const files = document.getElementById('batchImages').files;
-            if (files.length === 0) {
-                showCustomToast('Please select files to upload', 'error');
-                return;
-            }
-            
-            const formData = new FormData();
-            for (let i = 0; i < files.length; i++) {
-                formData.append('images[]', files[i]);
-            }
-            
-            const progressDiv = document.getElementById('batchUploadProgress');
-            const progressBar = document.getElementById('uploadProgressBar');
-            const uploadStatus = document.getElementById('uploadStatus');
-            
-            progressDiv.style.display = 'block';
-            batchUploadBtn.disabled = true;
-            batchUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
-            
-            try {
-                const response = await fetch('/admin/media/batch-upload', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showCustomToast(data.message, 'success');
-                    
-                    // Close modal and reload data
-                    const modal = bootstrap.Modal.getInstance(batchModal);
-                    if (modal) modal.hide();
-                    
-                    await loadDataFromServer();
-                    
-                    // Reset form
-                    document.getElementById('batchUploadForm').reset();
-                    batchUploadPreview.style.display = 'none';
-                } else {
-                    showCustomToast(data.message, 'error');
-                    if (data.failed && data.failed.length > 0) {
-                        console.error('Failed uploads:', data.failed);
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showCustomToast('Network error during batch upload', 'error');
-            } finally {
-                progressDiv.style.display = 'none';
-                batchUploadBtn.disabled = false;
-                batchUploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload All';
-                progressBar.style.width = '0%';
-            }
-        });
-    }
-}
-
-// Add to your initMediaManagement function
-function initMediaManagement() {
-    console.log('Initializing media management...');
-    
-    const editModalElement = document.getElementById('mediaEditModal');
-    if (editModalElement && typeof bootstrap !== 'undefined') {
-        editModal = new bootstrap.Modal(editModalElement);
-    }
-    
-    loadDataFromServer();
-    attachEventHandlers();
-    initDirectUploadModal(); // From previous implementation
-    initBatchUpload(); // Add this line
-}
