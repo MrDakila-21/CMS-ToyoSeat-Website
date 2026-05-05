@@ -72,6 +72,26 @@
         .floating-toast.hide {
             animation: slideOut 0.3s ease-in forwards;
         }
+
+        /* Active subtab styling */
+        .sidebar-dropdown a.active {
+            background: rgba(128, 204, 255, 0.2);
+            color: #80CCFF !important;
+            font-weight: 500;
+            border-left: 3px solid #80CCFF;
+            padding-left: 16px;
+        }
+
+        /* Ensure dropdown stays open when subtab is active */
+        .sidebar-dropdown.open {
+            max-height: 500px;
+        }
+
+        /* Parent active state styling when dropdown has active child */
+        .sidebar-link.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid #80CCFF;
+        }
     </style>
 </head>
 <body>
@@ -163,12 +183,12 @@
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && $subtab === 'history' ? 'active' : '' }}">History</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'privacy']) }}" class="{{ $tab === 'about' && $subtab === 'privacy' ? 'active' : '' }}">Privacy Policy</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'privacy']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'privacy' ? 'active' : '' }}">Privacy Policy</a></li>
                     </ul>
                 </li>
 
@@ -190,8 +210,8 @@
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && $subtab === 'media' ? 'active' : '' }}">Media Information</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Media Information</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
                     </ul>
                 </li>
 
