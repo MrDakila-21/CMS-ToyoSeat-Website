@@ -9,6 +9,7 @@ use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityCont
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
+use App\Http\Controllers\Admin\AnnouncementController;
 
 // Add this at the beginning of your routes file
 Route::get('/login', function () {
@@ -85,6 +86,16 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+
+                // Announcements management routes
+        Route::get('announcements/all', [AnnouncementController::class, 'getAll'])->name('admin.announcements.all');
+        Route::resource('announcements', AnnouncementController::class)->names('admin.announcements');
+        Route::patch('announcements/{id}/status/{status}', [AnnouncementController::class, 'updateStatus'])->name('admin.announcements.updateStatus');
+        
+        // Additional routes for folder image management
+        Route::post('announcements/upload-direct', [AnnouncementController::class, 'uploadDirectImage'])->name('admin.announcements.uploadDirect');
+        Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
+        Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
 
         Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
         

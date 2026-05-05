@@ -210,7 +210,7 @@
                         <i class="fas fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Media Information</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Events & Activities</a></li>
                         <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
                     </ul>
                 </li>

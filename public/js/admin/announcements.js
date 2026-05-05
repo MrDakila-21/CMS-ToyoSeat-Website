@@ -1,6 +1,5 @@
 /**
- * Media Management Module
- * Handles all event/activity management functionality
+ * Announcements Management Module
  */
 
 (function() {
@@ -8,26 +7,26 @@
     
     let addModal = null;
     let editModal = null;
+    let directUploadModal = null;
     let allData = [];
     let currentPage = 1;
     let rowsPerPage = 10;
     let currentFilters = {
         search: '',
-        type: '',
         status: ''
     };
     
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMediaManagement);
+        document.addEventListener('DOMContentLoaded', initAnnouncementManagement);
     } else {
-        initMediaManagement();
+        initAnnouncementManagement();
     }
     
-    function initMediaManagement() {
-        console.log('Initializing media management...');
+    function initAnnouncementManagement() {
+        console.log('Initializing announcement management...');
         
-        // Initialize Add Modal with static backdrop
-        const addModalElement = document.getElementById('mediaAddModal');
+        // Initialize Add Modal
+        const addModalElement = document.getElementById('announcementAddModal');
         if (addModalElement && typeof bootstrap !== 'undefined') {
             addModal = new bootstrap.Modal(addModalElement, {
                 backdrop: 'static',
@@ -35,7 +34,7 @@
             });
             
             addModalElement.addEventListener('hidden.bs.modal', function() {
-                const form = document.getElementById('mediaAddForm');
+                const form = document.getElementById('announcementAddForm');
                 if (form) {
                     form.reset();
                     form.querySelectorAll('.is-invalid').forEach(el => {
@@ -45,8 +44,8 @@
             });
         }
         
-        // Initialize Edit Modal with static backdrop
-        const editModalElement = document.getElementById('mediaEditModal');
+        // Initialize Edit Modal
+        const editModalElement = document.getElementById('announcementEditModal');
         if (editModalElement && typeof bootstrap !== 'undefined') {
             editModal = new bootstrap.Modal(editModalElement, {
                 backdrop: 'static',
@@ -54,23 +53,33 @@
             });
             
             editModalElement.addEventListener('hidden.bs.modal', function() {
-                const form = document.getElementById('mediaEditForm');
+                const form = document.getElementById('announcementEditForm');
                 if (form) {
                     form.reset();
                 }
             });
         }
         
+        // Initialize Direct Upload Modal
+        const directUploadModalElement = document.getElementById('announcementDirectUploadModal');
+        if (directUploadModalElement && typeof bootstrap !== 'undefined') {
+            directUploadModal = new bootstrap.Modal(directUploadModalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            directUploadModalElement.addEventListener('show.bs.modal', function() {
+                loadAnnouncementsForDirectUpload();
+            });
+        }
+        
         loadDataFromServer();
         attachEventHandlers();
-        initDirectUploadModal();
-        initBatchUpload();
         
-        // Global Enter key prevention for all modals
+        // Prevent Enter key in modals
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && e.target.closest('.modal')) {
-                const activeElement = document.activeElement;
-                if (activeElement && activeElement.tagName.toLowerCase() === 'textarea') {
+                if (e.target.tagName.toLowerCase() === 'textarea') {
                     return;
                 }
                 e.preventDefault();
@@ -81,14 +90,14 @@
     }
     
     async function loadDataFromServer() {
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const tableContainer = document.getElementById('tableContainer');
+        const loadingIndicator = document.getElementById('announcementLoadingIndicator');
+        const tableContainer = document.getElementById('announcementTableContainer');
         
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         if (tableContainer) tableContainer.style.display = 'none';
         
         try {
-            const response = await fetch('/admin/media/all', {
+            const response = await fetch('/admin/announcements/all', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -115,29 +124,23 @@
     
     function formatDate(dateString) {
         if (!dateString) return '-';
-        
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return dateString;
-        
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        
         return `${year}-${month}-${day}`;
     }
     
     function formatDateTime(dateString) {
         if (!dateString) return '-';
-        
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return dateString;
-        
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
-        
         return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
     
@@ -149,10 +152,6 @@
                 item.title.toLowerCase().includes(currentFilters.search) || 
                 (item.description && item.description.toLowerCase().includes(currentFilters.search))
             );
-        }
-        
-        if (currentFilters.type) {
-            filteredData = filteredData.filter(item => item.type === currentFilters.type);
         }
         
         if (currentFilters.status) {
@@ -171,13 +170,12 @@
         
         let tableHtml = `
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle" id="mediaTable">
+                <table class="table table-bordered table-striped align-middle" id="announcementTable">
                     <thead>
                         <tr>
                             <th style="width: 50px;">ID</th>
                             <th style="width: 80px;">Image</th>
                             <th>Title</th>
-                            <th style="width: 100px;">Type</th>
                             <th style="width: 110px;">Date</th>
                             <th style="width: 110px;">Status</th>
                             <th style="width: 140px;">Created At</th>
@@ -188,16 +186,12 @@
         `;
         
         if (pageData.length === 0) {
-            tableHtml += '<tr><td colspan="8" class="text-center text-muted py-4">No matching records found</td></tr>';
+            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
                 const imageHtml = item.image_url 
-                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" onerror="this.src='/images/default-image.png'">`
+                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">`
                     : '<span class="badge bg-secondary">No Image</span>';
-                
-                const typeBadge = item.type === 'event' 
-                    ? '<span class="badge bg-primary">Event</span>'
-                    : '<span class="badge bg-success">Activity</span>';
                 
                 const statusSelect = `
                     <select class="form-select form-select-sm status-select" data-id="${item.id}">
@@ -216,17 +210,15 @@
                         </button>
                     </div>
                 `;
-                
-                const formattedEventDate = formatDate(item.event_date);
+                const formattedDate = formatDate(item.date);
                 const formattedCreatedAt = formatDateTime(item.created_at);
                 
                 tableHtml += `
-                    <tr data-id="${item.id}" data-type="${item.type}" data-status="${item.status}">
-                        <td class="text-center">${item.id}</td>
+                    <tr data-id="${item.id}" data-status="${item.status}">
+                        <td class="text-center"><strong>${item.id}</strong></td>
                         <td>${imageHtml}</td>
                         <td>${escapeHtml(item.title)}</td>
-                        <td>${typeBadge}</td>
-                        <td>${formattedEventDate}</td>
+                        <td>${formattedDate}</td>
                         <td>${statusSelect}</td>
                         <td>${formattedCreatedAt}</td>
                         <td>${actions}</td>
@@ -241,18 +233,18 @@
             </div>
         `;
         
-        document.getElementById('tableContainer').innerHTML = tableHtml;
+        document.getElementById('announcementTableContainer').innerHTML = tableHtml;
         
-        document.getElementById('showingStart').textContent = totalRecords === 0 ? 0 : start + 1;
-        document.getElementById('showingEnd').textContent = Math.min(end, totalRecords);
-        document.getElementById('totalRecords').textContent = totalRecords;
+        document.getElementById('announcementShowingStart').textContent = totalRecords === 0 ? 0 : start + 1;
+        document.getElementById('announcementShowingEnd').textContent = Math.min(end, totalRecords);
+        document.getElementById('announcementTotalRecords').textContent = totalRecords;
         
         renderPagination(currentPage, totalPages);
         attachDynamicHandlers();
     }
     
     function renderPagination(currentPage, totalPages) {
-        const paginationUl = document.getElementById('tablePagination');
+        const paginationUl = document.getElementById('announcementPagination');
         if (!paginationUl) return;
         
         if (totalPages <= 1) {
@@ -303,7 +295,7 @@
     }
     
     function attachPaginationHandlers() {
-        const paginationLinks = document.querySelectorAll('#tablePagination .page-link[data-pagination-link="true"]');
+        const paginationLinks = document.querySelectorAll('#announcementPagination .page-link[data-pagination-link="true"]');
         
         paginationLinks.forEach(link => {
             link.removeEventListener('click', handlePaginationClick);
@@ -326,10 +318,6 @@
             );
         }
         
-        if (currentFilters.type) {
-            filteredData = filteredData.filter(item => item.type === currentFilters.type);
-        }
-        
         if (currentFilters.status) {
             filteredData = filteredData.filter(item => item.status === currentFilters.status);
         }
@@ -350,7 +338,7 @@
             select.addEventListener('change', handleStatusChange);
         });
         
-        const container = document.getElementById('tableContainer');
+        const container = document.getElementById('announcementTableContainer');
         if (container) {
             container.removeEventListener('click', handleTableClick);
             container.addEventListener('click', handleTableClick);
@@ -379,7 +367,7 @@
         select.disabled = true;
         
         try {
-            const response = await fetch(`/admin/media/${id}/status/${status}`, {
+            const response = await fetch(`/admin/announcements/${id}/status/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
@@ -412,7 +400,7 @@
     }
     
     async function handleEditClick(id) {
-        const modalBody = document.getElementById('mediaEditModalBody');
+        const modalBody = document.getElementById('announcementEditModalBody');
         if (modalBody) {
             modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
         }
@@ -420,7 +408,7 @@
         editModal.show();
         
         try {
-            const response = await fetch(`/admin/media/${id}/edit`, {
+            const response = await fetch(`/admin/announcements/${id}/edit`, {
                 method: 'GET',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
@@ -439,11 +427,11 @@
     }
     
     function populateEditModal(data) {
-        const modalBody = document.getElementById('mediaEditModalBody');
+        const modalBody = document.getElementById('announcementEditModalBody');
         
         let formattedDate = '';
-        if (data.event_date) {
-            const date = new Date(data.event_date);
+        if (data.date) {
+            const date = new Date(data.date);
             if (!isNaN(date.getTime())) {
                 formattedDate = date.toISOString().split('T')[0];
             }
@@ -455,43 +443,36 @@
                 <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Type <span class="text-danger">*</span></label>
-                <select name="type" class="form-select" required>
-                    <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                    <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-                </select>
-            </div>
-            <div class="mb-3">
                 <label class="form-label">Description <span class="text-danger">*</span></label>
                 <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
             </div>
             <div class="mb-3">
                 <label class="form-label">Date <span class="text-danger">*</span></label>
-                <input type="date" name="event_date" class="form-control" value="${formattedDate}" required>
+                <input type="date" name="date" class="form-control" value="${formattedDate}" required>
             </div>
             <div class="mb-3">
                 <label class="form-label">Current Image</label>
-                ${data.image_url ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;" onerror="this.src='/images/default-image.png'">` : '<p class="text-muted">No image uploaded</p>'}
+                ${data.image_url ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
                 <label class="form-label mt-2">Change Image</label>
                 <input type="file" name="image" class="form-control" accept="image/*">
                 <small class="form-text text-muted">Max size: 5MB. Leave empty to keep current image.</small>
             </div>
         `;
         
-        const form = document.getElementById('mediaEditForm');
-        form.action = `/admin/media/${data.id}`;
+        const form = document.getElementById('announcementEditForm');
+        form.action = `/admin/announcements/${data.id}`;
         form.enctype = 'multipart/form-data';
         
         preventEnterKeyOnForm(form);
     }
     
     async function handleDeleteClick(id) {
-        if (!confirm('⚠️ Are you sure you want to delete this item?\n\nThis action cannot be undone!')) {
+        if (!confirm('⚠️ Are you sure you want to delete this announcement?\n\nThis action cannot be undone!')) {
             return;
         }
         
         try {
-            const response = await fetch(`/admin/media/${id}`, {
+            const response = await fetch(`/admin/announcements/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
@@ -506,63 +487,63 @@
                 showCustomToast(data.message, 'error');
                 await loadDataFromServer();
             } else {
-                showCustomToast(data.message || 'Failed to delete item', 'error');
+                showCustomToast(data.message || 'Failed to delete announcement', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            showCustomToast('Network error deleting item', 'error');
+            showCustomToast('Network error deleting announcement', 'error');
         }
     }
     
     function attachEventHandlers() {
-        const searchInput = document.getElementById('tableSearchInput');
+        const searchInput = document.getElementById('announcementSearchInput');
         if (searchInput) {
             searchInput.removeEventListener('keyup', handleSearch);
             searchInput.addEventListener('keyup', handleSearch);
         }
         
-        const typeFilter = document.getElementById('typeFilter');
-        if (typeFilter) {
-            typeFilter.removeEventListener('change', handleTypeFilter);
-            typeFilter.addEventListener('change', handleTypeFilter);
-        }
-        
-        const statusFilter = document.getElementById('statusFilter');
+        const statusFilter = document.getElementById('announcementStatusFilter');
         if (statusFilter) {
             statusFilter.removeEventListener('change', handleStatusFilter);
             statusFilter.addEventListener('change', handleStatusFilter);
         }
         
-        const resetBtn = document.getElementById('resetFilters');
+        const resetBtn = document.getElementById('resetAnnouncementFilters');
         if (resetBtn) {
             resetBtn.removeEventListener('click', handleReset);
             resetBtn.addEventListener('click', handleReset);
         }
         
-        const rowsPerPageSelect = document.getElementById('rowsPerPage');
+        const rowsPerPageSelect = document.getElementById('announcementRowsPerPage');
         if (rowsPerPageSelect) {
             rowsPerPageSelect.removeEventListener('change', handleRowsPerPageChange);
             rowsPerPageSelect.addEventListener('change', handleRowsPerPageChange);
         }
         
-        const addForm = document.getElementById('mediaAddForm');
+        const addForm = document.getElementById('announcementAddForm');
         if (addForm) {
             addForm.removeEventListener('submit', handleAddFormSubmit);
             addForm.addEventListener('submit', handleAddFormSubmit);
             preventEnterKeyOnForm(addForm);
             
-            const addModalCloseBtns = document.querySelectorAll('#mediaAddModal [data-bs-dismiss="modal"]');
+            const addModalCloseBtns = document.querySelectorAll('#announcementAddModal [data-bs-dismiss="modal"]');
             addModalCloseBtns.forEach(btn => {
                 btn.removeEventListener('click', handleAddModalClose);
                 btn.addEventListener('click', handleAddModalClose);
             });
         }
         
-        const editForm = document.getElementById('mediaEditForm');
+        const editForm = document.getElementById('announcementEditForm');
         if (editForm) {
             editForm.removeEventListener('submit', handleEditFormSubmit);
             editForm.addEventListener('submit', handleEditFormSubmit);
             preventEnterKeyOnForm(editForm);
+        }
+        
+        const directUploadBtn = document.getElementById('announcementDirectUploadBtn');
+        if (directUploadBtn) {
+            directUploadBtn.removeEventListener('click', handleDirectUpload);
+            directUploadBtn.addEventListener('click', handleDirectUpload);
         }
     }
     
@@ -630,7 +611,6 @@
         
         try {
             const formData = new FormData(form);
-            formData.append('_method', 'PUT');
             
             const response = await fetch(form.action, {
                 method: 'POST',
@@ -669,6 +649,119 @@
         }
     }
     
+    async function handleDirectUpload() {
+        const announcementId = document.getElementById('announcementSelect').value;
+        const imageFile = document.getElementById('announcementDirectImage').files[0];
+        
+        if (!announcementId) {
+            showCustomToast('Please select an announcement', 'error');
+            return;
+        }
+        
+        if (!imageFile) {
+            showCustomToast('Please select an image to upload', 'error');
+            return;
+        }
+        
+        const uploadBtn = document.getElementById('announcementDirectUploadBtn');
+        const originalText = uploadBtn.innerHTML;
+        
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+        
+        const formData = new FormData();
+        formData.append('id', announcementId);
+        formData.append('image', imageFile);
+        
+        try {
+            const response = await fetch('/admin/announcements/upload-direct', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast('Image uploaded successfully to announcements folder!', 'success');
+                
+                if (directUploadModal) {
+                    directUploadModal.hide();
+                }
+                
+                document.getElementById('announcementDirectUploadForm').reset();
+                document.getElementById('currentImagePreview').style.display = 'none';
+                document.getElementById('currentImageDisplay').innerHTML = '';
+                
+                await loadDataFromServer();
+            } else {
+                showCustomToast(data.message || 'Upload failed', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error uploading image', 'error');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = originalText;
+        }
+    }
+    
+    async function loadAnnouncementsForDirectUpload() {
+        const select = document.getElementById('announcementSelect');
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">Loading announcements...</option>';
+        select.disabled = true;
+        
+        try {
+            const response = await fetch('/admin/announcements/all', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+            
+            const data = await response.json();
+            
+            select.innerHTML = '<option value="">Select an announcement...</option>';
+            
+            data.forEach(announcement => {
+                const option = document.createElement('option');
+                option.value = announcement.id;
+                option.textContent = `ID: ${announcement.id} - ${announcement.title.substring(0, 50)}${announcement.title.length > 50 ? '...' : ''} (${announcement.status})`;
+                select.appendChild(option);
+            });
+            
+            select.disabled = false;
+            
+            select.addEventListener('change', function() {
+                const selectedId = this.value;
+                if (selectedId) {
+                    const selectedAnnouncement = data.find(a => a.id == selectedId);
+                    if (selectedAnnouncement && selectedAnnouncement.image_url && !selectedAnnouncement.image_url.includes('default-image.png')) {
+                        document.getElementById('currentImagePreview').style.display = 'block';
+                        document.getElementById('currentImageDisplay').innerHTML = `<img src="${selectedAnnouncement.image_url}" style="max-width: 150px; border-radius: 4px; margin-top: 10px;">`;
+                    } else {
+                        document.getElementById('currentImagePreview').style.display = 'none';
+                        document.getElementById('currentImageDisplay').innerHTML = '';
+                    }
+                } else {
+                    document.getElementById('currentImagePreview').style.display = 'none';
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error loading announcements:', error);
+            select.innerHTML = '<option value="">Error loading announcements</option>';
+            select.disabled = false;
+        }
+    }
+    
     function preventEnterKeyOnForm(form) {
         if (!form) return;
         
@@ -704,12 +797,6 @@
         renderTable();
     }
     
-    function handleTypeFilter(e) {
-        currentFilters.type = e.target.value;
-        currentPage = 1;
-        renderTable();
-    }
-    
     function handleStatusFilter(e) {
         currentFilters.status = e.target.value;
         currentPage = 1;
@@ -717,10 +804,9 @@
     }
     
     function handleReset(e) {
-        document.getElementById('tableSearchInput').value = '';
-        document.getElementById('typeFilter').value = '';
-        document.getElementById('statusFilter').value = '';
-        currentFilters = { search: '', type: '', status: '' };
+        document.getElementById('announcementSearchInput').value = '';
+        document.getElementById('announcementStatusFilter').value = '';
+        currentFilters = { search: '', status: '' };
         currentPage = 1;
         renderTable();
     }
@@ -729,236 +815,6 @@
         rowsPerPage = parseInt(e.target.value);
         currentPage = 1;
         renderTable();
-    }
-    
-// Updated functions in media.js - Replace these functions
-
-    function initDirectUploadModal() {
-        const directModal = document.getElementById('directImageUploadModal');
-        if (!directModal) return;
-        
-        // Update modal title and description
-        const modalTitle = directModal.querySelector('.modal-title');
-        if (modalTitle) {
-            modalTitle.innerHTML = '<i class="fas fa-folder-open me-2"></i>Upload Image to EventActivity Folder';
-        }
-        
-        const modalBody = directModal.querySelector('.modal-body');
-        if (modalBody) {
-            // Add info about the folder
-            const infoAlert = modalBody.querySelector('.alert-info');
-            if (!infoAlert) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-info mb-3';
-                alertDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>Images will be uploaded to <strong>public/images/EventActivity/</strong> folder with the ID as filename (e.g., 1.jpg, 2.png). These images will take priority over database-stored images.';
-                modalBody.insertBefore(alertDiv, modalBody.firstChild);
-            }
-        }
-        
-        directModal.addEventListener('show.bs.modal', function() {
-            const select = document.getElementById('directImageId');
-            if (select) {
-                select.innerHTML = '<option value="">Loading...</option>';
-                
-                fetch('/admin/media/all', {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    select.innerHTML = '<option value="">Choose an item...</option>';
-                    data.forEach(item => {
-                        select.innerHTML += `<option value="${item.id}">${item.id} - ${escapeHtml(item.title)} (${item.type})</option>`;
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading items:', error);
-                    select.innerHTML = '<option value="">Error loading items</option>';
-                });
-            }
-        });
-        
-        const form = document.getElementById('directImageUploadForm');
-        if (form) {
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const id = document.getElementById('directImageId').value;
-                const file = document.getElementById('directImageFile').files[0];
-                
-                if (!id || !file) {
-                    showCustomToast('Please select an item and an image', 'error');
-                    return;
-                }
-                
-                const submitBtn = form.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
-                
-                const formData = new FormData();
-                formData.append('id', id);
-                formData.append('image', file);
-                
-                try {
-                    const response = await fetch('/admin/media/upload-direct', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showCustomToast('Image uploaded successfully to images/EventActivity folder!', 'success');
-                        
-                        const modal = bootstrap.Modal.getInstance(directModal);
-                        if (modal) modal.hide();
-                        
-                        form.reset();
-                        await loadDataFromServer();
-                    } else {
-                        showCustomToast(data.message || 'Upload failed', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showCustomToast('Network error uploading image', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
-            });
-        }
-    }
-    
-    function initBatchUpload() {
-        const batchModal = document.getElementById('batchUploadModal');
-        if (!batchModal) return;
-        
-        // Update modal title and description
-        const modalTitle = batchModal.querySelector('.modal-title');
-        if (modalTitle) {
-            modalTitle.innerHTML = '<i class="fas fa-layer-group me-2"></i>Batch Upload to EventActivity Folder';
-        }
-        
-        const modalBody = batchModal.querySelector('.modal-body');
-        if (modalBody) {
-            // Add info about the folder
-            const infoAlert = modalBody.querySelector('.alert-info');
-            if (!infoAlert) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-info mb-3';
-                alertDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>Important:</strong> Filenames must be numeric IDs (e.g., 1.jpg, 2.png, 3.webp). Files will be saved to <strong>public/images/EventActivity/</strong> folder and will automatically be assigned to matching event/activity IDs.';
-                modalBody.insertBefore(alertDiv, modalBody.firstChild);
-            }
-        }
-        
-        const batchImages = document.getElementById('batchImages');
-        const batchUploadPreview = document.getElementById('batchUploadPreview');
-        const fileList = document.getElementById('fileList');
-        
-        if (batchImages) {
-            batchImages.addEventListener('change', function() {
-                const files = this.files;
-                if (files.length > 0) {
-                    batchUploadPreview.style.display = 'block';
-                    fileList.innerHTML = '';
-                    for (let i = 0; i < files.length; i++) {
-                        const filename = files[i].name;
-                        const isValid = /^\d+\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
-                        const icon = isValid ? '✅' : '❌';
-                        const color = isValid ? 'style="color: green;"' : 'style="color: red;"';
-                        fileList.innerHTML += `<div ${color}>${icon} ${filename} (${(files[i].size / 1024).toFixed(2)} KB) ${!isValid ? ' - Invalid filename! Must be numeric ID (e.g., 1.jpg)' : ''}</div>`;
-                    }
-                } else {
-                    batchUploadPreview.style.display = 'none';
-                }
-            });
-        }
-        
-        const batchUploadBtn = document.getElementById('batchUploadBtn');
-        if (batchUploadBtn) {
-            batchUploadBtn.addEventListener('click', async function() {
-                const files = document.getElementById('batchImages').files;
-                if (files.length === 0) {
-                    showCustomToast('Please select files to upload', 'error');
-                    return;
-                }
-                
-                const formData = new FormData();
-                let validFiles = 0;
-                for (let i = 0; i < files.length; i++) {
-                    const filename = files[i].name;
-                    if (/^\d+\.(jpg|jpeg|png|gif|webp)$/i.test(filename)) {
-                        formData.append('images[]', files[i]);
-                        validFiles++;
-                    }
-                }
-                
-                if (validFiles === 0) {
-                    showCustomToast('No valid files selected. Filenames must be numeric IDs (e.g., 1.jpg, 2.png)', 'error');
-                    return;
-                }
-                
-                const progressDiv = document.getElementById('batchUploadProgress');
-                const progressBar = document.getElementById('uploadProgressBar');
-                const uploadStatus = document.getElementById('uploadStatus');
-                
-                progressDiv.style.display = 'block';
-                batchUploadBtn.disabled = true;
-                batchUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
-                
-                try {
-                    const response = await fetch('/admin/media/batch-upload', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showCustomToast(data.message, 'success');
-                        
-                        const modal = bootstrap.Modal.getInstance(batchModal);
-                        if (modal) modal.hide();
-                        
-                        await loadDataFromServer();
-                        
-                        document.getElementById('batchUploadForm').reset();
-                        batchUploadPreview.style.display = 'none';
-                    } else {
-                        showCustomToast(data.message, 'error');
-                        if (data.failed && data.failed.length > 0) {
-                            console.error('Failed uploads:', data.failed);
-                            let failedMsg = 'Failed uploads:\n';
-                            data.failed.forEach(f => {
-                                failedMsg += `- ${f.filename}: ${f.reason}\n`;
-                            });
-                            showCustomToast(failedMsg, 'error');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showCustomToast('Network error during batch upload', 'error');
-                } finally {
-                    progressDiv.style.display = 'none';
-                    batchUploadBtn.disabled = false;
-                    batchUploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload All';
-                    progressBar.style.width = '0%';
-                }
-            });
-        }
     }
     
     function getCsrfToken() {
@@ -1002,6 +858,6 @@
         }, 5000);
     }
     
-    window.loadMediaData = loadDataFromServer;
-    console.log('Media.js initialized successfully');
+    window.loadAnnouncementData = loadDataFromServer;
+    console.log('Announcements.js initialized successfully');
 })();
