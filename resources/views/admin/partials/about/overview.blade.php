@@ -137,7 +137,7 @@
                     </button>
                 </div>
             </div>
-            <div class="section-body">
+            <div class="section-body" id="company-profile-section-body">
                 <form id="company-form" class="section-form" data-section="company">
                     @csrf
                     <div class="row">
@@ -381,6 +381,7 @@
     margin-bottom: 1.5rem;
 }
 
+
 .section-header {
     background: #f8f9fa;
     padding: 15px 20px;
@@ -388,6 +389,34 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+
+/* Add scrollbar to Company Profile section only */
+#company-profile-section-body {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;  /* This removes horizontal scrollbar */
+    padding-right: 10px;
+}
+
+/* Custom scrollbar styling */
+#company-profile-section-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+#company-profile-section-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#company-profile-section-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#company-profile-section-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .section-header h4 {

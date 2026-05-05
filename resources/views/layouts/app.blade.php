@@ -123,6 +123,19 @@
             text-shadow: 0 0 4px rgba(255,255,255,0.5);
         }
 
+        /* Active state for parent dropdown items when any child is active */
+        .nav-link-custom.active {
+            background: rgba(255,255,255,0.25);
+            font-weight: 600;
+        }
+
+        /* Active state for dropdown menu items */
+        .dropdown-menu-custom li a.active {
+            background: rgba(128, 204, 255, 0.3);
+            font-weight: 600;
+            padding-left: 1.8rem;
+        }
+
         .dropdown-menu-custom {
             position: absolute;
             top: 100%;
@@ -158,6 +171,7 @@
 
         .dropdown-menu-custom li a:hover {
             background: rgba(255, 255, 255, 0.2);
+            padding-left: 1.8rem;
         }
 
         .dropdown-toggle-icon {
@@ -275,11 +289,6 @@
             }
         }
 
-        .nav-link-custom.active {
-            background: rgba(255,255,255,0.25);
-            font-weight: 600;
-        }
-
         /* ============ FOOTER STYLES - LEFT/RIGHT LAYOUT ============ */
         .footer-custom {
             background: linear-gradient(135deg, #0a1e2c 0%, #0E334C 100%);
@@ -323,6 +332,8 @@
 
         .footer-brand-name {
             font-weight: 800;
+            font-family: 'Cinzel', serif;
+            font-style: italic;
             font-size: 1.3rem;
             letter-spacing: 1px;
             color: white;
@@ -332,6 +343,8 @@
         .footer-brand-sub {
             font-weight: 500;
             font-size: 0.7rem;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
             color: rgba(255, 255, 255, 0.8);
         }
 
@@ -507,12 +520,12 @@
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
                 <ul class="dropdown-menu-custom">
-                    <li><a href="{{ route('guest.about.overview') }}">Overview</a></li>
-                    <li><a href="{{ route('guest.about.business-introduction') }}">Business introduction</a></li>
-                    <li><a href="{{ route('guest.about.location') }}">Location</a></li>
-                    <li><a href="{{ route('guest.about.history') }}">History</a></li>
-                    <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
-                    <li><a href="{{ route('guest.about.privacy-policy') }}">Privacy Policy</a></li>
+                    <li><a href="{{ route('guest.about.overview') }}" class="{{ request()->routeIs('guest.about.overview') ? 'active' : '' }}">Overview</a></li>
+                    <li><a href="{{ route('guest.about.business-introduction') }}" class="{{ request()->routeIs('guest.about.business-introduction') ? 'active' : '' }}">Business introduction</a></li>
+                    <li><a href="{{ route('guest.about.location') }}" class="{{ request()->routeIs('guest.about.location') ? 'active' : '' }}">Location</a></li>
+                    <li><a href="{{ route('guest.about.history') }}" class="{{ request()->routeIs('guest.about.history') ? 'active' : '' }}">History</a></li>
+                    <li><a href="{{ route('guest.about.iso-obtained') }}" class="{{ request()->routeIs('guest.about.iso-obtained') ? 'active' : '' }}">ISO Obtained</a></li>
+                    <li><a href="{{ route('guest.about.privacy-policy') }}" class="{{ request()->routeIs('guest.about.privacy-policy') ? 'active' : '' }}">Privacy Policy</a></li>
                 </ul>
             </li>
 
@@ -526,8 +539,8 @@
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
                 <ul class="dropdown-menu-custom">
-                    <li><a href="{{ route('guest.news.media-information') }}">Events & Activities</a></li>
-                    <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
+                    <li><a href="{{ route('guest.news.media-information') }}" class="{{ request()->routeIs('guest.news.media-information') ? 'active' : '' }}">Events & Activities</a></li>
+                    <li><a href="{{ route('guest.news.announcements') }}" class="{{ request()->routeIs('guest.news.announcements') ? 'active' : '' }}">Announcements</a></li>
                 </ul>
             </li>
 
