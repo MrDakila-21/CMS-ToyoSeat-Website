@@ -9,6 +9,8 @@ class Inquiry extends Model
     protected $fillable = [
         'name',
         'email',
+        'contact_number',  // NEW
+        'company_name',    // NEW
         'subject',
         'message',
         'attachment_path',

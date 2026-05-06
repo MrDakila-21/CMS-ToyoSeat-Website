@@ -15,6 +15,8 @@ class InquiryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
+            'contact_number' => ['required', 'string', 'max:20'],  // NEW
+            'company_name' => ['nullable', 'string', 'max:255'],   // NEW
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:2048'],
