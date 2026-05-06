@@ -175,15 +175,19 @@
     border-radius: 15px !important;
     transition: all 0.3s ease !important;
     overflow: hidden !important;
+    border: 3px solid var(--border, #cad4e2) !important;
+    background: white;
 }
 
 .event-card:hover {
     transform: translateY(-8px) !important;
     box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+    border-color: var(--primary-light, #5b9dbb) !important;
 }
 
 .event-card .card-img-top {
     transition: transform 0.5s ease !important;
+    border-bottom: 1px solid var(--gray-border, #E9ECEF);
 }
 
 .event-card:hover .card-img-top {
