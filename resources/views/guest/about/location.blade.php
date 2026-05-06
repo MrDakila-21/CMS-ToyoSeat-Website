@@ -4,7 +4,7 @@
 
 @section('content')
 <style>
-    /* CSS Variables - Enhanced Color Scheme (copied from overview) */
+    /* CSS Variables - Enhanced Color Scheme */
     :root {
         --primary-dark: #0A2B3E;
         --primary: #1A6D8F;
@@ -176,161 +176,327 @@
         opacity: 0;
     }
 
-    /* Location specific styles */
+    /* Location specific styles - Enhanced Responsive */
     .info-card {
         background: white;
         border-radius: 20px;
         padding: 30px;
         margin-top: 50px;
         height: 100%;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(0,0,0,0.03);
     }
     
     .info-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Title Header with Icon Beside */
+    .info-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
     }
     
     .info-icon {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
         background: linear-gradient(135deg, #0E334C 0%, #3988BD 100%);
-        border-radius: 12px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 20px;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+    
+    .info-card:hover .info-icon {
+        transform: scale(1.05) rotate(5deg);
     }
     
     .info-icon i {
-        font-size: 24px;
+        font-size: 26px;
         color: white;
     }
     
     .info-title {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #0E334C;
-        margin-bottom: 20px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin: 0;
+        letter-spacing: -0.01em;
     }
     
     .address-detail {
-        margin-bottom: 15px;
+        margin-bottom: 25px;
         padding-left: 20px;
-        border-left: 3px solid #3988BD;
+        border-left: 4px solid var(--primary);
+        background: var(--gray-light);
+        padding: 15px 20px;
+        border-radius: 12px;
+        transition: var(--transition);
+    }
+    
+    .address-detail:hover {
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .address-detail p {
+        margin-bottom: 8px;
+        color: var(--text-dark);
+        line-height: 1.6;
+    }
+    
+    /* Contact Items Grid - New Responsive Layout */
+    .contact-grid {
+        display: grid;
+        gap: 12px;
+        margin-top: 20px;
     }
     
     .contact-item {
         display: flex;
         align-items: center;
         gap: 15px;
-        margin-bottom: 15px;
-        padding: 10px;
-        border-radius: 10px;
-        transition: background 0.3s ease;
+        padding: 12px 15px;
+        border-radius: 12px;
+        margin-top: 10px;
+        transition: var(--transition);
+        background: white;
+        border: 1px solid var(--gray-border);
     }
     
     .contact-item:hover {
-        background: #f8f9fa;
+        transform: translateX(8px);
+        background: var(--primary-lighter);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow-sm);
     }
     
     .contact-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(57, 136, 189, 0.1);
-        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, rgba(57, 136, 189, 0.1) 0%, rgba(57, 136, 189, 0.2) 100%);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #3988BD;
-        font-size: 18px;
+        color: var(--primary);
+        font-size: 20px;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+    
+    .contact-item:hover .contact-icon {
+        background: var(--primary);
+        color: white;
+        transform: scale(1.1);
     }
     
     .contact-content {
         flex: 1;
+        min-width: 0;
     }
     
     .contact-label {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-bottom: 3px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
     }
     
     .contact-value {
         font-size: 1rem;
-        color: #0E334C;
+        color: var(--text-dark);
         font-weight: 500;
         text-decoration: none;
+        word-break: break-word;
+        display: inline-block;
     }
     
     .contact-value:hover {
-        color: #3988BD;
+        color: var(--primary);
     }
     
+    /* Working Hours - Enhanced */
     .working-hours {
-        background: #f8f9fa;
-        border-radius: 15px;
+        background: linear-gradient(135deg, var(--gray-light) 0%, white 100%);
+        border-radius: 16px;
         padding: 20px;
-        margin-top: 20px;
+        margin-top: 25px;
+        border: 1px solid var(--gray-border);
+        transition: var(--transition);
+    }
+    
+    .working-hours:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-light);
+    }
+    
+    .working-hours-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--primary-light);
+    }
+    
+    .working-hours-header i {
+        font-size: 24px;
+        color: var(--primary);
+    }
+    
+    .working-hours-header h4 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin: 0;
     }
     
     .hour-item {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--gray-border);
+        transition: var(--transition);
+        flex-wrap: wrap;
+        gap: 8px;
     }
     
     .hour-item:last-child {
         border-bottom: none;
     }
     
+    .hour-item:hover {
+        padding-left: 10px;
+        background: rgba(57, 136, 189, 0.05);
+        border-radius: 8px;
+    }
+    
     .hour-day {
         font-weight: 600;
-        color: #0E334C;
+        color: var(--primary-dark);
+        font-size: 0.95rem;
     }
     
     .hour-time {
-        color: #3988BD;
+        color: var(--primary);
+        font-weight: 500;
+        font-size: 0.95rem;
     }
     
+    /* Map Card - Fixed for proper fit */
     .map-card {
         background: white;
         border-radius: 20px;
         margin-top: 50px;
         overflow: hidden;
         height: 100%;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
     }
     
     .map-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
     }
     
+    .map-header {
+        padding: 20px 25px;
+        background: linear-gradient(135deg, var(--gray-light) 0%, white 100%);
+        border-bottom: 1px solid var(--gray-border);
+        flex-shrink: 0;
+    }
+    
+    .map-header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .map-header-content i {
+        font-size: 28px;
+        color: var(--primary);
+    }
+    
+    .map-header-content h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin: 0;
+    }
+    
+    .map-header-content small {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    
+    /* Fixed Map Container - Proper fit */
     .map-container {
-        height: 400px;
+        position: relative;
         width: 100%;
+        background: #f5f5f5;
+        flex: 1;
+        min-height: 400px;
+    }
+    
+    .map-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
+    /* For Google Maps API */
+    #map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
     
     .map-placeholder {
         background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-        height: 400px;
+        min-height: 400px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        color: #6c757d;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 20px;
+        flex: 1;
     }
     
+    .map-placeholder i {
+        font-size: 60px;
+        margin-bottom: 20px;
+        color: var(--primary);
+        opacity: 0.5;
+    }
+    
+    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 40px;
         background: white;
         border-radius: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-md);
     }
     
     .empty-icon {
@@ -346,10 +512,47 @@
     
     .empty-icon i {
         font-size: 50px;
-        color: #3988BD;
+        color: var(--primary);
     }
     
-    /* Responsive Design */
+    /* Responsive Design - Enhanced */
+    @media (max-width: 992px) {
+        .info-card, .map-card {
+            margin-top: 30px;
+        }
+        
+        .info-title {
+            font-size: 1.3rem;
+        }
+        
+        .info-icon {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .info-icon i {
+            font-size: 24px;
+        }
+        
+        .contact-item {
+            padding: 10px 12px;
+        }
+        
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+        
+        .map-container {
+            min-height: 350px;
+        }
+        
+        .map-placeholder {
+            min-height: 350px;
+        }
+    }
+    
     @media (max-width: 768px) {
         .hero-title {
             font-size: 2rem;
@@ -376,8 +579,72 @@
             padding: 20px;
         }
         
+        .info-header {
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .info-icon {
+            width: 45px;
+            height: 45px;
+        }
+        
+        .info-icon i {
+            font-size: 22px;
+        }
+        
+        .info-title {
+            font-size: 1.2rem;
+        }
+        
+        .address-detail {
+            padding: 12px 15px;
+        }
+        
+        .contact-grid {
+            gap: 10px;
+        }
+        
+        .contact-item {
+            padding: 10px;
+        }
+        
+        .contact-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 16px;
+        }
+        
+        .contact-label {
+            font-size: 0.7rem;
+        }
+        
+        .contact-value {
+            font-size: 0.9rem;
+        }
+        
         .map-container {
-            height: 300px;
+            min-height: 300px;
+        }
+        
+        .map-placeholder {
+            min-height: 300px;
+        }
+        
+        .map-header {
+            padding: 15px 20px;
+        }
+        
+        .map-header-content h3 {
+            font-size: 1.1rem;
+        }
+        
+        .working-hours {
+            padding: 15px;
+        }
+        
+        .hour-day, .hour-time {
+            font-size: 0.85rem;
         }
     }
     
@@ -409,10 +676,154 @@
         .hero-scroll-indicator i {
             font-size: 0.75rem;
         }
+        
+        .info-card, .map-card {
+            margin-top: 20px;
+            border-radius: 16px;
+        }
+        
+        .info-card {
+            padding: 16px;
+        }
+        
+        .info-header {
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-icon {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .info-icon i {
+            font-size: 18px;
+        }
+        
+        .info-title {
+            font-size: 1.1rem;
+        }
+        
+        .address-detail {
+            padding: 10px 12px;
+            margin-bottom: 20px;
+        }
+        
+        .address-detail p {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .contact-item {
+            padding: 8px 10px;
+            gap: 10px;
+        }
+        
+        .contact-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+        
+        .contact-label {
+            font-size: 0.65rem;
+        }
+        
+        .contact-value {
+            font-size: 0.85rem;
+        }
+        
+        .working-hours-header i {
+            font-size: 18px;
+        }
+        
+        .working-hours-header h4 {
+            font-size: 1rem;
+        }
+        
+        .hour-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .hour-day {
+            font-size: 0.85rem;
+        }
+        
+        .hour-time {
+            font-size: 0.8rem;
+        }
+        
+        .map-header {
+            padding: 12px 15px;
+        }
+        
+        .map-header-content {
+            gap: 10px;
+        }
+        
+        .map-header-content i {
+            font-size: 20px;
+        }
+        
+        .map-header-content h3 {
+            font-size: 1rem;
+        }
+        
+        .map-header-content small {
+            font-size: 0.7rem;
+        }
+        
+        .map-container {
+            min-height: 250px;
+        }
+        
+        .map-placeholder {
+            min-height: 250px;
+        }
+        
+        .empty-state {
+            padding: 40px 20px;
+        }
+        
+        .empty-icon {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .empty-icon i {
+            font-size: 35px;
+        }
+    }
+    
+    /* Print Styles */
+    @media print {
+        .hero-section-wrapper,
+        .hero-scroll-indicator,
+        .btn {
+            display: none;
+        }
+        
+        .info-card, .map-card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+        
+        .map-container {
+            min-height: 300px;
+        }
+    }
+    
+    /* Smooth Loading */
+    .container {
+        opacity: 0;
+        animation: fadeInUp 0.8s ease-out 0.1s forwards;
     }
 </style>
 
-<!-- Hero Section - Modern Gradient with Subtle Animation (copied from overview) -->
+<!-- Hero Section - Modern Gradient with Subtle Animation -->
 <div class="hero-section-wrapper">
     <div class="hero-particles"></div>
     <div class="container">
@@ -433,32 +844,82 @@
 </div>
 
 <div class="container mb-5">
+    @php
+        // Ensure default values if location is null
+        $defaultCity = 'Santa Rosa';
+        $defaultProvince = 'Laguna';
+        $defaultPostalCode = '4026';
+        $defaultCountry = 'Philippines';
+        
+        // Function to convert 24-hour time to 12-hour format with AM/PM
+        function formatTimeTo12Hour($time) {
+            if (empty($time) || $time == 'Closed') {
+                return $time;
+            }
+            
+            // Check if time contains a range
+            if (strpos($time, '-') !== false) {
+                $times = explode('-', $time);
+                $startTime = trim($times[0]);
+                $endTime = trim($times[1]);
+                return formatSingleTime($startTime) . ' - ' . formatSingleTime($endTime);
+            }
+            
+            return formatSingleTime($time);
+        }
+        
+        function formatSingleTime($time) {
+            if (empty($time) || $time == 'Closed') {
+                return $time;
+            }
+            
+            // Check if already has AM/PM
+            if (preg_match('/(am|pm)/i', $time)) {
+                return $time;
+            }
+            
+            // Try to parse 24-hour format (HH:MM)
+            if (preg_match('/(\d{1,2}):(\d{2})/', $time, $matches)) {
+                $hour = intval($matches[1]);
+                $minute = $matches[2];
+                $ampm = $hour >= 12 ? 'PM' : 'AM';
+                $hour12 = $hour % 12;
+                if ($hour12 == 0) $hour12 = 12;
+                return sprintf("%d:%s %s", $hour12, $minute, $ampm);
+            }
+            
+            return $time;
+        }
+    @endphp
+
     @isset($location)
     <div class="row g-4 fade-in-up" style="animation-delay: 0.2s;">
         <!-- Address & Contact Information -->
         <div class="col-lg-6">
             <div class="info-card">
-                <div class="info-icon">
-                    <i class="fas fa-building"></i>
+                <div class="info-header">
+                    <div class="info-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="info-title">Company Headquarters</h3>
                 </div>
-                <h3 class="info-title">Company Headquarters</h3>
                 
                 <div class="address-detail">
-                    <p class="mb-1">{{ $location->address_line1 }}</p>
-                    @if($location->address_line2)
-                        <p class="mb-1">{{ $location->address_line2 }}</p>
+                    <p class="mb-2">{{ $location->address_line1 ?? 'Address information coming soon' }}</p>
+                    @if(!empty($location->address_line2))
+                        <p class="mb-2">{{ $location->address_line2 }}</p>
                     @endif
-                    <p class="mb-1">
-                        {{ $location->city }}
-                        @if($location->state), {{ $location->state }}@endif
-                        @if($location->postal_code) {{ $location->postal_code }}@endif
+                    <p class="mb-2">
+                        {{ $location->city ?? $defaultCity }}
+                        @if(!empty($location->state)), {{ $location->state }}@else, {{ $defaultProvince }}@endif
+                        @if(!empty($location->postal_code)) {{ $location->postal_code }}@else {{ $defaultPostalCode }}@endif
                     </p>
-                    <p class="mb-0">{{ $location->country }}</p>
+                    <p class="mb-0">{{ $location->country ?? $defaultCountry }}</p>
                 </div>
                 
-                @if($location->phone || $location->email)
-                <div class="mt-4">
-                    @if($location->phone)
+                @if(!empty($location->phone) || !empty($location->telephone) || !empty($location->email))
+                <div class="contact-grid">
+                    @if(!empty($location->phone))
                     <div class="contact-item">
                         <div class="contact-icon">
                             <i class="fas fa-phone"></i>
@@ -471,8 +932,22 @@
                         </div>
                     </div>
                     @endif
+
+                    @if(!empty($location->telephone))
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="contact-content">
+                            <div class="contact-label">Telephone Number</div>
+                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $location->telephone) }}" class="contact-value">
+                                {{ $location->telephone }}
+                            </a>
+                        </div>
+                    </div>
+                    @endif
                     
-                    @if($location->email)
+                    @if(!empty($location->email))
                     <div class="contact-item">
                         <div class="contact-icon">
                             <i class="fas fa-envelope"></i>
@@ -488,11 +963,11 @@
                 </div>
                 @endif
                 
-                @if($location->working_hours)
+                @if(!empty($location->working_hours))
                 <div class="working-hours">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <i class="fas fa-clock" style="color: #3988BD; font-size: 20px;"></i>
-                        <h4 class="mb-0" style="font-size: 1.1rem; font-weight: 600; color: #0E334C;">Operating Hours</h4>
+                    <div class="working-hours-header">
+                        <i class="fas fa-clock"></i>
+                        <h4>Operating Hours</h4>
                     </div>
                     @php
                         $hours = explode("\n", $location->working_hours);
@@ -501,10 +976,13 @@
                         @if(trim($hour))
                             @php
                                 $parts = explode(':', $hour, 2);
+                                $dayRange = isset($parts[0]) ? trim($parts[0]) : '';
+                                $timeRange = isset($parts[1]) ? trim($parts[1]) : '';
+                                $formattedTime = formatTimeTo12Hour($timeRange);
                             @endphp
                             <div class="hour-item">
-                                <span class="hour-day">{{ trim($parts[0]) }}</span>
-                                <span class="hour-time">{{ isset($parts[1]) ? trim($parts[1]) : trim($hour) }}</span>
+                                <span class="hour-day">{{ $dayRange }}</span>
+                                <span class="hour-time">{{ $formattedTime }}</span>
                             </div>
                         @endif
                     @endforeach
@@ -513,48 +991,48 @@
             </div>
         </div>
         
-        <!-- Map Section -->
+        <!-- Map Section - Fixed -->
         <div class="col-lg-6">
             <div class="map-card">
-                <div class="p-4 border-bottom" style="background: #f8f9fa;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-map-marker-alt" style="color: #3988BD; font-size: 24px;"></i>
+                <div class="map-header">
+                    <div class="map-header-content">
+                        <i class="fas fa-map-marker-alt"></i>
                         <div>
-                            <h3 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #0E334C;">Find Us Here</h3>
-                            <small class="text-muted">Get directions to our location</small>
+                            <h3>Find Us Here</h3>
+                            <small>Get directions to our location</small>
                         </div>
                     </div>
                 </div>
                 
-                @if($location->google_maps_embed)
-                    <div class="map-container">
+                <div class="map-container">
+                    @if(!empty($location->google_maps_embed))
                         {!! $location->google_maps_embed !!}
-                    </div>
-                @elseif($location->latitude && $location->longitude)
-                    <div id="map" class="map-container"></div>
-                @else
-                    <div class="map-placeholder">
-                        <i class="fas fa-map-marked-alt fa-4x mb-3" style="color: #3988BD;"></i>
-                        <p class="text-center mb-0 px-4">Interactive map will be available soon. Please check back later.</p>
-                    </div>
-                @endif
+                    @elseif(!empty($location->latitude) && !empty($location->longitude))
+                        <div id="map"></div>
+                    @else
+                        <div class="map-placeholder">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <p class="text-center mb-0 px-4">Interactive map will be available soon. Please check back later.</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
     
     @else
-    <!-- Empty State -->
+    <!-- Empty State with Default Values -->
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <div class="empty-state fade-in-up">
                 <div class="empty-icon">
                     <i class="fas fa-map-marker-alt"></i>
                 </div>
-                <h3 class="h4 mb-3" style="color: #0E334C;">Location Information</h3>
+                <h3 class="h4 mb-3" style="color: var(--primary-dark);">Location Information</h3>
                 <p class="text-muted mb-4">Company location details will be available soon.</p>
                 <div class="alert alert-info" style="background: rgba(57, 136, 189, 0.1); border: none; border-radius: 12px;">
                     <i class="fas fa-info-circle me-2"></i> 
-                    Please check back later for our complete address and map.
+                    Our headquarters is located in {{ $defaultCity }}, {{ $defaultProvince }}, {{ $defaultCountry }} (Postal Code: {{ $defaultPostalCode }})
                 </div>
             </div>
         </div>
@@ -587,7 +1065,7 @@
 @endsection
 
 @isset($location)
-    @if($location->latitude && $location->longitude && !$location->google_maps_embed)
+    @if(!empty($location->latitude) && !empty($location->longitude) && empty($location->google_maps_embed))
     @section('scripts')
     <script>
         function initMap() {
@@ -627,7 +1105,7 @@
             const marker = new google.maps.Marker({
                 position: location,
                 map: map,
-                title: "{{ addslashes($location->address_line1) }}",
+                title: "{{ addslashes($location->address_line1 ?? 'Company Location') }}",
                 animation: google.maps.Animation.DROP,
                 icon: {
                     url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
@@ -637,7 +1115,7 @@
             
             // Optional: Add an info window
             const infoWindow = new google.maps.InfoWindow({
-                content: '<div style="padding: 10px;"><strong>{{ addslashes($location->address_line1) }}</strong><br>{{ addslashes($location->city) }}, {{ addslashes($location->country) }}</div>'
+                content: '<div style="padding: 10px;"><strong>{{ addslashes($location->address_line1 ?? 'Company Location') }}</strong><br>{{ addslashes($location->city ?? 'Santa Rosa') }}, {{ addslashes($location->country ?? 'Philippines') }}</div>'
             });
             
             marker.addListener('click', function() {

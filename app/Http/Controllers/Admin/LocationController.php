@@ -28,6 +28,7 @@ class LocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'phone' => 'nullable|string|max:50|regex:/^[\+\-\s\(\)0-9]+$/',
+            'telephone' => 'nullable|string|max:50|regex:/^[\+\-\s\(\)0-9]+$/',
             'email' => 'nullable|email|max:100',
             'working_hours' => 'nullable|string|max:1000'
         ], [
@@ -39,6 +40,7 @@ class LocationController extends Controller
             'longitude.numeric' => 'Longitude must be a valid number.',
             'longitude.between' => 'Longitude must be between -180 and 180.',
             'phone.regex' => 'Please enter a valid phone number.',
+            'telephone.regex' => 'Please enter a valid telephone number.',
             'email.email' => 'Please enter a valid email address.',
         ]);
 
@@ -79,6 +81,7 @@ class LocationController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'phone' => 'nullable|string|max:50|regex:/^[\+\-\s\(\)0-9]+$/',
+            'telephone' => 'nullable|string|max:50|regex:/^[\+\-\s\(\)0-9]+$/',
             'email' => 'nullable|email|max:100',
             'working_hours' => 'nullable|string|max:1000'
         ], [
@@ -90,6 +93,7 @@ class LocationController extends Controller
             'longitude.numeric' => 'Longitude must be a valid number.',
             'longitude.between' => 'Longitude must be between -180 and 180.',
             'phone.regex' => 'Please enter a valid phone number.',
+            'telephone.regex' => 'Please enter a valid telephone number.',
             'email.email' => 'Please enter a valid email address.',
         ]);
 
