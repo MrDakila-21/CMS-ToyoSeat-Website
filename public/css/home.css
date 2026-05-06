@@ -1,0 +1,1136 @@
+/* resources/css/home.css */
+
+/* Reset for full screen */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Full Screen Hero Section */
+.hero-wrapper {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
+
+/* Background Image - Full Screen */
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Gradient Overlay 1 - Bottom to Top */
+.gradient-overlay-1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, #000000 0%, rgba(0, 6, 10, 0.7) 10.5%, rgba(88, 138, 172, 0) 52.2%, rgba(255, 255, 255, 0) 100%);
+    z-index: 1;
+}
+
+/* Gradient Overlay 2 - Left to Right */
+.gradient-overlay-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #0E334C -2.12%, rgba(1, 90, 150, 0.6) 19.47%, rgba(172, 218, 249, 0) 65.91%, rgba(255, 255, 255, 0) 97.88%);
+    z-index: 1;
+}
+
+/* Text Container - Moved UP slightly */
+/* Text Container - Positioned higher */
+.text-container {
+    position: absolute;
+    z-index: 2;
+    left: 67px;
+    top: 10%;
+    transform: translateY(-50%);
+}
+
+/* SHAPING THE FUTURE */
+.shaping-title {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    padding-bottom: -70px;
+    line-height: 36px;
+    color: #80CCFF;
+    margin-bottom: 20px;
+}
+
+/* Line 10 */
+.line-10 {
+    width: 86px;
+    height: 2px;
+    background: #80CCFF;
+    margin-bottom: 15px;
+    margin-top: -20px;
+}
+
+/* Lead. Move. Motivate. */
+.lead-move-motivate {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 45px;
+    line-height: 1.2;
+    color: #e0baba;
+    margin-bottom: 10px;
+}
+
+.lead-move-motivate div {
+    margin-bottom: 5px;
+}
+
+/* Quote Text */
+.quote-text {
+    width: 407px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 26px;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.lead-move-motivate,
+.quote-text {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.together-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between line and text */
+    margin-top: -20px;
+}
+
+/* Line */
+.line-11 {
+    width: 49px;
+    height: 2px;
+    background: #80CCFF;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 12px; /* Adjust spacing as needed */
+}
+
+/* Text */
+.together-text {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: #B4DFFD;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Bottom Cards Section - Smaller and more compact */
+.bottom-cards {
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 80px; /* Equal spacing between cards */
+    flex-wrap: wrap;
+    padding: 0 20px;
+}
+/* Individual Card - Smaller size */
+.card-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    flex: 0 0 auto; /* Prevent stretching */
+}
+.card-item:hover {
+    transform: translateY(-3px);
+}
+
+/* Icon Circle - Smaller */
+.card-icon-circle {
+    width: 60px;
+    height: 60px;
+    background: #015A96;
+    border: 1.5px solid #4285F4;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px auto; /* Centered horizontally */
+    transition: all 0.3s ease;
+}
+
+
+.card-item:hover .card-icon-circle {
+    background: #3988BD;
+    border-color: #80CCFF;
+}
+
+/* Icon Image - Smaller */
+.card-icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+/* Card Title - Smaller */
+.card-title {
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 18px;
+    color: #FFFFFF;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.card-item:hover .card-title {
+    color: #80CCFF;
+}
+
+/* ===== NEST HUB (1024x600) SPECIFIC FIXES ===== */
+/* Target devices with 1024x600 resolution (Nest Hub) */
+@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 600px) and (max-height: 600px),
+       (min-width: 1024px) and (max-width: 1024px) and (min-height: 598px) and (max-height: 602px) {
+    
+    /* Override hero-wrapper height for proper scrolling */
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding-bottom: 90px;
+    }
+    
+    /* Adjust text container position - move up to balance with cards */
+    .text-container {
+        position: relative;
+        top: 0;
+        left: 30px;
+        transform: none;
+        padding-top: 45px;
+        padding-bottom: 20px;
+        margin-bottom: 0;
+    }
+    
+    /* Fix the spacing between title elements */
+    .shaping-title {
+        font-size: 16px;
+        margin-bottom: 8px;
+        line-height: 24px;
+    }
+    
+    .line-10 {
+        width: 70px;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+    
+    /* Keep Lead.Move.Motivate properly sized */
+    .lead-move-motivate {
+        font-size: 38px;
+        line-height: 1.2;
+        margin-bottom: 8px;
+    }
+    
+    .lead-move-motivate div {
+        margin-bottom: 2px;
+    }
+    
+    /* Quote text styling */
+    .quote-text {
+        width: 380px;
+        font-size: 14px;
+        line-height: 22px;
+        margin-bottom: 12px;
+    }
+    
+    /* Fix the together wrapper positioning - bring up closer */
+    .together-wrapper {
+        margin-top: 0;
+        gap: 8px;
+    }
+    
+    .line-11 {
+        width: 45px;
+        margin-right: 8px;
+    }
+    
+    .together-text {
+        font-size: 14px;
+        line-height: 20px;
+    }
+    
+    /* Bottom cards - properly positioned and spaced */
+    .bottom-cards {
+        position: relative;
+        bottom: auto;
+        margin-top: 15px;
+        margin-bottom: 30px;
+        gap: 35px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Card styling for Nest Hub */
+    .card-icon-circle {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 6px;
+    }
+    
+    .card-icon-img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .card-title {
+        font-size: 11px;
+        line-height: 16px;
+    }
+    
+    /* Ensure section2 doesn't overlap weirdly */
+    .section2 {
+        margin-top: 0;
+        clear: both;
+    }
+}
+
+/* Fallback for any device with similar dimensions */
+@media (max-width: 1024px) and (max-height: 620px) and (min-height: 580px) {
+    /* Apply same fixes for any device in this range */
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 80px;
+    }
+    
+    .text-container {
+        position: relative;
+        top: 0;
+        left: 30px;
+        transform: none;
+        padding-top: 40px;
+        padding-bottom: 15px;
+    }
+    
+    .shaping-title {
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+    
+    .line-10 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 34px;
+    }
+    
+    .quote-text {
+        width: 350px;
+        font-size: 13px;
+        line-height: 20px;
+    }
+    
+    .together-wrapper {
+        margin-top: 0;
+    }
+    
+    .bottom-cards {
+        position: relative;
+        bottom: auto;
+        margin-top: 20px;
+        margin-bottom: 25px;
+        gap: 30px;
+    }
+    
+    .card-icon-circle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .card-icon-img {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .card-title {
+        font-size: 10px;
+    }
+}
+
+/* Responsive Design - Enhanced */
+@media (max-width: 1200px) {
+    .bottom-cards {
+        gap: 45px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 45px;
+    }
+    
+    .quote-text {
+        width: 350px;
+        font-size: 18px;
+    }
+    
+    .text-container {
+        top: 40%;
+    }
+}
+
+@media (max-width: 992px) {
+    .text-container {
+        left: 40px;
+        top: 38%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 38px;
+    }
+    
+    .quote-text {
+        width: 320px;
+        font-size: 16px;
+        line-height: 26px;
+    }
+    
+    .bottom-cards {
+        bottom: 30px;
+        gap: 35px;
+    }
+    
+    .card-icon-circle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .card-icon-img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .card-title {
+        font-size: 12px;
+    }
+    
+    /* Adjust line elements */
+    .line-10 {
+        width: 70px;
+    }
+    
+    .line-11 {
+        width: 40px;
+    }
+    
+    .shaping-title {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 140px;
+    }
+    
+    .text-container {
+        left: 30px;
+        top: 30%;
+        transform: translateY(-50%);
+    }
+    
+    .shaping-title {
+        font-size: 14px;
+        line-height: 24px;
+        margin-bottom: 12px;
+    }
+    
+    .line-10 {
+        width: 60px;
+        margin-top: -10px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 28px;
+        line-height: 1.3;
+    }
+    
+    .lead-move-motivate div {
+        margin-bottom: 3px;
+    }
+    
+    .quote-text {
+        width: 260px;
+        font-size: 13px;
+        line-height: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .together-wrapper {
+        margin-top: -15px;
+        gap: 8px;
+    }
+    
+    .line-11 {
+        width: 35px;
+    }
+    
+    .together-text {
+        font-size: 12px;
+        line-height: 20px;
+    }
+    
+    .bottom-cards {
+        bottom: 30px;
+        gap: 20px;
+        padding: 0 15px;
+    }
+    
+    .card-icon-circle {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .card-icon-img {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .card-title {
+        font-size: 10px;
+        line-height: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-wrapper {
+        min-height: 100vh;
+        padding-bottom: 120px;
+    }
+    
+    .text-container {
+        left: 20px;
+        top: 25%;
+        transform: translateY(-50%);
+    }
+    
+    .shaping-title {
+        font-size: 12px;
+        line-height: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .line-10 {
+        width: 50px;
+        margin-top: -8px;
+        margin-bottom: 8px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 22px;
+        line-height: 1.35;
+        margin-bottom: 8px;
+    }
+    
+    .lead-move-motivate div {
+        margin-bottom: 2px;
+    }
+    
+    .quote-text {
+        width: 220px;
+        font-size: 11px;
+        line-height: 18px;
+        margin-bottom: 15px;
+    }
+    
+    .together-wrapper {
+        margin-top: -10px;
+        gap: 6px;
+    }
+    
+    .line-11 {
+        width: 30px;
+        height: 1.5px;
+    }
+    
+    .together-text {
+        font-size: 10px;
+        line-height: 16px;
+    }
+    
+    .bottom-cards {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        bottom: 20px;
+    }
+    
+    .card-item {
+        flex: 0 0 calc(33.33% - 15px);
+        min-width: 80px;
+    }
+    
+    .card-icon-circle {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 5px;
+    }
+    
+    .card-icon-img {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .card-title {
+        font-size: 9px;
+        line-height: 12px;
+        letter-spacing: 0.3px;
+    }
+}
+
+@media (max-width: 380px) {
+    .text-container {
+        left: 15px;
+        top: 22%;
+    }
+    
+    .shaping-title {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+    
+    .line-10 {
+        width: 45px;
+    }
+    
+    .lead-move-motivate {
+        font-size: 18px;
+    }
+    
+    .quote-text {
+        width: 200px;
+        font-size: 10px;
+        line-height: 16px;
+    }
+    
+    .card-item {
+        flex: 0 0 calc(50% - 15px);
+    }
+    
+    .card-icon-circle {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-icon-img {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .card-title {
+        font-size: 8px;
+        line-height: 11px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .hero-wrapper {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 120px;
+    }
+    
+    .text-container {
+        top: 35%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 24px;
+    }
+    
+    .quote-text {
+        width: 240px;
+        font-size: 12px;
+    }
+    
+    .bottom-cards {
+        bottom: 20px;
+    }
+}
+
+/* High-resolution screens */
+@media (min-width: 1920px) {
+    .text-container {
+        left: 100px;
+        top: 12%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 56px;
+    }
+    
+    .quote-text {
+        width: 500px;
+        font-size: 18px;
+        line-height: 28px;
+    }
+    
+    .shaping-title {
+        font-size: 22px;
+    }
+    
+    .line-10 {
+        width: 100px;
+    }
+    
+    .bottom-cards {
+        gap: 80px;
+        bottom: 50px;
+    }
+    
+    .card-icon-circle {
+        width: 75px;
+        height: 75px;
+    }
+    
+    .card-icon-img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-title {
+        font-size: 16px;
+        line-height: 22px;
+    }
+}
+
+/* Tablet specific improvements */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    .text-container {
+        top: 32%;
+    }
+    
+    .lead-move-motivate {
+        font-size: 42px;
+    }
+    
+    .bottom-cards {
+        gap: 40px;
+    }
+}
+
+/* =========================
+   SECTION 2 BASE
+========================= */
+
+/* ================= SECTION BASE ================= */
+
+.section2 {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* WHITE PANEL */
+.section2-white-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 52%;
+    height: 100%;
+    background: #fff;
+    z-index: 2;
+}
+
+/* LEFT SIDE */
+.section2-left {
+    flex: 1;
+    width: 48%;
+}
+
+/* MAIN CONTENT */
+.section2-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* RIGHT SIDE */
+.section2-right {
+    width: 52%;
+    padding: 60px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    z-index: 4;
+    position: relative;
+}
+
+/* ================= DIAGONAL TRANSITION ================= */
+
+.diag-layer {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.layer1 {
+    left: 40%;
+    width: 15%;
+    background: rgba(255, 255, 255, 0.15);
+    transform: skewX(-15deg);
+}
+
+.layer2 {
+    left: 44%;
+    width: 15%;
+    background: rgba(255, 255, 255, 0.35);
+    transform: skewX(-15deg);
+}
+
+.layer3 {
+    left: 48%;
+    width: 15%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: skewX(-15deg);
+}
+
+/* ================= SECTION HEADER ================= */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.section-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.announcements-title,
+.mediainfo-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #0A5AA6;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+}
+
+/* ================= UNDERLINE ================= */
+
+.underline {
+    width: 575px;
+    height: 3px;
+    background: #0A5AA6;
+    margin-bottom: 15px;
+    margin-top: 5px;
+}
+
+/* ================= NEWS CARDS ================= */
+
+.news-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.news-card {
+    display: flex;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* DATE BOX */
+.news-date-box {
+    background: #0A5AA6;
+    color: white;
+    min-width: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
+    padding: 12px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* NEWS TEXT */
+.news-text {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: 'Hind', sans-serif;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* ================= ANIMATIONS ================= */
+
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.delay-1 {
+    animation-delay: 0.2s;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+    .section2-white-panel {
+        width: 65%;
+    }
+    
+    .section2-right {
+        width: 65%;
+        padding: 40px;
+    }
+    
+    .section2-left {
+        width: 35%;
+    }
+    
+    .layer1, .layer2, .layer3 {
+        transform: skewX(-10deg);
+    }
+    
+    .announcements-title,
+    .mediainfo-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .section2-white-panel {
+        width: 100%;
+        opacity: 0.95;
+    }
+    
+    .section2-right {
+        width: 100%;
+        padding: 30px 20px;
+        gap: 40px;
+    }
+    
+    .section2-left {
+        display: none;
+    }
+    
+    .diag-layer {
+        display: none;
+    }
+    
+    .announcements-title,
+    .mediainfo-title {
+        font-size: 22px;
+    }
+    
+    .section-header {
+        gap: 10px;
+    }
+    
+    .section-icon {
+        width: 30px;
+    }
+    
+    .underline {
+        width: 50px;
+        margin-bottom: 20px;
+    }
+    
+    .news-date-box {
+        min-width: 90px;
+        font-size: 11px;
+        padding: 10px;
+    }
+    
+    .news-text {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .news-cards {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .section2-right {
+        padding: 20px 15px;
+        gap: 35px;
+    }
+    
+    .announcements-title,
+    .mediainfo-title {
+        font-size: 20px;
+    }
+    
+    .section-icon {
+        width: 26px;
+    }
+    
+    .underline {
+        width: 45px;
+        height: 2.5px;
+        margin-bottom: 18px;
+    }
+    
+    .news-card {
+        flex-direction: column;
+    }
+    
+    .news-date-box {
+        min-width: auto;
+        padding: 8px 12px;
+        font-size: 10px;
+    }
+    
+    .news-text {
+        font-size: 11px;
+        padding: 10px 12px;
+    }
+    
+    .news-cards {
+        gap: 10px;
+    }
+}
+
+/* Landscape mode fix */
+@media (max-width: 768px) and (orientation: landscape) {
+    .section2 {
+        min-height: auto;
+    }
+    
+    .section2-right {
+        padding: 25px 30px;
+        gap: 30px;
+    }
+    
+    .news-card {
+        flex-direction: row;
+    }
+    
+    .news-date-box {
+        min-width: 100px;
+    }
+}
+
+ /* Slideshow styles - ADDED without removing existing styles */
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            z-index: 1;
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+        
+        /* Slideshow checkbox styling */
+.slide-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin: 0;
+    accent-color: #0E334C;
+}
+
+.slide-checkbox:checked {
+    background-color: #0E334C;
+    border-color: #0E334C;
+}
+
+/* Preview remove button styling */
+.remove-preview-btn {
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.remove-preview-btn:hover {
+    opacity: 1;
+}
+
+.preview-item {
+    position: relative;
+}
+
+#clearAllPreviews {
+    margin-left: 10px;
+    font-size: 12px;
+}
+
