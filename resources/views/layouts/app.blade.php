@@ -546,7 +546,7 @@
             </li>
 
             <li class="nav-item">
-                <a href="{{ route('guest.inquiry.index') }}" class="nav-link-custom {{ request()->routeIs('guest.inquiry.*') ? 'active' : '' }}">Inquiry</a>
+                <a href="{{ route('guest.inquiry.index') }}" class="nav-link-custom {{ request()->routeIs('guest.inquiry.*') ? 'active' : '' }}">Contact Us</a>
             </li>
         </ul>
     </div>
@@ -613,7 +613,7 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('guest.news.media-information') }}">Events & Activities</a></li>
                         <li><a href="{{ route('guest.news.announcements') }}">Announcements</a></li>
-                        <li><a href="{{ route('guest.inquiry.index') }}">Inquiry</a></li>
+                        <li><a href="{{ route('guest.inquiry.index') }}">Contact Us</a></li>
                     </ul>
                 </div>
             </div>

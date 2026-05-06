@@ -19,6 +19,7 @@ class CompanyLocation extends Model
         'latitude',
         'longitude',
         'phone',
+        'telephone',  // ← Make SURE this line exists!
         'email',
         'working_hours',
         'is_active'
