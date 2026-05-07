@@ -92,6 +92,7 @@ class OverviewController extends Controller
                 'reload' => true, 
                 'data' => [
                     'president_image' => $content->president_image ? '/storage.php?file=' . $content->president_image : null,
+                    'president_image_url' => $content->president_image_url,
                     'president_name' => $content->president_name,
                     'president_title' => $content->president_title,
                     'president_message' => $content->president_message,
@@ -190,6 +191,7 @@ class OverviewController extends Controller
                 'reload' => true, 
                 'data' => [
                     'company_profile_image' => $content->company_profile_image ? '/storage.php?file=' . $content->company_profile_image : null,
+                    'company_profile_image_url' => $content->company_profile_image_url, 
                     'company_name' => $content->company_name,
                     'company_profile' => $content->company_profile,
                     'established_date' => $content->established_date,
