@@ -89,6 +89,7 @@ class OverviewController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'President section updated successfully!',
+                'reload' => true, 
                 'data' => [
                     'president_image' => $content->president_image ? '/storage.php?file=' . $content->president_image : null,
                     'president_name' => $content->president_name,
@@ -186,6 +187,7 @@ class OverviewController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Company section updated successfully!',
+                'reload' => true, 
                 'data' => [
                     'company_profile_image' => $content->company_profile_image ? '/storage.php?file=' . $content->company_profile_image : null,
                     'company_name' => $content->company_name,

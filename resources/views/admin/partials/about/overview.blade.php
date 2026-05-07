@@ -1014,6 +1014,13 @@ function updateCompanySectionDynamically(data) {
             .then(data => {
                 if (data.success) {
                     showFloatingToast(data.message, 'success');
+
+                            if (data.reload) {
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            return;
+        }
                     
                     // DYNAMIC UPDATE WITHOUT PAGE RELOAD
                     if (section === 'president' && data.data) {
