@@ -19,6 +19,7 @@ class HomepageSlide extends Model
         'order' => 'integer'
     ];
     
+    // ADD THIS ACCESSOR - Same as Announcement/EventActivity
     public function getImageUrlAttribute()
     {
         if ($this->image_path) {

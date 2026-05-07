@@ -55,7 +55,7 @@ class OverviewContent extends Model
         return $content;
     }
     
-    // Accessor for president image URL
+    // ADD THIS ACCESSOR - Same pattern as Announcement
     public function getPresidentImageUrlAttribute()
     {
         if ($this->president_image) {
@@ -64,7 +64,7 @@ class OverviewContent extends Model
         return null;
     }
     
-    // Accessor for company profile image URL
+    // ADD THIS ACCESSOR - Same pattern as Announcement
     public function getCompanyProfileImageUrlAttribute()
     {
         if ($this->company_profile_image) {

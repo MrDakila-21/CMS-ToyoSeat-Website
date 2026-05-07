@@ -75,7 +75,7 @@
                                         <div id="currentPresidentImageWrapper" class="position-relative d-inline-block">
                                             @if($content->president_image)
                                                 <div class="current-image-wrapper" id="currentPresidentImage">
-                                                    <img src="{{ Storage::url($content->president_image) }}" alt="President" class="img-thumbnail" style="max-height: 150px;">
+                                                    <img src="{{ '/storage.php?file=' . $content->president_image }}" alt="President" class="img-thumbnail" style="max-height: 150px;">
                                                     <button type="button" class="btn btn-sm btn-danger remove-image-btn" data-image-type="president" style="position: absolute; top: 5px; right: 5px;">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -154,7 +154,7 @@
                                         <div id="currentCompanyImageWrapper" class="position-relative d-inline-block">
                                             @if($content->company_profile_image)
                                                 <div class="current-image-wrapper" id="currentCompanyImage">
-                                                    <img src="{{ Storage::url($content->company_profile_image) }}" alt="Company" class="img-thumbnail" style="max-height: 150px;">
+                                                    <img src="{{ '/storage.php?file=' . $content->company_profile_image }}" alt="Company" class="img-thumbnail" style="max-height: 150px;">
                                                     <button type="button" class="btn btn-sm btn-danger remove-image-btn" data-image-type="company" style="position: absolute; top: 5px; right: 5px;">
                                                         <i class="fas fa-times"></i>
                                                     </button>
