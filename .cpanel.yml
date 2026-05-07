@@ -1,5 +1,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/toyoseat/public_html/
-    - /bin/cp -Rf public/* $DEPLOYPATH
-    - /usr/bin/php $DEPLOYPATH/deploy.php
+    - /bin/cp -R * $DEPLOYPATH
