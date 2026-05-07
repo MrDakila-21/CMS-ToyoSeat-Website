@@ -1,0 +1,446 @@
+/* resources/css/admin-login.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    width: 100%;
+    height: 100vh;
+}
+
+/* Centered Container */
+.login-container {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Modal Card */
+.login-card {
+    position: relative;
+    width: 483px;
+    height: 536px;
+    background: #FFFFFF;
+    border-radius: 15px;
+    margin: 0 auto;
+    padding: 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Logo Section */
+.logo-container {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 38px;
+    text-align: center;
+}
+
+.logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+/* TOYO SEAT */
+.company-name {
+    position: absolute;
+    width: 202px;
+    height: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 128px;
+    font-family: 'Cinzel', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 31px;
+    line-height: 48px;
+    color: #015A96;
+    text-align: center;
+    margin: 0;
+    letter-spacing: 3px;
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+/* PHILIPPINES CORPORATION */
+.company-sub {
+    position: absolute;
+    width: 174px;
+    height: 17px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 167px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 17px;
+    text-align: center;
+    letter-spacing: 1px;
+    color: #015A96;
+    margin: 0;
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+/* CMS ADMIN LOGIN */
+.login-title {
+    position: absolute;
+    width: 196px;
+    height: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 196px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 30px;
+    color: #8F8686;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+}
+
+/* Form Wrapper */
+.form-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: 259px;
+    padding: 0 99px;
+}
+
+/* Form Group for Username */
+.form-group-username {
+    position: relative;
+    width: 285px;
+    height: 58px;
+    margin-bottom: 26px;
+}
+
+/* Input wrapper for positioning icon */
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Username Input Field */
+.form-control-username {
+    width: 100%;
+    height: 58px;
+    background: #FFFFFF;
+    border: 1px solid #8F8686;
+    border-radius: 10px;
+    padding-left: 50px;
+    padding-right: 15px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: #000000;
+    transition: all 0.3s ease;
+}
+
+.form-control-username::placeholder {
+    color: #8F8686;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.form-control-username:focus {
+    outline: none;
+    border-color: #015A96;
+    box-shadow: 0 0 0 3px rgba(1, 90, 150, 0.1);
+    color: #000000;
+}
+
+/* Password Input Field */
+.form-control-password {
+    width: 100%;
+    height: 58px;
+    background: #FFFFFF;
+    border: 1px solid #8F8686;
+    border-radius: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: #000000;
+    transition: all 0.3s ease;
+}
+
+.form-control-password::placeholder {
+    color: #8F8686;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.form-control-password:focus {
+    outline: none;
+    border-color: #015A96;
+    box-shadow: 0 0 0 3px rgba(1, 90, 150, 0.1);
+    color: #000000;
+}
+
+/* Keep typed/autofilled text black */
+.form-control-username,
+.form-control-password,
+.form-control-username:active,
+.form-control-password:active,
+.form-control-username:-webkit-autofill,
+.form-control-username:-webkit-autofill:hover,
+.form-control-username:-webkit-autofill:focus,
+.form-control-password:-webkit-autofill,
+.form-control-password:-webkit-autofill:hover,
+.form-control-password:-webkit-autofill:focus {
+    color: #000000;
+    -webkit-text-fill-color: #000000;
+    caret-color: #000000;
+}
+
+.form-control-username:-webkit-autofill,
+.form-control-username:-webkit-autofill:hover,
+.form-control-username:-webkit-autofill:focus,
+.form-control-password:-webkit-autofill,
+.form-control-password:-webkit-autofill:hover,
+.form-control-password:-webkit-autofill:focus {
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Icon Styles */
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.input-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.input-icon i {
+    font-size: 20px;
+    color: #8F8686;
+}
+
+.input-icon .svg-icon {
+    display: block;
+}
+
+.input-icon .fa-icon {
+    display: none;
+}
+
+.input-icon.svg-fallback .svg-icon {
+    display: none;
+}
+
+.input-icon.svg-fallback .fa-icon {
+    display: block;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #8F8686;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.password-toggle:focus {
+    outline: none;
+    color: #015A96;
+}
+
+/* Form Group for Password */
+.form-group-password {
+    position: relative;
+    width: 285px;
+    height: 58px;
+    margin-bottom: 26px;
+}
+
+/* Button Group */
+.button-group {
+    position: relative;
+    width: 285px;
+    height: 58px;
+    margin-top: 10px;
+}
+
+/* Login Button */
+.login-btn {
+    width: 100%;
+    height: 58px;
+    background: #015A96;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 30px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #004070;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(1, 90, 150, 0.3);
+}
+
+.login-btn:active {
+    transform: translateY(0);
+}
+
+/* Toast Message */
+.login-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    min-width: 280px;
+    max-width: 360px;
+    background: #fff2f2;
+    border: 1px solid #f4b4b4;
+    color: #9f1d1d;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.login-toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.login-toast.hide {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Hide default labels */
+.form-label {
+    display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 520px) {
+    .login-card {
+        width: 95%;
+        max-width: 483px;
+        height: auto;
+        min-height: 536px;
+    }
+    
+    .form-wrapper {
+        padding: 0 5%;
+    }
+    
+    .form-group-username,
+    .form-group-password,
+    .button-group {
+        width: 100%;
+    }
+
+    .login-toast {
+        right: 12px;
+        left: 12px;
+        min-width: 0;
+        max-width: none;
+    }
+    
+    .company-name {
+        font-size: 28px;
+        width: auto;
+        white-space: nowrap;
+    }
+    
+    .company-sub {
+        width: auto;
+        white-space: nowrap;
+    }
+    
+    .login-title {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .company-name {
+        font-size: 24px;
+        white-space: normal;
+        width: 90%;
+    }
+    
+    .company-sub {
+        white-space: normal;
+        width: 90%;
+    }
+    
+    .login-title {
+        white-space: normal;
+        width: 90%;
+    }
+}

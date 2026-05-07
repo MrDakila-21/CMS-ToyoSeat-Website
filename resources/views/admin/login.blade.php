@@ -6,9 +6,9 @@
     <title>Toyo Seat Philippines - Admin Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="{{ asset('css/admin-login.css') }}">
     <!-- Vite CSS - This will compile and serve your CSS -->
-    @vite(['resources/css/admin-login.css'])
+
     
     <style>
         /* Inline style for dynamic background image */
