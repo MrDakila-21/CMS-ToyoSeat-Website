@@ -28,7 +28,7 @@ class EventActivity extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - Organized in EventActivity folder
+    // Helper to get full image URL - FIXED for storage.php
     public function getImageUrlAttribute()
     {
         // PRIORITY 1: Check for image in public/images/EventActivity folder with ID as filename
@@ -38,17 +38,17 @@ class EventActivity extends Model
             // Check in public/images/EventActivity directory
             $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
-                return asset("images/EventActivity/{$this->id}.{$ext}");
+                return "/storage.php?file=images/EventActivity/{$this->id}.{$ext}";
             }
         }
         
         // PRIORITY 2: Check if there's a stored image path in database (from upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+            return '/storage.php?file=' . $this->image;
         }
         
         // PRIORITY 3: Return default image if no image found
-        return asset('images/default-image.png');
+        return '/storage.php?file=images/default-image.png';
     }
     
     // Method to check if folder image exists

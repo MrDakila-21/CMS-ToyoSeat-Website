@@ -23,13 +23,13 @@ class OverviewContent extends Model
         'business_description',
         'employees',
         'dynamic_categories',
-        'category_metadata'   // Add this
+        'category_metadata'
     ];
     
     protected $casts = [
         'business_principles' => 'array',
         'dynamic_categories' => 'array',
-        'category_metadata' => 'array'   // Add this
+        'category_metadata' => 'array'
     ];
     
     public static function getContent()
@@ -49,9 +49,27 @@ class OverviewContent extends Model
                 'business_description' => 'Manufacturing and sales of automotive seats',
                 'employees' => 1000,
                 'dynamic_categories' => [],
-                'category_metadata' => []  // Add this
+                'category_metadata' => []
             ]);
         }
         return $content;
+    }
+    
+    // Accessor for president image URL
+    public function getPresidentImageUrlAttribute()
+    {
+        if ($this->president_image) {
+            return '/storage.php?file=' . $this->president_image;
+        }
+        return null;
+    }
+    
+    // Accessor for company profile image URL
+    public function getCompanyProfileImageUrlAttribute()
+    {
+        if ($this->company_profile_image) {
+            return '/storage.php?file=' . $this->company_profile_image;
+        }
+        return null;
     }
 }
