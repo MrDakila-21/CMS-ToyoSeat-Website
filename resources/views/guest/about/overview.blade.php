@@ -71,7 +71,7 @@
                         <div class="col-md-5 col-lg-4">
                             <div class="executive-image-wrapper">
                                 <div class="executive-image-overlay"></div>
-                                <img src="{{ Storage::url($content->president_image) }}" 
+                                <img src="{{ $content->president_image ? '/storage.php?file=' . $content->president_image : '' }}" 
                                      alt="{{ $content->president_name }}" 
                                      class="executive-image"
                                      loading="lazy">
@@ -121,7 +121,7 @@
                     <div class="profile-image-section">
                         <div class="image-container">
                             <div class="image-overlay"></div>
-                            <img src="{{ Storage::url($content->company_profile_image) }}" 
+                            <img src="{{ $content->company_profile_image ? '/storage.php?file=' . $content->company_profile_image : '' }}" 
                                  alt="{{ $content->company_name }}" 
                                  class="corporate-image"
                                  loading="lazy">
