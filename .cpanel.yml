@@ -1,17 +1,5 @@
 deployment:
   tasks:
-    # Copy public folder contents to web root
     - export DEPLOYPATH=/home/toyoseat/public_html/
-    - /bin/cp -R public/* $DEPLOYPATH
-    
-    # Copy Laravel core files (keep them outside web root but accessible)
-    - /bin/cp .env $DEPLOYPATH/../ 2>/dev/null || true
-    
-    # Set permissions
-    - /bin/chmod -R 755 $DEPLOYPATH/storage
-    - /bin/chmod -R 755 $DEPLOYPATH/bootstrap/cache
-    
-    # Run Laravel commands (if terminal available via hooks)
-    - cd /home/toyoseat/public_html && php artisan config:cache 2>/dev/null || true
-    - cd /home/toyoseat/public_html && php artisan route:cache 2>/dev/null || true
-    - cd /home/toyoseat/public_html && php artisan view:cache 2>/dev/null || true
+    - /bin/cp -Rf public/* $DEPLOYPATH
+    - /usr/bin/php $DEPLOYPATH/deploy.php
