@@ -67,8 +67,9 @@ class OverviewContent extends Model
 public function getCompanyProfileImageUrlAttribute()
 {
     if ($this->company_profile_image) {
-        // Remove the ?v= timestamp for now
-        return '/storage.php?file=' . $this->company_profile_image;
+        $path = storage_path('app/public/' . $this->company_profile_image);
+        $mtime = file_exists($path) ? filemtime($path) : time();
+        return '/storage.php?file=' . $this->company_profile_image . '&t=' . $mtime;
     }
     return null;
 }

@@ -121,7 +121,7 @@
                     <div class="profile-image-section">
                         <div class="image-container">
                             <div class="image-overlay"></div>
-                            <img src="{{ $content->company_profile_image ? '/storage.php?file=' . $content->company_profile_image . '?t=' . time() : '' }}"
+                           <img src="{{ $content->company_profile_image_url }}?t={{ time() }}" 
                                  alt="{{ $content->company_name }}" 
                                  class="corporate-image"
                                  loading="lazy">
