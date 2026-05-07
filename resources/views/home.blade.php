@@ -84,7 +84,7 @@ $hasSlides = $slides->count() > 0;
 
 <!-- SECTION 2 -->
 <div class="section2"
-     style="background-image: url('{{ '/storage.php?file=images/home1.png' }}');"
+     style="background-image: url('{{ '/storage.php?file=images/Home1.png' }}');"
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;">

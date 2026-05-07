@@ -1015,12 +1015,13 @@ function updateCompanySectionDynamically(data) {
                 if (data.success) {
                     showFloatingToast(data.message, 'success');
 
-                            if (data.reload) {
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-            return;
-        }
+                           if (data.reload) {
+    showFloatingToast(data.message + ' Refreshing page...', 'success');
+    setTimeout(() => {
+        window.location.href = window.location.href; // Force reload current page
+    }, 1500);
+    return;
+}
                     
                     // DYNAMIC UPDATE WITHOUT PAGE RELOAD
                     if (section === 'president' && data.data) {
