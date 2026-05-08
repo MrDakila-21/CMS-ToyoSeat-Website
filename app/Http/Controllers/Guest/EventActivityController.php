@@ -29,13 +29,29 @@ class EventActivityController extends Controller
             $query->where('type', $request->type);
         }
         
-        // Paginate results (9 per page)
-        $events = $query->paginate(9);
-        
-        // If AJAX request, return JSON
+        // If AJAX request for real-time filtering, return paginated results as JSON
         if ($request->ajax()) {
-            return response()->json($events);
+            $events = $query->paginate(9);
+            
+            // Ensure each event has image_url
+            $items = $events->items();
+            foreach ($items as $event) {
+                $event->image_url = $event->image_url; // This triggers the accessor
+            }
+            
+            return response()->json([
+                'data' => $items,
+                'total' => $events->total(),
+                'current_page' => $events->currentPage(),
+                'last_page' => $events->lastPage(),
+                'per_page' => $events->perPage(),
+                'from' => $events->firstItem(),
+                'to' => $events->lastItem(),
+            ]);
         }
+        
+        // Regular request - paginate normally
+        $events = $query->paginate(9);
         
         return view('guest.news.media-information', compact('events'));
     }
@@ -44,10 +60,12 @@ class EventActivityController extends Controller
     public function show($id)
     {
         $event = EventActivity::where('status', 'published')->findOrFail($id);
+        $event->image_url = $event->image_url; // Ensure image_url is included
         return response()->json($event);
     }
+    
     public function boot()
-{
-    Paginator::useBootstrapFive(); // or useBootstrapFour()
-}
+    {
+        Paginator::useBootstrapFive();
+    }
 }

@@ -23,7 +23,7 @@ $hasSlides = $slides->count() > 0;
         <div class="hero-slideshow">
             @foreach($slides as $index => $slide)
                 <div class="hero-slide {{ $index === 0 ? 'active' : '' }}" 
-                     style="background-image: url('{{ asset('storage/' . $slide->image_path) }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                     style="background-image:  url('{{ '/storage.php?file=' . $slide->image_path }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
                 </div>
             @endforeach
         </div>
@@ -84,7 +84,7 @@ $hasSlides = $slides->count() > 0;
 
 <!-- SECTION 2 -->
 <div class="section2"
-     style="background-image: url('{{ asset('images/home1.png') }}');
+     style="background-image: url('{{ '/storage.php?file=images/Home1.png' }}');"
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;">

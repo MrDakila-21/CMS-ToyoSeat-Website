@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController; // ADD THIS LINE
 
 // Add this at the beginning of your routes file
 Route::get('/login', function () {
@@ -42,7 +43,7 @@ Route::prefix('guest')->name('guest.')->group(function () {
     // News pages
     Route::prefix('news')->name('news.')->group(function () {
         Route::get('/media-information', [GuestEventActivityController::class, 'index'])->name('media-information');
-        Route::view('/announcements', 'guest.news.announcements')->name('announcements');
+        Route::get('/announcements', [GuestAnnouncementController::class, 'index'])->name('announcements');
     });
     
     // Inquiry page
@@ -135,4 +136,3 @@ Route::fallback(function () {
         return redirect()->route('admin.login');
     }
 });
-

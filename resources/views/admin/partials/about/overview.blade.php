@@ -20,7 +20,7 @@
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h5 class="principle-title">{{ $principle['title'] }}</h5>
-                                            <p class="principle-description text-muted">{{ $principle['description'] }}</p>
+                                            <p class="principle-description text-muted" style="white-space: pre-wrap;">{{ $principle['description'] }}</p>
                                         </div>
                                         <div>
                                             <button type="button" class="btn btn-sm btn-warning edit-principle me-2" 
@@ -75,7 +75,7 @@
                                         <div id="currentPresidentImageWrapper" class="position-relative d-inline-block">
                                             @if($content->president_image)
                                                 <div class="current-image-wrapper" id="currentPresidentImage">
-                                                    <img src="{{ Storage::url($content->president_image) }}" alt="President" class="img-thumbnail" style="max-height: 150px;">
+                                                    <img src="{{ '/storage.php?file=' . $content->president_image }}" alt="President" class="img-thumbnail" style="max-height: 150px;">
                                                     <button type="button" class="btn btn-sm btn-danger remove-image-btn" data-image-type="president" style="position: absolute; top: 5px; right: 5px;">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -154,7 +154,7 @@
                                         <div id="currentCompanyImageWrapper" class="position-relative d-inline-block">
                                             @if($content->company_profile_image)
                                                 <div class="current-image-wrapper" id="currentCompanyImage">
-                                                    <img src="{{ Storage::url($content->company_profile_image) }}" alt="Company" class="img-thumbnail" style="max-height: 150px;">
+                                                    <img src="{{ '/storage.php?file=' . $content->company_profile_image }}" alt="Company" class="img-thumbnail" style="max-height: 150px;">
                                                     <button type="button" class="btn btn-sm btn-danger remove-image-btn" data-image-type="company" style="position: absolute; top: 5px; right: 5px;">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -1014,6 +1014,14 @@ function updateCompanySectionDynamically(data) {
             .then(data => {
                 if (data.success) {
                     showFloatingToast(data.message, 'success');
+
+                           if (data.reload) {
+    showFloatingToast(data.message + ' Refreshing page...', 'success');
+    setTimeout(() => {
+        window.location.href = window.location.href; // Force reload current page
+    }, 1500);
+    return;
+}
                     
                     // DYNAMIC UPDATE WITHOUT PAGE RELOAD
                     if (section === 'president' && data.data) {

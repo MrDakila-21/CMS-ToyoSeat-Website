@@ -8,7 +8,7 @@ export default defineConfig({
             input: ['resources/css/app.css', 
                     'resources/js/app.js', 
                      'resources/css/admin-login.css', 
-                     'resources/css/inqury.css'],
+                     'resources/css/inquiry.css'],
             refresh: true,
         }),
         tailwindcss(),

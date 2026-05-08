@@ -27,7 +27,7 @@ class Announcement extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - HIGHEST PRIORITY: public/images/announcements/{id}.{ext}
+    // Helper to get full image URL - FIXED for storage.php
     public function getImageUrlAttribute()
     {
         // PRIORITY 1: Check for image in public/images/announcements folder (direct upload)
@@ -35,17 +35,17 @@ class Announcement extends Model
         foreach ($imageExtensions as $ext) {
             $directImagePath = public_path("images/announcements/{$this->id}.{$ext}");
             if (file_exists($directImagePath)) {
-                return asset("images/announcements/{$this->id}.{$ext}");
+                return "/storage.php?file=images/announcements/{$this->id}.{$ext}";
             }
         }
         
         // PRIORITY 2: Check if there's a stored image path in database (normal upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+            return '/storage.php?file=' . $this->image;
         }
         
         // PRIORITY 3: Return default image if no image found
-        return asset('images/default-image.png');
+        return '/storage.php?file=images/default-image.png';
     }
     
     // Normal upload - save to storage (Laravel storage system)
