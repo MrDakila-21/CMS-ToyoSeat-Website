@@ -71,7 +71,7 @@
                         <div class="invalid-feedback" id="google_maps_embed_error"></div>
                     </div>
                     
-                    <!-- Improved Working Hours Section with Day Range -->
+                    <!-- Improved Working Hours Section with Custom Title -->
                     <div class="col-12 mb-3">
                         <label for="working_hours" class="form-label">Working Hours</label>
                         <div id="workingHoursContainer">
@@ -181,7 +181,7 @@ function closeToast() {
     }
 }
 
-// Working Hours Management Functions with Day Range Support
+// Working Hours Management Functions with Custom Title Support
 function parseWorkingHoursText(text) {
     const hours = [];
     if (!text) return hours;
@@ -189,11 +189,30 @@ function parseWorkingHoursText(text) {
     const lines = text.split('\n');
     for (const line of lines) {
         if (line.trim()) {
-            const colonIndex = line.indexOf(':');
-            if (colonIndex > 0) {
-                const dayRange = line.substring(0, colonIndex).trim();
-                const time = line.substring(colonIndex + 1).trim();
+            let title = null;
+            let dayRange = '';
+            let time = '';
+            
+            // Check for custom title format: "Title|Day Range: Time"
+            if (line.includes('|')) {
+                const parts = line.split('|');
+                title = parts[0].trim();
+                const rest = parts[1].trim();
                 
+                if (rest.includes(':')) {
+                    const colonIndex = rest.indexOf(':');
+                    dayRange = rest.substring(0, colonIndex).trim();
+                    time = rest.substring(colonIndex + 1).trim();
+                }
+            } 
+            // Standard format: "Day Range: Time"
+            else if (line.includes(':')) {
+                const colonIndex = line.indexOf(':');
+                dayRange = line.substring(0, colonIndex).trim();
+                time = line.substring(colonIndex + 1).trim();
+            }
+            
+            if (dayRange && time) {
                 // Parse day range (e.g., "Monday - Friday" or "Saturday")
                 let fromDay = '';
                 let toDay = '';
@@ -207,6 +226,7 @@ function parseWorkingHoursText(text) {
                 }
                 
                 hours.push({ 
+                    title: title,
                     fromDay, 
                     toDay, 
                     time,
@@ -224,20 +244,26 @@ function formatWorkingHoursText(hoursArray) {
         if (hour.toDay && hour.toDay !== hour.fromDay) {
             dayDisplay = `${hour.fromDay} - ${hour.toDay}`;
         }
-        return `${dayDisplay}: ${hour.time}`;
+        
+        const timePart = `${dayDisplay}: ${hour.time}`;
+        
+        // Add custom title if present
+        if (hour.title && hour.title.trim()) {
+            return `${hour.title}|${timePart}`;
+        }
+        
+        return timePart;
     }).join('\n');
 }
 
-// Helper function to format time for display in the working hours list
+// Helper function to format time for display
 function formatTimeDisplay(time) {
     if (!time || time === 'Closed') return time;
     
     function formatSingleTimeDisplay(t) {
         if (!t) return '';
-        // Check if already has AM/PM
         if (/(am|pm)/i.test(t)) return t;
         
-        // Parse 24-hour format
         const match = t.match(/(\d{1,2}):(\d{2})/);
         if (match) {
             let hour = parseInt(match[1]);
@@ -263,17 +289,30 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
     container.empty();
     
     if (hoursArray.length === 0) {
-        // Add default empty entry
-        hoursArray.push({ fromDay: 'Monday', toDay: 'Friday', time: '' });
+        hoursArray.push({ title: '', fromDay: 'Monday', toDay: 'Friday', time: '' });
     }
     
     hoursArray.forEach((hour, index) => {
         const hourDiv = $('<div>').addClass('working-hour-item mb-3 p-3 border rounded').css('background', '#f8f9fa');
         
-        const row1 = $('<div>').addClass('row g-2 mb-2');
-        const row2 = $('<div>').addClass('row g-2');
+        // Custom Title Row
+        const titleRow = $('<div>').addClass('row g-2 mb-2');
+        const titleCol = $('<div>').addClass('col-12');
+        const titleInput = $('<input>')
+            .attr('type', 'text')
+            .addClass('form-control working-hour-title')
+            .attr('placeholder', 'Custom Title (Optional - e.g., "Office Hours", "Customer Service")')
+            .attr('data-index', index)
+            .val(hour.title || '')
+            .prop('disabled', !enabled);
         
-        // From Day dropdown
+        titleCol.append($('<label>').addClass('form-label small mb-1').text('Section Title (Optional)'));
+        titleCol.append(titleInput);
+        titleRow.append(titleCol);
+        
+        // Day Range Row
+        const row1 = $('<div>').addClass('row g-2 mb-2');
+        
         const fromDayCol = $('<div>').addClass('col-md-5');
         const fromDaySelect = $('<select>')
             .addClass('form-select working-hour-from-day')
@@ -289,7 +328,6 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
         fromDayCol.append($('<label>').addClass('form-label small mb-1').text('From Day'));
         fromDayCol.append(fromDaySelect);
         
-        // To Day dropdown
         const toDayCol = $('<div>').addClass('col-md-5');
         const toDaySelect = $('<select>')
             .addClass('form-select working-hour-to-day')
@@ -305,7 +343,6 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
         toDayCol.append($('<label>').addClass('form-label small mb-1').text('To Day'));
         toDayCol.append(toDaySelect);
         
-        // Remove button
         const actionCol = $('<div>').addClass('col-md-2 d-flex align-items-end');
         const removeBtn = $('<button>')
             .attr('type', 'button')
@@ -320,10 +357,11 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
             });
         
         actionCol.append(removeBtn);
-        
         row1.append(fromDayCol, toDayCol, actionCol);
         
-        // Time inputs
+        // Time Row
+        const row2 = $('<div>').addClass('row g-2');
+        
         const startTimeCol = $('<div>').addClass('col-md-3');
         const startTimeInput = $('<input>')
             .attr('type', 'time')
@@ -343,7 +381,6 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
         }
         
         startTimeInput.val(startTime);
-        
         startTimeCol.append($('<label>').addClass('form-label small mb-1').text('Start Time'));
         startTimeCol.append(startTimeInput);
         
@@ -371,7 +408,6 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
             .prop('checked', hour.time === 'Closed');
         
         const closedLabel = $('<label>').addClass('form-check-label').text('Closed');
-        
         closedCheckDiv.append(closedCheckbox, closedLabel);
         closedCheckCol.append(closedCheckDiv);
         
@@ -399,10 +435,11 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
             updateWorkingHoursText();
         });
         
-        hourDiv.append(row1, row2);
+        hourDiv.append(titleRow, row1, row2);
         
         // Add change handlers
         if (enabled) {
+            titleInput.on('input', updateWorkingHoursText);
             fromDaySelect.on('change', updateWorkingHoursText);
             toDaySelect.on('change', updateWorkingHoursText);
             startTimeInput.on('change', updateWorkingHoursText);
@@ -416,6 +453,7 @@ function renderWorkingHoursList(hoursArray, enabled = false) {
 function collectWorkingHours() {
     const hours = [];
     $('.working-hour-item').each(function() {
+        const title = $(this).find('.working-hour-title').val();
         const fromDay = $(this).find('.working-hour-from-day').val();
         const toDay = $(this).find('.working-hour-to-day').val();
         const startTime = $(this).find('.working-hour-start-time').val();
@@ -434,7 +472,12 @@ function collectWorkingHours() {
         }
         
         if (fromDay && toDay && time) {
-            hours.push({ fromDay, toDay, time });
+            hours.push({ 
+                title: title || null,
+                fromDay, 
+                toDay, 
+                time 
+            });
         }
     });
     return hours;
@@ -563,6 +606,7 @@ function loadLocationData() {
                 $('#postal_code').val(loc.postal_code || '4026');
                 $('#country').val(loc.country || 'Philippines');
                 $('#phone').val(loc.phone || '');
+                $('#telephone').val(loc.telephone || '');
                 $('#email').val(loc.email || '');
                 $('#google_maps_embed').val(loc.google_maps_embed || '');
                 $('#working_hours').val(loc.working_hours || '');
@@ -594,16 +638,22 @@ function loadLocationData() {
 }
 
 $(document).ready(function() {
-    // Add working hour button click
-    $('#addWorkingHourBtn').on('click', function() {
-        const currentHours = collectWorkingHours();
-        currentHours.push({ fromDay: 'Monday', toDay: 'Friday', time: '' });
-        renderWorkingHoursList(currentHours, true);
-        updateWorkingHoursText();
+    // Add working hour button click - FIXED
+    $('#addWorkingHourBtn').off('click').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!$(this).prop('disabled')) {
+            const currentHours = collectWorkingHours();
+            currentHours.push({ title: '', fromDay: 'Monday', toDay: 'Friday', time: '' });
+            renderWorkingHoursList(currentHours, true);
+            updateWorkingHoursText();
+            showToast('New working hours entry added', false);
+        }
     });
     
     // Edit button click handler
-    $('#editBtn').on('click', function() {
+    $('#editBtn').off('click').on('click', function() {
         if (isProcessing) return;
         
         captureOriginalData();
@@ -618,7 +668,6 @@ $(document).ready(function() {
         
         setFormFieldsEnabled(true);
         
-        // Re-enable add button specifically
         $('#addWorkingHourBtn').prop('disabled', false);
         
         $('#editBtn').hide();
@@ -630,7 +679,7 @@ $(document).ready(function() {
     });
     
     // Cancel button click handler
-    $('#cancelBtn').on('click', function() {
+    $('#cancelBtn').off('click').on('click', function() {
         if (isProcessing) return;
         
         restoreOriginalData();
@@ -657,7 +706,7 @@ $(document).ready(function() {
     });
     
     // Save button click handler
-    $('#saveBtn').on('click', function(e) {
+    $('#saveBtn').off('click').on('click', function(e) {
         e.preventDefault();
         
         if (isProcessing) {
@@ -760,7 +809,7 @@ $(document).ready(function() {
     });
     
     // Delete button
-    $('#deleteBtn').on('click', function() {
+    $('#deleteBtn').off('click').on('click', function() {
         if (isProcessing) {
             showToast('Please wait, processing your request...', false);
             return;
