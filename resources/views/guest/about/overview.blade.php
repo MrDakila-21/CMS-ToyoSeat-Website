@@ -548,11 +548,18 @@
 /* ICON WRAPPER COMPLETELY REMOVED - No styles needed */
 
 .principle-title {
-    font-size: 1.35rem; /* INCREASED from 1.2rem */
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--primary-dark);
     margin-bottom: 0.75rem;
-    margin-top: 0; /* Added to remove extra space where icon was */
+    margin-top: 0;
+    line-height: 1.4;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: calc(1.4em * 3);
 }
 
 .principle-description {
