@@ -65,13 +65,13 @@
                                      onerror="this.style.display='none'; document.getElementById('username-icon').classList.add('svg-fallback');">
                                 <i class="fas fa-user fa-icon" style="font-size: 20px; color: #8F8686;"></i>
                             </div>
-                            <input type="email" 
+                            <input type="name" 
                                    class="form-control-username" 
                                    autocomplete="off"
-                                   id="email" 
-                                   name="email" 
+                                   id="name" 
+                                   name="name" 
                                    placeholder="Username" 
-                                   value="{{ old('email') }}"
+                                   value="{{ old('name') }}"
                                    required 
                                    autofocus>
                         </div>
