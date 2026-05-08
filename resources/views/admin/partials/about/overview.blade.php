@@ -20,7 +20,7 @@
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h5 class="principle-title">{{ $principle['title'] }}</h5>
-                                            <p class="principle-description text-muted">{{ $principle['description'] }}</p>
+                                            <p class="principle-description text-muted" style="white-space: pre-wrap;">{{ $principle['description'] }}</p>
                                         </div>
                                         <div>
                                             <button type="button" class="btn btn-sm btn-warning edit-principle me-2" 

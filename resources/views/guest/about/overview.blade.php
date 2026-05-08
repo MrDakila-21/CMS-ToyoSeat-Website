@@ -47,7 +47,7 @@
                         <div class="principle-number">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</div>
                         <!-- ICON REMOVED -->
                         <h4 class="principle-title">{{ $principle['title'] }}</h4>
-                        <p class="principle-description">{{ $principle['description'] }}</p>
+                       <p class="principle-description" style="white-space: pre-wrap;">{{ $principle['description'] }}</p>
                         <div class="principle-hover-effect"></div>
                     </div>
                 </div>
