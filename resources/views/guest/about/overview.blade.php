@@ -40,9 +40,9 @@
                 <div class="section-line"></div>
                 <p class="section-subtitle">The guiding philosophies that shape our corporate culture and drive excellence</p>
             </div>
-            <div class="row justify-content-center g-4">
+            <div class="row justify-content-center g-5 principle-row">
                 @foreach($content->business_principles as $index => $principle)
-                <div class="col-md-6 col-lg-4 d-flex fade-in-up" style="animation-delay: {{ $index * 0.1 }}s">
+                <div class="col-md-6 col-lg-5 d-flex fade-in-up" style="animation-delay: {{ $index * 0.1 }}s">
                     <div class="principle-card h-100">
                         <div class="principle-number">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</div>
                         <!-- ICON REMOVED -->
@@ -501,7 +501,7 @@
 /* Business Principles Cards - Enhanced with larger text and no icons */
 .principle-card {
     background: white;
-    padding: 2rem 1.5rem;
+    padding: 2.25rem 1.75rem;
     border-radius: 20px;
     text-align: left;
     transition: var(--transition);
@@ -1278,6 +1278,11 @@
 html {
     scroll-behavior: smooth;
 }
+
+.principle-row {
+    row-gap: 2rem;
+}
+
 </style>
 
 <!-- Font Awesome 6 -->
