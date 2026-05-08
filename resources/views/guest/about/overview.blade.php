@@ -503,7 +503,7 @@
     background: white;
     padding: 2rem 1.5rem;
     border-radius: 20px;
-    text-align: center;
+    text-align: left;
     transition: var(--transition);
     border: 1px solid var(--gray-border);
     position: relative;
