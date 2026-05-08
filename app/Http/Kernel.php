@@ -3,7 +3,6 @@
 namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\CheckActiveSession; // Add this line
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\NoCache;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -89,7 +88,6 @@ class Kernel extends HttpKernel
         'signed' => ValidateSignature::class,
         'throttle' => ThrottleRequests::class,
         'verified' => EnsureEmailIsVerified::class,
-        'nocache' => NoCache::class,
-        'check.active.session' => CheckActiveSession::class, // Add this line
+        'nocache' => NoCache::class, // Add this line
     ];
 }

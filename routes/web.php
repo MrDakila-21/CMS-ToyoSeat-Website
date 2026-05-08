@@ -63,7 +63,7 @@ Route::prefix('admin')->group(function () {
     });
 
     // Protected admin routes (must be authenticated)
-    Route::middleware(['auth', 'nocache', 'check.active.session'])->group(function () {
+    Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/dashboard', [AdminAuthController::class, 'dashboard'])->name('admin.dashboard');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
