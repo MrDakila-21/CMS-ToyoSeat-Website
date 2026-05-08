@@ -555,11 +555,7 @@
     margin-top: 0;
     line-height: 1.4;
 
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: calc(1.4em * 3);
+    min-height: 120px; /* adjust as needed */
 }
 
 .principle-description {
