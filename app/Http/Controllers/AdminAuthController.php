@@ -17,7 +17,7 @@ class AdminAuthController extends Controller
         return view('admin.login');
     }
 
- public function login(Request $request)
+public function login(Request $request)
 {
     $credentials = $request->validate([
         'name' => 'string',
@@ -28,7 +28,18 @@ class AdminAuthController extends Controller
     $user = \App\Models\User::where('name', $credentials['name'])->first();
     
     if ($user && $user->password === $credentials['password']) {
+        // Force logout any existing sessions for this user
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->delete();
+        
         Auth::login($user);
+        
+        // Store user_id in the current session
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('id', $request->session()->getId())
+            ->update(['user_id' => $user->id]);
+        
         $request->session()->regenerate();
         $request->session()->regenerateToken();
         
@@ -39,6 +50,7 @@ class AdminAuthController extends Controller
         'name' => 'The provided credentials do not match our records.',
     ])->onlyInput('name');
 }
+
 public function dashboard(Request $request)
 {
     // Ensure user is authenticated
@@ -105,28 +117,36 @@ public function dashboard(Request $request)
     
     return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content')); // Add 'content' to compact
 }
-    public function logout(Request $request)
-    {
-        // Clear all session data
-        Auth::logout();
-        
-        // Invalidate the session completely
-        $request->session()->invalidate();
-        
-        // Regenerate the CSRF token
-        $request->session()->regenerateToken();
-        
-        // Clear all session data explicitly
-        $request->session()->flush();
-        
-        // Clear any remember me cookies
-        if ($request->hasCookie(Auth::getRecallerName())) {
-            $cookie = \Cookie::forget(Auth::getRecallerName());
-            return redirect('/admin/login')->with('success', 'Successfully logged out!')->withCookie($cookie);
-        }
-        
-        return redirect('/admin/login')->with('success', 'Successfully logged out!');
+   public function logout(Request $request)
+{
+    // Remove the session record for this user
+    if (Auth::check()) {
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->where('id', $request->session()->getId())
+            ->delete();
     }
+    
+    // Clear all session data
+    Auth::logout();
+    
+    // Invalidate the session completely
+    $request->session()->invalidate();
+    
+    // Regenerate the CSRF token
+    $request->session()->regenerateToken();
+    
+    // Clear all session data explicitly
+    $request->session()->flush();
+    
+    // Clear any remember me cookies
+    if ($request->hasCookie(Auth::getRecallerName())) {
+        $cookie = \Cookie::forget(Auth::getRecallerName());
+        return redirect('/admin/login')->with('success', 'Successfully logged out!')->withCookie($cookie);
+    }
+    
+    return redirect('/admin/login')->with('success', 'Successfully logged out!');
+}
     
     // REMOVED: checkAuth() method - no longer needed for AJAX
     // REMOVED: loadContent() method - no longer needed for AJAX
