@@ -17,26 +17,28 @@ class AdminAuthController extends Controller
         return view('admin.login');
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+ public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'name' => 'string',
+        'password' => 'required',
+    ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            // Regenerate session ID for security
-            $request->session()->regenerateToken();
-            
-            // Redirect with success message
-            return redirect()->intended('/admin/dashboard')->with('success', 'Welcome ADMIN! You have successfully logged in.');
-        }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+    // Custom authentication without bcrypt
+    $user = \App\Models\User::where('name', $credentials['name'])->first();
+    
+    if ($user && $user->password === $credentials['password']) {
+        Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->regenerateToken();
+        
+        return redirect()->intended('/admin/dashboard')->with('success', 'Welcome ADMIN! You have successfully logged in.');
     }
+
+    return back()->withErrors([
+        'name' => 'The provided credentials do not match our records.',
+    ])->onlyInput('name');
+}
 public function dashboard(Request $request)
 {
     // Ensure user is authenticated

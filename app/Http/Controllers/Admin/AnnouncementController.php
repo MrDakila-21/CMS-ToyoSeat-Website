@@ -29,40 +29,46 @@ class AnnouncementController extends Controller
         return response()->json($announcements);
     }
 
-    // Store new record (Normal way - from form)
-    public function store(Request $request)
-    {
-        // Validate the request
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        ]);
+  // Store new record
+public function store(Request $request)
+{
+    // Validate the request
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'date' => 'required|date',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+    ]);
 
-        // Create new record
-        $announcement = new Announcement();
-        $announcement->title = $request->title;
-        $announcement->description = $request->description;
-        $announcement->date = $request->date;
-        $announcement->status = 'published';
+    // Create new record
+    $announcement = new Announcement();
+    $announcement->title = $request->title;
+    $announcement->description = $request->description;
+    $announcement->date = $request->date;
+    $announcement->status = 'published';
 
-        // Save to get the ID first
+    // Save to get the ID first
+    $announcement->save();
+
+    // Handle image upload if present (store with ID as filename) - SAME AS EVENTACTIVITY
+    if ($request->hasFile('image')) {
+        $extension = $request->file('image')->getClientOriginalExtension();
+        $filename = "{$announcement->id}.{$extension}";
+        $imagePath = $request->file('image')->storeAs('announcements', $filename, 'public');
+        $announcement->image = $imagePath;
         $announcement->save();
-
-        // Handle normal image upload if present (saves to storage)
-        if ($request->hasFile('image')) {
-            $announcement->saveImage($request->file('image'));
-        }
-        // If no image uploaded, it will use default-image.png or check public folder later
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Announcement created successfully!', 'data' => $announcement]);
-        }
-
-        return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements'])
-            ->with('success', 'Announcement created successfully!');
+    } else {
+        // Check if there's an image in the folder with matching ID
+        $announcement->syncImageFromFolder();
     }
+
+    if ($request->expectsJson()) {
+        return response()->json(['success' => true, 'message' => 'Announcement created successfully!', 'data' => $announcement]);
+    }
+
+    return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements'])
+        ->with('success', 'Announcement created successfully!');
+}
 
     // Get record for editing
     public function edit($id)
@@ -73,38 +79,55 @@ class AnnouncementController extends Controller
         return response()->json($announcement);
     }
 
-    // Update record
-    public function update(Request $request, $id)
-    {
-        $announcement = Announcement::findOrFail($id);
+  // Update record
+public function update(Request $request, $id)
+{
+    $announcement = Announcement::findOrFail($id);
 
-        // Validate the request
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'date' => 'required|date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        ]);
+    // Validate the request
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'date' => 'required|date',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+    ]);
 
-        // Update fields
-        $announcement->title = $request->title;
-        $announcement->description = $request->description;
-        $announcement->date = $request->date;
+    // Update fields
+    $announcement->title = $request->title;
+    $announcement->description = $request->description;
+    $announcement->date = $request->date;
 
-        // Handle normal image upload if present (saves to storage)
-        if ($request->hasFile('image')) {
-            $announcement->saveImage($request->file('image'));
+    // Handle image upload if present - SAME AS EVENTACTIVITY
+    if ($request->hasFile('image')) {
+        // Delete any existing folder image first
+        $announcement->deleteFolderImage();
+        
+        // Delete old database image if exists in storage
+        if ($announcement->image && Storage::disk('public')->exists($announcement->image)) {
+            Storage::disk('public')->delete($announcement->image);
         }
-
-        $announcement->save();
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Announcement updated successfully!']);
-        }
-
-        return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements'])
-            ->with('success', 'Announcement updated successfully!');
+        
+        // Upload new image with ID as filename
+        $extension = $request->file('image')->getClientOriginalExtension();
+        $filename = "{$announcement->id}.{$extension}";
+        $imagePath = $request->file('image')->storeAs('announcements', $filename, 'public');
+        $announcement->image = $imagePath;
+    } else {
+        // If no new image uploaded, check if folder image exists
+        $announcement->syncImageFromFolder();
     }
+
+    $announcement->save();
+
+    if ($request->expectsJson()) {
+        return response()->json(['success' => true, 'message' => 'Announcement updated successfully!']);
+    }
+
+    return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements'])
+        ->with('success', 'Announcement updated successfully!');
+}
+
+     
 
     // Delete record
     public function destroy($id)
