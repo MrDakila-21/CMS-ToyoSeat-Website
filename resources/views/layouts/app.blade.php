@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Toyoseat - @yield('title', 'Home')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,12 +28,12 @@
             flex: 1;
         }
 
-        /* Full width navbar container */
+        /* Full width navbar container - STICKY HEADER */
         .navbar-custom {
             width: 100%;
             background: linear-gradient(90deg, #0E334C 12.02%, #3988BD 46.63%, #0E334C 100%);
             box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.3);
-            position: relative;
+            position: sticky;
             top: 0;
             left: 0;
             z-index: 1030;
@@ -121,20 +121,24 @@
 
         .nav-link-custom:hover {
             background: rgba(255, 255, 255, 0.2);
-            text-shadow: 0 0 4px rgba(255,255,255,0.5);
         }
 
-        /* Active state for parent dropdown items when any child is active */
         .nav-link-custom.active {
             background: rgba(255,255,255,0.25);
             font-weight: 600;
         }
 
-        /* Active state for dropdown menu items */
+        /* Active state for dropdown parent when any child is active */
+        .nav-item-dropdown.active-dropdown > .dropdown-toggle-main {
+            background: rgba(255,255,255,0.25);
+            font-weight: 600;
+        }
+
         .dropdown-menu-custom li a.active {
             background: rgba(128, 204, 255, 0.3);
             font-weight: 600;
             padding-left: 1.8rem;
+            border-left: 3px solid #3988BD;
         }
 
         .dropdown-menu-custom {
@@ -179,6 +183,11 @@
             font-size: 0.7rem;
             margin-left: 5px;
             display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item-dropdown.open .dropdown-toggle-icon {
+            transform: rotate(180deg);
         }
 
         .mobile-toggle {
@@ -188,6 +197,8 @@
             border-radius: 8px;
             padding: 0.5rem 0.75rem;
             cursor: pointer;
+            z-index: 1060;
+            position: relative;
         }
 
         .mobile-toggle span {
@@ -199,61 +210,59 @@
             transition: 0.2s;
         }
 
-        @media (max-width: 1024px) {
-            .nav-link-custom {
-                padding: 0.5rem 0.8rem;
-                font-size: 0.85rem;
-                white-space: nowrap;
-            }
-            .company-name-main {
-                font-size: 1rem;
-            }
-            .company-name-sub {
-                font-size: 0.6rem;
-            }
-            .company-logo {
-                height: 40px;
-            }
-        }
-
+        /* MOBILE STYLES - FIXED */
         @media (max-width: 900px) {
             .mobile-toggle {
                 display: block;
             }
-            .navbar-container {
-                width: 95%;
-            }
+            
             .nav-menu {
                 position: fixed;
                 top: 0;
-                left: -100%;
-                width: 80%;
-                max-width: 320px;
+                right: -100%;
+                width: 280px;
                 height: 100vh;
-                background: linear-gradient(145deg, #0E334C 0%, #1f6182 100%);
+                background: #0E334C;
                 flex-direction: column;
-                align-items: flex-start;
-                padding: 80px 1.5rem 2rem;
-                gap: 0.5rem;
-                transition: left 0.3s ease;
-                box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-                z-index: 1050;
+                padding: 80px 20px 20px;
+                transition: right 0.3s ease;
+                z-index: 99999;
                 overflow-y: auto;
-                flex-wrap: nowrap;
             }
+            
             .nav-menu.active {
-                left: 0;
+                right: 0;
             }
+            
             .nav-item {
                 width: 100%;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                flex-shrink: 0;
             }
+            
             .nav-link-custom {
                 display: block;
                 width: 100%;
-                padding: 0.75rem 0;
-                font-size: 1rem;
+                padding: 15px 0;
+                font-size: 16px;
                 white-space: normal;
+                text-align: left;
+                border-radius: 0;
             }
+            
+            /* Mobile active states */
+            .nav-link-custom.active {
+                background: rgba(255,255,255,0.2);
+                border-left: 3px solid #3988BD;
+                padding-left: 12px;
+            }
+            
+            .dropdown-menu-custom li a.active {
+                background: rgba(128, 204, 255, 0.2);
+                border-left: 3px solid #3988BD;
+                padding-left: 17px;
+            }
+            
             .dropdown-menu-custom {
                 position: static;
                 opacity: 1;
@@ -261,36 +270,37 @@
                 transform: none;
                 background: rgba(0,0,0,0.2);
                 box-shadow: none;
-                padding-left: 1rem;
-                margin-top: 0;
+                padding: 0;
+                margin: 0;
                 display: none;
                 width: 100%;
+                max-height: none;
+                overflow: visible;
             }
+            
             .nav-item-dropdown.open .dropdown-menu-custom {
                 display: block;
             }
+            
+            .dropdown-menu-custom li a {
+                padding: 12px 0 12px 20px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
             .dropdown-toggle-icon {
                 float: right;
+                margin-top: 3px;
             }
-            .menu-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 1040;
-                display: none;
-            }
-            .menu-overlay.active {
-                display: block;
-            }
-            .company-name-main {
-                font-size: 0.9rem;
+            
+            /* Ensure menu doesn't overflow */
+            .nav-menu {
+                overflow-y: auto;
+                overflow-x: hidden;
             }
         }
 
-        /* ============ FOOTER STYLES - LEFT/RIGHT LAYOUT ============ */
+        /* FOOTER STYLES */
         .footer-custom {
             background: linear-gradient(135deg, #0a1e2c 0%, #0E334C 100%);
             color: #ffffff;
@@ -304,7 +314,6 @@
             margin: 0 auto;
         }
 
-        /* Top section: Left (brand) + Right (nav columns) */
         .footer-top {
             display: flex;
             justify-content: space-between;
@@ -313,7 +322,6 @@
             margin-bottom: 2.5rem;
         }
 
-        /* LEFT SIDE - Logo, Company Name, Tagline, Social Icons */
         .footer-left {
             flex: 1.2;
             min-width: 280px;
@@ -381,7 +389,6 @@
             transform: translateY(-3px);
         }
 
-        /* RIGHT SIDE - Navigation Columns */
         .footer-right {
             flex: 2;
             display: flex;
@@ -436,7 +443,6 @@
             transform: translateX(5px);
         }
 
-        /* Bottom section: Left (Copyright) + Right (Credit) */
         .footer-bottom {
             display: flex;
             justify-content: space-between;
@@ -471,26 +477,12 @@
                 flex-direction: column;
                 text-align: center;
             }
-            .footer-section h4::after {
-                left: 0;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .footer-right {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-            .footer-section {
-                width: 100%;
-            }
         }
     </style>
     @stack('styles')
 </head>
 <body>
 
-{{-- FULL WIDTH NAVBAR --}}
 <div class="navbar-custom">
     <div class="navbar-container">
         <a href="{{ route('home') }}" class="navbar-brand-custom">
@@ -504,19 +496,19 @@
             </div>
         </a>
 
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+        <button class="mobile-toggle" id="mobileToggleBtn">
             <span></span>
             <span></span>
             <span></span>
         </button>
 
-        <ul class="nav-menu" id="navMenu">
+        <ul class="nav-menu" id="mobileMenu">
             <li class="nav-item">
                 <a href="{{ route('home') }}" class="nav-link-custom {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
             </li>
 
-            <li class="nav-item nav-item-dropdown" id="aboutDropdownLi">
-                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.about.*') ? 'active' : '' }}">
+            <li class="nav-item nav-item-dropdown {{ request()->routeIs('guest.about.*') ? 'active-dropdown' : '' }}">
+                <a href="#" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.about.*') ? 'active' : '' }}">
                     About Us
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
@@ -531,11 +523,11 @@
             </li>
 
             <li class="nav-item">
-                <a href="{{ route('guest.recruitment.information') }}" class="nav-link-custom {{ request()->routeIs('guest.recruitment.*') ? 'active' : '' }}">Recruitment information</a>
+                <a href="{{ route('guest.recruitment.information') }}" class="nav-link-custom {{ request()->routeIs('guest.recruitment.*') ? 'active' : '' }}">Recruitment</a>
             </li>
 
-            <li class="nav-item nav-item-dropdown" id="newsDropdownLi">
-                <a href="javascript:void(0)" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.news.*') ? 'active' : '' }}">
+            <li class="nav-item nav-item-dropdown {{ request()->routeIs('guest.news.*') ? 'active-dropdown' : '' }}">
+                <a href="#" class="nav-link-custom dropdown-toggle-main {{ request()->routeIs('guest.news.*') ? 'active' : '' }}">
                     News
                     <span class="dropdown-toggle-icon">▼</span>
                 </a>
@@ -552,18 +544,13 @@
     </div>
 </div>
 
-<div id="menuOverlay" class="menu-overlay"></div>
-
 <main>
     @yield('content')
 </main>
 
-{{-- ============ FOOTER - LEFT/RIGHT LAYOUT ============ --}}
 <footer class="footer-custom">
     <div class="footer-container">
-        <!-- TOP SECTION: LEFT (Brand + Social) | RIGHT (Nav Columns) -->
         <div class="footer-top">
-            <!-- LEFT SIDE -->
             <div class="footer-left">
                 <div class="footer-logo-area">
                     <img src="{{ asset('images/logo.svg') }}" 
@@ -579,13 +566,12 @@
                     Toyo Seat is committed to creating innovative seating solutions that enhance comfort, safety, and sustainability for a better tomorrow.
                 </div>
                 <div class="footer-social">
-                    <a href="https://www.facebook.com/profile.php?id=100057821552844" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.youtube.com/@ToyoSeatPhilippinesCorporation" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                    <a href="#" target="_blank" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=100057821552844" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.youtube.com/@ToyoSeatPhilippinesCorporation" target="_blank"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- RIGHT SIDE - Navigation Columns -->
             <div class="footer-right">
                 <div class="footer-section">
                     <h4>COMPANY</h4>
@@ -602,9 +588,7 @@
                 <div class="footer-section">
                     <h4>RECRUITMENT</h4>
                     <ul class="footer-links">
-                        <li><a href="{{ route('guest.recruitment.information') }}">Information TOP</a></li>
-                        <li><a href="{{ route('guest.recruitment.new-graduate') }}">New Graduate Recruitment</a></li>
-                        <li><a href="{{ route('guest.recruitment.career') }}">Career Recruitment</a></li>
+                        <li><a href="{{ route('guest.recruitment.information') }}">Recruitment Information</a></li>
                     </ul>
                 </div>
 
@@ -619,7 +603,6 @@
             </div>
         </div>
 
-        <!-- BOTTOM SECTION: LEFT (Copyright) | RIGHT (Credit) -->
         <div class="footer-bottom">
             <div class="footer-copyright">
                 &copy; {{ date('Y') }} Toyo Seat Philippines Corporation. All Rights Reserved.
@@ -632,91 +615,89 @@
 </footer>
 
 <script>
-    const mobileToggle = document.getElementById('mobileToggle');
-    const navMenu = document.getElementById('navMenu');
-    const overlay = document.getElementById('menuOverlay');
-
-    function closeMenu() {
-        navMenu.classList.remove('active');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    function openMenu() {
-        navMenu.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (navMenu.classList.contains('active')) {
-                closeMenu();
-            } else {
-                openMenu();
-            }
-        });
-    }
-
-    if (overlay) {
-        overlay.addEventListener('click', closeMenu);
-    }
-
-    function handleMobileDropdowns() {
-        const isMobile = window.innerWidth <= 900;
-        const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+    (function() {
+        var toggleBtn = document.getElementById('mobileToggleBtn');
+        var mobileMenu = document.getElementById('mobileMenu');
         
-        dropdownItems.forEach(item => {
-            const toggleLink = item.querySelector('.dropdown-toggle-main');
-            if (!toggleLink) return;
+        if (toggleBtn && mobileMenu) {
+            // Toggle menu when button clicked
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                mobileMenu.classList.toggle('active');
+            });
             
-            if (isMobile) {
-                const newToggle = toggleLink.cloneNode(true);
-                toggleLink.parentNode.replaceChild(newToggle, toggleLink);
-                
-                newToggle.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const isOpen = item.classList.contains('open');
-                    dropdownItems.forEach(other => {
-                        if (other !== item) other.classList.remove('open');
-                    });
-                    if (!isOpen) {
-                        item.classList.add('open');
-                    } else {
-                        item.classList.remove('open');
+            // Close menu ONLY when clicking on regular navigation links (NOT dropdown toggles)
+            var allLinks = mobileMenu.querySelectorAll('a');
+            allLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    // Check if this is a dropdown toggle (has dropdown-toggle-main class)
+                    var isDropdownToggle = this.classList.contains('dropdown-toggle-main');
+                    
+                    // If it's NOT a dropdown toggle, close the menu
+                    if (!isDropdownToggle) {
+                        mobileMenu.classList.remove('active');
                     }
                 });
-            } else {
-                item.classList.remove('open');
-                const cleanLink = toggleLink.cloneNode(true);
-                toggleLink.parentNode.replaceChild(cleanLink, toggleLink);
-            }
-        });
-    }
-
-    window.addEventListener('load', handleMobileDropdowns);
-    window.addEventListener('resize', () => {
-        handleMobileDropdowns();
-        if (window.innerWidth > 900 && navMenu.classList.contains('active')) {
-            closeMenu();
+            });
         }
-    });
-    
-    document.querySelectorAll('.nav-link-custom, .dropdown-menu-custom a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            if (window.innerWidth <= 900) {
-                if (link.classList.contains('dropdown-toggle-main')) {
-                    return;
+        
+        // Handle dropdown toggles on mobile - CLOSE OTHER DROPDOWNS
+        var dropdownToggles = document.querySelectorAll('.dropdown-toggle-main');
+        dropdownToggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function(e) {
+                if (window.innerWidth <= 900) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var parentLi = this.closest('.nav-item-dropdown');
+                    if (parentLi) {
+                        // Check if this dropdown is already open
+                        var isOpen = parentLi.classList.contains('open');
+                        
+                        // Close ALL dropdowns first
+                        var allDropdowns = document.querySelectorAll('.nav-item-dropdown');
+                        allDropdowns.forEach(function(dropdown) {
+                            dropdown.classList.remove('open');
+                        });
+                        
+                        // If this dropdown wasn't open, open it (toggle functionality)
+                        if (!isOpen) {
+                            parentLi.classList.add('open');
+                        }
+                    }
                 }
-                if (!link.closest('.dropdown-menu-custom')) {
-                    closeMenu();
-                } else {
-                    setTimeout(closeMenu, 150);
-                }
+            });
+        });
+        
+        // Auto-open dropdown parent on mobile if a child is active (only one at a time)
+        if (window.innerWidth <= 900) {
+            var activeDropdowns = document.querySelectorAll('.nav-item-dropdown.active-dropdown');
+            // Close all first, then open the active one
+            var allDropdowns = document.querySelectorAll('.nav-item-dropdown');
+            allDropdowns.forEach(function(dropdown) {
+                dropdown.classList.remove('open');
+            });
+            activeDropdowns.forEach(function(dropdown) {
+                dropdown.classList.add('open');
+            });
+        }
+        
+        // Handle window resize to reset dropdown states
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 900) {
+                var allDropdowns = document.querySelectorAll('.nav-item-dropdown');
+                allDropdowns.forEach(function(dropdown) {
+                    dropdown.classList.remove('open');
+                });
+            } else {
+                // On mobile, re-open the active dropdown if any
+                var activeDropdowns = document.querySelectorAll('.nav-item-dropdown.active-dropdown');
+                activeDropdowns.forEach(function(dropdown) {
+                    dropdown.classList.add('open');
+                });
             }
         });
-    });
+    })();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

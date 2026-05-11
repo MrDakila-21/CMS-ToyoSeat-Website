@@ -3,7 +3,7 @@
 @section('title', 'Inquiry')
 
 @section('content')
-@vite(['resources/css/inquiry.css'])
+<link rel="stylesheet" href="{{ asset('css/guest/inquiry.css') }}">
 <link rel="stylesheet" href="{{ asset('css/dash.css') }}">
 
 <!-- Toast Container -->

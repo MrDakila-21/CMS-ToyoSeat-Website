@@ -24,7 +24,7 @@ class HomepageController extends Controller
                 ->map(function($slide) {
                     return [
                         'id' => $slide->id,
-                        'image_url' => asset('storage/' . $slide->image_path),
+                        'image_url' => '/storage.php?file=' . $slide->image_path,
                         'order' => $slide->order,
                         'is_active' => $slide->is_active
                     ];
@@ -52,7 +52,6 @@ class HomepageController extends Controller
         try {
             Log::info('Upload multiple images request received');
             
-            // Check if request expects JSON
             if (!$request->ajax() && !$request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -60,7 +59,6 @@ class HomepageController extends Controller
                 ], 400);
             }
             
-            // Validate the request
             if (!$request->hasFile('images')) {
                 return response()->json([
                     'success' => false,
@@ -70,7 +68,6 @@ class HomepageController extends Controller
             
             $files = $request->file('images');
             
-            // Custom validation
             if (count($files) > 10) {
                 return response()->json([
                     'success' => false,
@@ -83,7 +80,6 @@ class HomepageController extends Controller
             $errors = [];
             
             foreach ($files as $index => $image) {
-                // Validate each file
                 if (!$image->isValid()) {
                     $errors[] = 'Invalid file at position ' . ($index + 1);
                     continue;
@@ -97,13 +93,11 @@ class HomepageController extends Controller
                     continue;
                 }
                 
-                // 10MB max size
                 if ($image->getSize() > 10 * 1024 * 1024) {
                     $errors[] = $image->getClientOriginalName() . ' exceeds 10MB limit.';
                     continue;
                 }
                 
-                // Generate unique filename
                 $filename = Str::random(40) . '.' . $extension;
                 $path = $image->storeAs('homepage_slides', $filename, 'public');
                 
@@ -160,7 +154,6 @@ class HomepageController extends Controller
     public function updateSlidesOrder(Request $request)
     {
         try {
-            // Check if request expects JSON
             if (!$request->ajax() && !$request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -206,7 +199,6 @@ class HomepageController extends Controller
     public function presentSlides(Request $request)
     {
         try {
-            // Check if request expects JSON
             if (!$request->ajax() && !$request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -216,16 +208,12 @@ class HomepageController extends Controller
             
             $slideIds = $request->slide_ids ?? [];
             
-            // Deactivate all slides first
             HomepageSlide::query()->update(['is_active' => false]);
             
-            // If there are selected slides, activate them
             if (!empty($slideIds) && count($slideIds) > 0) {
-                // Validate that the IDs exist
                 $validIds = HomepageSlide::whereIn('id', $slideIds)->pluck('id')->toArray();
                 
                 if (count($validIds) > 0) {
-                    // Activate selected slides
                     HomepageSlide::whereIn('id', $validIds)
                         ->update(['is_active' => true]);
                     
@@ -264,7 +252,6 @@ class HomepageController extends Controller
     public function deleteSlide(Request $request, $id)
     {
         try {
-            // Check if request expects JSON
             if (!$request->ajax() && !$request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -274,7 +261,6 @@ class HomepageController extends Controller
             
             $slide = HomepageSlide::findOrFail($id);
             
-            // Delete the file from storage
             if (Storage::disk('public')->exists($slide->image_path)) {
                 Storage::disk('public')->delete($slide->image_path);
             }
