@@ -11,6 +11,8 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController; // ADD THIS LINE
+use App\Http\Controllers\Admin\RecruitmentController; 
+
 
 // Add this at the beginning of your routes file
 Route::get('/login', function () {
@@ -97,6 +99,11 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/upload-direct', [AnnouncementController::class, 'uploadDirectImage'])->name('admin.announcements.uploadDirect');
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
+
+                // Recruitment management routes
+        Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
+        Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
+        Route::patch('recruitments/{id}/status/{status}', [RecruitmentController::class, 'updateStatus'])->name('admin.recruitments.updateStatus');
 
         Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
         
