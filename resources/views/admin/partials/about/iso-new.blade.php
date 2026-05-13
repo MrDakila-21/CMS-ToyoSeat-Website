@@ -1,55 +1,10 @@
-<!-- ISO Introduction - single title/description using the same table -->
-<div class="container-fluid mb-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>ISO Introduction</h5>
-                </div>
-                <div class="card-body">
-                    <div id="introDisplay" class="mb-3">
-                        <h5 id="introDisplayTitle" class="mb-2"></h5>
-                        <div id="introDisplayDescription" class="text-muted"></div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="editIntroBtn">
-                                <i class="fas fa-edit me-1"></i> Edit Introduction
-                            </button>
-                        </div>
-                    </div>
-
-                    <form id="introForm" class="d-none">
-                        @csrf
-                        <input type="hidden" id="introId" name="id">
-                        <div class="mb-3">
-                            <label for="introTitle" class="form-label">Title</label>
-                            <input type="text" id="introTitle" name="title" class="form-control" placeholder="Intro title">
-                        </div>
-                        <div class="mb-3">
-                            <label for="introDescription" class="form-label">Description</label>
-                            <textarea id="introDescription" name="description" rows="3" class="form-control" placeholder="Short introduction"></textarea>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-sm btn-primary" id="introSaveBtn">
-                                <i class="fas fa-save me-1"></i> Save Introduction
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary ms-2" id="introCancelBtn">
-                                <i class="fas fa-times me-1"></i> Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card content-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5><i class="fas fa-certificate me-2"></i>Manage ISO Obtained Content</h5>
-                    <button class="btn btn-primary btn-sm" id="addNewBtn">
+                    <button class="btn btn-success btn-sm" id="addNewBtn">
                         <i class="fas fa-plus me-1"></i> Add New Entry
                     </button>
                 </div>
@@ -152,10 +107,9 @@
     </div>
 </div>
 
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-
-<!-- Custom Toast Container (upper-right) -->
 <div id="customToast" style="position: fixed; top: 20px; right: 20px; z-index: 11; display: none;">
     <div style="background: #d4edda; color: #155724; border-radius: 8px; padding: 15px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 320px; display: flex; align-items: center; gap: 12px; border-left: 4px solid #28a745;">
         <i class="fas fa-check-circle" id="toastIcon" style="color: #28a745;"></i>
@@ -163,7 +117,6 @@
         <button type="button" onclick="closeToast()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 0; line-height: 1;">&times;</button>
     </div>
 </div>
-
 <script>
 let toastTimeout;
 
@@ -174,34 +127,34 @@ function showToast(message, type = 'success', duration = 3000) {
         alert(message);
         return;
     }
-    
+
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessageText');
     const toastContent = toast.querySelector('div');
-    
+
     if (!toastIcon || !toastMessage || !toastContent) {
         console.error('Toast elements not found');
         alert(message);
         return;
     }
-    
+
     if (toastTimeout) {
         clearTimeout(toastTimeout);
     }
-    
+
     const normalizedType = type === true ? 'error' : type === false ? 'success' : type;
-    const bgClass = normalizedType === 'success' ? '#28a745' : normalizedType === 'error' ? '#dc3545' : '#17a2b8';
+    const color = normalizedType === 'success' ? '#28a745' : normalizedType === 'error' ? '#dc3545' : '#17a2b8';
     const icon = normalizedType === 'success' ? 'check-circle' : normalizedType === 'error' ? 'exclamation-circle' : 'info-circle';
 
-    toastContent.style.borderLeftColor = bgClass;
+    toastContent.style.borderLeftColor = color;
     toastContent.style.background = normalizedType === 'success' ? '#d4edda' : normalizedType === 'error' ? '#f8d7da' : '#d1ecf1';
     toastContent.style.color = normalizedType === 'success' ? '#155724' : normalizedType === 'error' ? '#721c24' : '#0c5460';
     toastIcon.className = `fas fa-${icon}`;
-    toastIcon.style.color = bgClass;
-    
+    toastIcon.style.color = color;
+
     toastMessage.textContent = message;
     toast.style.display = 'block';
-    
+
     toastTimeout = setTimeout(() => {
         closeToast();
     }, duration);
@@ -218,6 +171,7 @@ function closeToast() {
 }
 
 $(document).ready(function() {
+
     // Load ISO entries on page load
     function loadIsoEntries() {
         $.ajax({
@@ -225,27 +179,20 @@ $(document).ready(function() {
             type: 'GET',
             dataType: 'json',
             success: function(data) {
-                const entries = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-                renderTable(entries);
+                renderTable(data);
             },
-            error: function(xhr) {
-                const message = xhr.responseJSON?.message || 'Failed to load ISO entries';
-                showToast(message, true);
+            error: function() {
+                showToast('Failed to load ISO entries', 'error');
             }
         });
     }
 
-    // Render table with ISO entries (exclude intro entries)
+    // Render table with ISO entries
     function renderTable(entries) {
         const tbody = $('#isoTableBody');
         tbody.empty();
 
-        const safeEntries = Array.isArray(entries) ? entries : [];
-
-        // Filter out intro entries - only show regular entries
-        const regularEntries = safeEntries.filter(e => !e.is_intro);
-
-        if (regularEntries.length === 0) {
+        if (entries.length === 0) {
             tbody.append(`
                 <tr>
                     <td colspan="5" class="text-center text-muted py-4">
@@ -256,19 +203,15 @@ $(document).ready(function() {
             return;
         }
 
-        regularEntries.forEach(entry => {
-            const title = entry.title || 'Untitled';
-            const fullDescription = typeof entry.description === 'string' ? entry.description : '';
-            const description = fullDescription.substring(0, 50) + (fullDescription.length > 50 ? '...' : '');
+        entries.forEach(entry => {
+            const description = entry.description.substring(0, 50) + (entry.description.length > 50 ? '...' : '');
+            const createdDate = new Date(entry.created_at).toLocaleDateString();
             const currentStatus = entry.status || 'published';
-            const imageUrl = entry.image_url || "{{ route('image.serve', ['path' => 'images/default-image.png']) }}";
-            const imageCell = `<img src="${imageUrl}" alt="${title}" style="width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef;">`;
+            const imageCell = `<img src="${entry.image_url}" alt="${entry.title}" style="width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef;">`;
 
             tbody.append(`
                 <tr>
-                    <td>
-                        <strong>${title}</strong>
-                    </td>
+                    <td><strong>${entry.title}</strong></td>
                     <td>${description}</td>
                     <td>
                         ${imageCell}
@@ -311,35 +254,6 @@ $(document).ready(function() {
     // Edit Button
     $(document).on('click', '.editBtn', function() {
         const id = $(this).data('id');
-        $.ajax({
-            url: `/admin/iso-obtained/${id}/edit`,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                $('#isoId').val(data.id);
-                $('#title').val(data.title);
-                $('#description').val(data.description);
-
-                // Show current image if exists
-                if (data.image_url && !data.image_url.includes('default-image.png')) {
-                    $('#currentImage').attr('src', data.image_url);
-                    $('#currentImagePreview').removeClass('d-none');
-                } else {
-                    $('#currentImagePreview').addClass('d-none');
-                }
-
-                $('#formTitle').html('<i class="fas fa-edit me-2"></i>Edit ISO Entry');
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('isoFormContainer')).show();
-            },
-            error: function() {
-                showToast('Failed to load entry details', true);
-            }
-        });
-    });
-
-    // Delete Button
-    $(document).on('click', '.deleteBtn', function() {
-        const id = $(this).data('id');
 
         Swal.fire({
             title: 'Delete ISO Entry?',
@@ -358,6 +272,36 @@ $(document).ready(function() {
                 confirmButton: 'btn btn-danger px-4 py-2 me-2',
                 cancelButton: 'btn btn-outline-secondary px-4 py-2'
             }
+        }).then((result) => {
+                if (data.image_url && !data.image_url.includes('default-image.png')) {
+                    $('#currentImage').attr('src', data.image_url);
+                    $('#currentImagePreview').removeClass('d-none');
+                } else {
+                    $('#currentImagePreview').addClass('d-none');
+                }
+
+                $('#formTitle').html('<i class="fas fa-edit me-2"></i>Edit ISO Entry');
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('isoFormContainer')).show();
+            },
+            error: function() {
+                showToast('Failed to load entry details', 'error');
+            }
+        });
+    });
+
+    // Delete Button
+    $(document).on('click', '.deleteBtn', function() {
+        const id = $(this).data('id');
+        const button = $(this);
+
+        Swal.fire({
+            title: 'Delete Entry?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -410,22 +354,16 @@ $(document).ready(function() {
         });
     });
 
-    // Form Submit (Create or Update) - regular ISO entries
+    // Form Submit (Create or Update)
     $('#isoForm').on('submit', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
         const id = $('#isoId').val();
         const url = id ? `/admin/iso-obtained/${id}` : '{{ route('admin.iso.store') }}';
+        const method = id ? 'PUT' : 'POST';
 
         const formData = new FormData(this);
-        // Use method override for updates to ensure Laravel receives form fields
-        if (id) {
-            formData.append('_method', 'PUT');
-        }
-        // Ensure regular entries are never marked as intro
-        formData.append('is_intro', false);
-
         const submitBtn = $('#submitBtn');
         const originalBtnHtml = submitBtn.html();
 
@@ -433,7 +371,7 @@ $(document).ready(function() {
 
         $.ajax({
             url: url,
-            type: 'POST',
+            type: method,
             data: formData,
             processData: false,
             contentType: false,
@@ -446,7 +384,6 @@ $(document).ready(function() {
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('isoFormContainer')).hide();
                     resetForm();
                     loadIsoEntries();
-                    loadIntro();
                 }
             },
             error: function(xhr) {
@@ -510,107 +447,8 @@ $(document).ready(function() {
         resetForm();
     });
 
-    // Load intro and show either display or form
-    function loadIntro() {
-        $.ajax({
-            url: "{{ route('admin.iso.index') }}",
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                const entries = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-                const intro = entries.length ? entries.find(i => i.is_intro) : null;
-                if (intro) {
-                    // populate display and hide form
-                    $('#introId').val(intro.id);
-                    $('#introTitle').val(intro.title);
-                    $('#introDescription').val(intro.description);
-
-                    $('#introDisplayTitle').text(intro.title || '');
-                    $('#introDisplayDescription').html((intro.description || '').replace(/\n/g, '<br>'));
-
-                    $('#introDisplay').removeClass('d-none');
-                    $('#introForm').addClass('d-none');
-                } else {
-                    // no intro exists - show form to create
-                    $('#introId').val('');
-                    $('#introTitle').val('');
-                    $('#introDescription').val('');
-
-                    $('#introDisplayTitle').text('');
-                    $('#introDisplayDescription').text('No introduction set.');
-
-                    $('#introDisplay').addClass('d-none');
-                    $('#introForm').removeClass('d-none');
-                }
-            },
-            error: function() {
-                // silent
-            }
-        });
-    }
-
-    // Edit intro button -> show form
-    $(document).on('click', '#editIntroBtn', function() {
-        $('#introDisplay').addClass('d-none');
-        $('#introForm').removeClass('d-none');
-        $('#introTitle').focus();
-    });
-
-    // Cancel intro edit
-    $(document).on('click', '#introCancelBtn', function() {
-        $('#introForm').addClass('d-none');
-        $('#introDisplay').removeClass('d-none');
-    });
-
-    // Intro form submit - create or update the chosen intro entry
-    $('#introForm').on('submit', function(e) {
-        e.preventDefault();
-        const id = $('#introId').val();
-        const url = id ? `/admin/iso-obtained/${id}` : '{{ route('admin.iso.store') }}';
-        const payload = {
-            _method: id ? 'PUT' : 'POST',
-            title: $('#introTitle').val(),
-            description: $('#introDescription').val(),
-            is_intro: true
-        };
-
-        const btn = $('#introSaveBtn');
-        const orig = btn.html();
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Saving...');
-
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: payload,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    showToast(response.message, false);
-                    showToast(response.message, 'success');
-                    loadIsoEntries();
-                    loadIntro();
-                } else {
-                    showToast(response.message || 'Failed to save intro', 'error');
-                }
-            },
-            error: function(xhr) {
-                let message = 'An error occurred';
-                if (xhr.responseJSON?.errors) {
-                    message = Object.values(xhr.responseJSON.errors).join(', ');
-                } else if (xhr.responseJSON?.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showToast(message, 'error');
-            },
-            complete: function() {
-                btn.prop('disabled', false).html(orig);
-            }
-        });
-    });
-
-    loadIntro();
+    // Load entries on page load
     loadIsoEntries();
 });
 </script>
+@endpush
