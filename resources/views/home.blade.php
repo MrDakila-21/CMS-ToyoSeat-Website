@@ -36,8 +36,8 @@ $hasSlides = $slides->count() > 0;
         @endif
     @endif
     
-    <div class="gradient-overlay-1"></div>
-    <div class="gradient-overlay-2"></div>
+<div class="gradient-overlay-1" style="pointer-events: none;"></div>
+<div class="gradient-overlay-2" style="pointer-events: none;"></div>
     
     <div class="text-container">
         <div class="shaping-title">SHAPING THE FUTURE</div>

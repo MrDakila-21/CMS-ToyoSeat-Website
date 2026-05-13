@@ -40,14 +40,14 @@
                 <div class="section-line"></div>
                 <p class="section-subtitle">The guiding philosophies that shape our corporate culture and drive excellence</p>
             </div>
-            <div class="row justify-content-center g-4">
+            <div class="row justify-content-center g-5 principle-row">
                 @foreach($content->business_principles as $index => $principle)
-                <div class="col-md-6 col-lg-4 d-flex fade-in-up" style="animation-delay: {{ $index * 0.1 }}s">
+                <div class="col-md-6 col-lg-5 d-flex fade-in-up" style="animation-delay: {{ $index * 0.1 }}s">
                     <div class="principle-card h-100">
                         <div class="principle-number">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</div>
                         <!-- ICON REMOVED -->
                         <h4 class="principle-title">{{ $principle['title'] }}</h4>
-                        <p class="principle-description">{{ $principle['description'] }}</p>
+                       <p class="principle-description" style="white-space: pre-wrap;">{{ $principle['description'] }}</p>
                         <div class="principle-hover-effect"></div>
                     </div>
                 </div>
@@ -501,9 +501,9 @@
 /* Business Principles Cards - Enhanced with larger text and no icons */
 .principle-card {
     background: white;
-    padding: 2rem 1.5rem;
+    padding: 2.25rem 1.75rem;
     border-radius: 20px;
-    text-align: center;
+    text-align: left;
     transition: var(--transition);
     border: 1px solid var(--gray-border);
     position: relative;
@@ -548,11 +548,14 @@
 /* ICON WRAPPER COMPLETELY REMOVED - No styles needed */
 
 .principle-title {
-    font-size: 1.35rem; /* INCREASED from 1.2rem */
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--primary-dark);
     margin-bottom: 0.75rem;
-    margin-top: 0; /* Added to remove extra space where icon was */
+    margin-top: 0;
+    line-height: 1.4;
+
+    min-height: 120px; /* adjust as needed */
 }
 
 .principle-description {
@@ -1275,6 +1278,11 @@
 html {
     scroll-behavior: smooth;
 }
+
+.principle-row {
+    row-gap: 2rem;
+}
+
 </style>
 
 <!-- Font Awesome 6 -->

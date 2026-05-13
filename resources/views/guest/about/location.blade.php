@@ -324,19 +324,28 @@
         color: var(--primary);
     }
     
-    /* Working Hours - Enhanced */
+    /* Working Hours - Enhanced with multi-section support */
+    .working-hours-section {
+        margin-top: 25px;
+    }
+    
     .working-hours {
         background: linear-gradient(135deg, var(--gray-light) 0%, white 100%);
         border-radius: 16px;
         padding: 20px;
-        margin-top: 25px;
+        margin-bottom: 20px;
         border: 1px solid var(--gray-border);
         transition: var(--transition);
+    }
+    
+    .working-hours:last-child {
+        margin-bottom: 0;
     }
     
     .working-hours:hover {
         box-shadow: var(--shadow-md);
         border-color: var(--primary-light);
+        transform: translateX(5px);
     }
     
     .working-hours-header {
@@ -391,6 +400,14 @@
         color: var(--primary);
         font-weight: 500;
         font-size: 0.95rem;
+    }
+    
+    /* Multiple Sections Styling */
+    .working-hours-subtitle {
+        font-size: 0.85rem;
+        color: var(--primary-light);
+        margin-top: 5px;
+        font-style: italic;
     }
     
     /* Map Card - Fixed for proper fit */
@@ -646,6 +663,14 @@
         .hour-day, .hour-time {
             font-size: 0.85rem;
         }
+        
+        .working-hours-header h4 {
+            font-size: 1rem;
+        }
+        
+        .working-hours-header i {
+            font-size: 18px;
+        }
     }
     
     @media (max-width: 576px) {
@@ -890,6 +915,50 @@
             
             return $time;
         }
+        
+        // Function to parse working hours with custom titles
+        function parseWorkingHoursWithTitles($workingHoursText) {
+            if (empty($workingHoursText)) {
+                return [];
+            }
+            
+            $sections = [];
+            $lines = explode("\n", $workingHoursText);
+            
+            foreach ($lines as $line) {
+                if (trim($line)) {
+                    // Check for custom title format: "Title|Day Range: Time"
+                    if (strpos($line, '|') !== false) {
+                        $parts = explode('|', $line, 2);
+                        $title = trim($parts[0]);
+                        $rest = trim($parts[1]);
+                        
+                        if (strpos($rest, ':') !== false) {
+                            $timeParts = explode(':', $rest, 2);
+                            $dayRange = trim($timeParts[0]);
+                            $timeRange = trim($timeParts[1]);
+                            
+                            $sections[] = [
+                                'title' => $title,
+                                'day_range' => $dayRange,
+                                'time' => $timeRange
+                            ];
+                        }
+                    } 
+                    // Standard format: "Day Range: Time"
+                    else if (strpos($line, ':') !== false) {
+                        $parts = explode(':', $line, 2);
+                        $sections[] = [
+                            'title' => null,
+                            'day_range' => trim($parts[0]),
+                            'time' => trim($parts[1])
+                        ];
+                    }
+                }
+            }
+            
+            return $sections;
+        }
     @endphp
 
     @isset($location)
@@ -963,30 +1032,36 @@
                 </div>
                 @endif
                 
+                <!-- Working Hours with Custom Title Support -->
                 @if(!empty($location->working_hours))
-                <div class="working-hours">
-                    <div class="working-hours-header">
-                        <i class="fas fa-clock"></i>
-                        <h4>Operating Hours</h4>
-                    </div>
                     @php
-                        $hours = explode("\n", $location->working_hours);
+                        $workingHoursSections = parseWorkingHoursWithTitles($location->working_hours);
                     @endphp
-                    @foreach($hours as $hour)
-                        @if(trim($hour))
-                            @php
-                                $parts = explode(':', $hour, 2);
-                                $dayRange = isset($parts[0]) ? trim($parts[0]) : '';
-                                $timeRange = isset($parts[1]) ? trim($parts[1]) : '';
-                                $formattedTime = formatTimeTo12Hour($timeRange);
-                            @endphp
-                            <div class="hour-item">
-                                <span class="hour-day">{{ $dayRange }}</span>
-                                <span class="hour-time">{{ $formattedTime }}</span>
+                    
+                    @if(count($workingHoursSections) > 0)
+                        <div class="working-hours-section">
+                            @foreach($workingHoursSections as $section)
+                            <div class="working-hours">
+                                <div class="working-hours-header">
+                                    @if(!empty($section['title']))
+                                        <i class="fas fa-tag"></i>
+                                        <h4>{{ $section['title'] }}</h4>
+                                    @else
+                                        <i class="fas fa-clock"></i>
+                                        <h4>Operating Hours</h4>
+                                    @endif
+                                </div>
+                                <div class="hour-item">
+                                    <span class="hour-day">{{ $section['day_range'] }}</span>
+                                    <span class="hour-time">{{ formatTimeTo12Hour($section['time']) }}</span>
+                                </div>
+                                @if(!empty($section['title']))
+                                    
+                                @endif
                             </div>
-                        @endif
-                    @endforeach
-                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>
