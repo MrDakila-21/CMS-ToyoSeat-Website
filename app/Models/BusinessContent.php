@@ -12,7 +12,7 @@ class BusinessContent extends Model
     
     protected $fillable = [
         'section', 'title', 'description', 'image', 
-        'name', 'position', 'order', 'is_active'
+        'original_filename', 'name', 'position', 'order', 'is_active'
     ];
     
     protected $casts = [
@@ -59,5 +59,10 @@ class BusinessContent extends Model
             return Storage::url($this->image);
         }
         return null;
+    }
+    
+    public function getDisplayFilenameAttribute()
+    {
+        return $this->original_filename ?? ($this->image ? basename($this->image) : null);
     }
 }

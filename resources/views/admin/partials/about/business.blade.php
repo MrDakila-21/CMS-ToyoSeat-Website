@@ -169,9 +169,37 @@
 @include('admin.partials.about.business-modals')
 
 <script>
-// Make sure Bootstrap JS is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap tabs if needed
+    // Check if this is first visit or if we should use saved preference
+    const lastTab = localStorage.getItem('lastBusinessTab');
+    
+    if (!lastTab || lastTab === 'automotive') {
+        // Force automotive tab to be active
+        const automotiveTab = document.querySelector('#automotive-tab');
+        const automotivePane = document.querySelector('#automotive');
+        
+        if (automotiveTab && automotivePane) {
+            document.querySelectorAll('#businessTab .nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            automotiveTab.classList.add('active');
+            automotivePane.classList.add('show', 'active');
+        }
+    }
+    
+    // Save current tab when clicked
+    document.querySelectorAll('#businessTab button').forEach(button => {
+        button.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.getAttribute('data-bs-target');
+            localStorage.setItem('lastBusinessTab', targetId);
+        });
+    });
+    
+    // Initialize Bootstrap tabs
     var triggerTabList = [].slice.call(document.querySelectorAll('#businessTab button'));
     triggerTabList.forEach(function(triggerEl) {
         var tabTrigger = new bootstrap.Tab(triggerEl);
@@ -185,6 +213,78 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentEditId = null;
 let currentSection = null;
 
+// ============================================
+// TOAST NOTIFICATION SYSTEM
+// ============================================
+function showToast(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `floating-toast ${type}-toast`;
+    
+    // Set icon based on type
+    let icon = 'fa-circle-check';
+    if (type === 'error') icon = 'fa-circle-exclamation';
+    if (type === 'warning') icon = 'fa-exclamation-triangle';
+    if (type === 'info') icon = 'fa-info-circle';
+    
+    let bgColor, borderColor, textColor;
+    switch(type) {
+        case 'success':
+            bgColor = '#d4edda';
+            borderColor = '#28a745';
+            textColor = '#155724';
+            break;
+        case 'error':
+            bgColor = '#f8d7da';
+            borderColor = '#dc3545';
+            textColor = '#721c24';
+            break;
+        case 'warning':
+            bgColor = '#fff3cd';
+            borderColor = '#ffc107';
+            textColor = '#856404';
+            break;
+        case 'info':
+            bgColor = '#d1ecf1';
+            borderColor = '#17a2b8';
+            textColor = '#0c5460';
+            break;
+        default:
+            bgColor = '#d4edda';
+            borderColor = '#28a745';
+            textColor = '#155724';
+    }
+    
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 6px; background-color: ${bgColor}; border-left: 3px solid ${borderColor}; color: ${textColor};">
+            <i class="fas ${icon}" style="font-size: 18px;"></i>
+            <span style="font-size: 13px; line-height: 1.4;">${message}</span>
+            <button type="button" class="toast-close" style="background: none; border: none; margin-left: auto; cursor: pointer; color: inherit; opacity: 0.5; font-size: 20px; padding: 0 5px;" onclick="this.closest('.floating-toast').remove()">×</button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast && toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }
+    }, 5000);
+}
+
 // Helper function for AJAX requests
 async function makeRequest(url, method, formData) {
     try {
@@ -192,7 +292,8 @@ async function makeRequest(url, method, formData) {
             method: method,
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: formData
         });
@@ -206,7 +307,7 @@ async function makeRequest(url, method, formData) {
         return data;
     } catch (error) {
         console.error('Error:', error);
-        alert(error.message);
+        showToast(error.message, 'error');
         throw error;
     }
 }
@@ -214,14 +315,22 @@ async function makeRequest(url, method, formData) {
 // Get CSRF token from meta tag
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-// Automotive Functions
 function showAddAutomotiveModal() {
     currentSection = 'automotive';
     document.getElementById('automotiveModalLabel').textContent = 'Add Automotive Seat Cover';
     document.getElementById('automotiveForm').reset();
     document.getElementById('automotiveId').value = '';
     currentEditId = null;
-    new bootstrap.Modal(document.getElementById('automotiveModal')).show();
+    
+    // Hide current image container for add mode
+    const container = document.getElementById('automotiveCurrentImageContainer');
+    if (container) container.style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    modal.show();
 }
 
 async function editAutomotive(id) {
@@ -230,7 +339,8 @@ async function editAutomotive(id) {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         const data = await response.json();
@@ -240,53 +350,120 @@ async function editAutomotive(id) {
         document.getElementById('automotive_title').value = data.title;
         document.getElementById('automotive_description').value = data.description;
         currentEditId = data.id;
-        new bootstrap.Modal(document.getElementById('automotiveModal')).show();
+        
+        // Show and update current image if exists
+        const currentImageContainer = document.getElementById('automotiveCurrentImageContainer');
+        const currentImage = document.getElementById('automotiveCurrentImage');
+        const currentImageName = document.getElementById('automotiveCurrentImageName');
+        
+        if (currentImageContainer && currentImage && currentImageName) {
+            if (data.image_url) {
+                currentImage.src = data.image_url;
+                const filename = data.image ? data.image.split('/').pop() : 'image';
+                currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
+                currentImageContainer.style.display = 'block';
+            } else {
+                currentImageContainer.style.display = 'none';
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
     } catch (error) {
         console.error('Error:', error);
-        alert('Error loading data');
+        showToast('Error loading data', 'error');
     }
 }
 
+// Automotive Form Handler
 document.getElementById('automotiveForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     let formData = new FormData(this);
     let url = currentEditId ? `/admin/business-content/automotive/${currentEditId}` : '/admin/business-content/automotive';
-    let method = currentEditId ? 'POST' : 'POST';
     
     if (currentEditId) {
         formData.append('_method', 'PUT');
     }
     
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
     try {
         const response = await fetch(url, {
-            method: method,
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: formData
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error saving data');
+            if (response.status === 422 && data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                showToast(errorMessages, 'error');
+            } else {
+                throw new Error(data.message || 'Error saving data');
+            }
+            return;
         }
         
-        bootstrap.Modal.getInstance(document.getElementById('automotiveModal')).hide();
-        location.reload();
+        if (data.success) {
+            if (currentEditId) {
+                // Update existing item
+                const itemElement = document.querySelector(`#automotive-list [data-id="${currentEditId}"]`);
+                if (itemElement) {
+                    itemElement.outerHTML = data.html;
+                }
+            } else {
+                // Add new item
+                document.getElementById('automotive-list').insertAdjacentHTML('beforeend', data.html);
+            }
+            
+            showToast(data.message, 'success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('automotiveModal'));
+            if (modal) modal.hide();
+            
+            // Reset form
+            this.reset();
+            currentEditId = null;
+        }
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 });
 
-// Organization Functions
+// Organization Modal Functions
 function showAddOrganizationModal() {
     currentSection = 'organization';
     document.getElementById('organizationModalLabel').textContent = 'Add Organization Member';
     document.getElementById('organizationForm').reset();
     document.getElementById('organizationId').value = '';
     currentEditId = null;
-    new bootstrap.Modal(document.getElementById('organizationModal')).show();
+    
+    // Hide current image container for add mode
+    const container = document.getElementById('organizationCurrentImageContainer');
+    if (container) container.style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    modal.show();
 }
 
 async function editOrganization(id) {
@@ -295,7 +472,8 @@ async function editOrganization(id) {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         const data = await response.json();
@@ -305,13 +483,35 @@ async function editOrganization(id) {
         document.getElementById('organization_name').value = data.name;
         document.getElementById('organization_position').value = data.position;
         currentEditId = data.id;
-        new bootstrap.Modal(document.getElementById('organizationModal')).show();
+        
+        // Show and update current image if exists
+        const currentImageContainer = document.getElementById('organizationCurrentImageContainer');
+        const currentImage = document.getElementById('organizationCurrentImage');
+        const currentImageName = document.getElementById('organizationCurrentImageName');
+        
+        if (currentImageContainer && currentImage && currentImageName) {
+            if (data.image_url) {
+                currentImage.src = data.image_url;
+                const filename = data.image ? data.image.split('/').pop() : 'image';
+                currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
+                currentImageContainer.style.display = 'block';
+            } else {
+                currentImageContainer.style.display = 'none';
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
     } catch (error) {
         console.error('Error:', error);
-        alert('Error loading data');
+        showToast('Error loading data', 'error');
     }
 }
 
+// Organization Form Handler
 document.getElementById('organizationForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     let formData = new FormData(this);
@@ -321,36 +521,75 @@ document.getElementById('organizationForm')?.addEventListener('submit', async fu
         formData.append('_method', 'PUT');
     }
     
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: formData
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error saving data');
+            if (response.status === 422 && data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                showToast(errorMessages, 'error');
+            } else {
+                throw new Error(data.message || 'Error saving data');
+            }
+            return;
         }
         
-        bootstrap.Modal.getInstance(document.getElementById('organizationModal')).hide();
-        location.reload();
+        if (data.success) {
+            if (currentEditId) {
+                const itemElement = document.querySelector(`#organization-list [data-id="${currentEditId}"]`);
+                if (itemElement) {
+                    itemElement.outerHTML = data.html;
+                }
+            } else {
+                document.getElementById('organization-list').insertAdjacentHTML('beforeend', data.html);
+            }
+            
+            showToast(data.message, 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('organizationModal'));
+            if (modal) modal.hide();
+            this.reset();
+            currentEditId = null;
+        }
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 });
 
-// Characteristic Functions
+// Characteristic Modal Functions
 function showAddCharacteristicModal() {
     currentSection = 'characteristic';
     document.getElementById('characteristicModalLabel').textContent = 'Add Characteristic';
     document.getElementById('characteristicForm').reset();
     document.getElementById('characteristicId').value = '';
     currentEditId = null;
-    new bootstrap.Modal(document.getElementById('characteristicModal')).show();
+    
+    // Hide current image container for add mode
+    const container = document.getElementById('characteristicCurrentImageContainer');
+    if (container) container.style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    modal.show();
 }
 
 async function editCharacteristic(id) {
@@ -359,7 +598,8 @@ async function editCharacteristic(id) {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         const data = await response.json();
@@ -369,13 +609,35 @@ async function editCharacteristic(id) {
         document.getElementById('characteristic_title').value = data.title;
         document.getElementById('characteristic_description').value = data.description;
         currentEditId = data.id;
-        new bootstrap.Modal(document.getElementById('characteristicModal')).show();
+        
+        // Show and update current image if exists
+        const currentImageContainer = document.getElementById('characteristicCurrentImageContainer');
+        const currentImage = document.getElementById('characteristicCurrentImage');
+        const currentImageName = document.getElementById('characteristicCurrentImageName');
+        
+        if (currentImageContainer && currentImage && currentImageName) {
+            if (data.image_url) {
+                currentImage.src = data.image_url;
+                const filename = data.image ? data.image.split('/').pop() : 'image';
+                currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
+                currentImageContainer.style.display = 'block';
+            } else {
+                currentImageContainer.style.display = 'none';
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
     } catch (error) {
         console.error('Error:', error);
-        alert('Error loading data');
+        showToast('Error loading data', 'error');
     }
 }
 
+// Characteristic Form Handler
 document.getElementById('characteristicForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     let formData = new FormData(this);
@@ -385,36 +647,75 @@ document.getElementById('characteristicForm')?.addEventListener('submit', async 
         formData.append('_method', 'PUT');
     }
     
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: formData
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error saving data');
+            if (response.status === 422 && data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                showToast(errorMessages, 'error');
+            } else {
+                throw new Error(data.message || 'Error saving data');
+            }
+            return;
         }
         
-        bootstrap.Modal.getInstance(document.getElementById('characteristicModal')).hide();
-        location.reload();
+        if (data.success) {
+            if (currentEditId) {
+                const itemElement = document.querySelector(`#characteristics-list [data-id="${currentEditId}"]`);
+                if (itemElement) {
+                    itemElement.outerHTML = data.html;
+                }
+            } else {
+                document.getElementById('characteristics-list').insertAdjacentHTML('beforeend', data.html);
+            }
+            
+            showToast(data.message, 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('characteristicModal'));
+            if (modal) modal.hide();
+            this.reset();
+            currentEditId = null;
+        }
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 });
 
-// Partnership Functions
+// Partnership Modal Functions
 function showAddPartnershipModal() {
     currentSection = 'partnership';
     document.getElementById('partnershipModalLabel').textContent = 'Add Partnership';
     document.getElementById('partnershipForm').reset();
     document.getElementById('partnershipId').value = '';
     currentEditId = null;
-    new bootstrap.Modal(document.getElementById('partnershipModal')).show();
+    
+    // Hide current image container for add mode
+    const container = document.getElementById('partnershipCurrentImageContainer');
+    if (container) container.style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    modal.show();
 }
 
 async function editPartnership(id) {
@@ -423,7 +724,8 @@ async function editPartnership(id) {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
         const data = await response.json();
@@ -432,13 +734,35 @@ async function editPartnership(id) {
         document.getElementById('partnershipId').value = data.id;
         document.getElementById('partnership_title').value = data.title;
         currentEditId = data.id;
-        new bootstrap.Modal(document.getElementById('partnershipModal')).show();
+        
+        // Show and update current image if exists
+        const currentImageContainer = document.getElementById('partnershipCurrentImageContainer');
+        const currentImage = document.getElementById('partnershipCurrentImage');
+        const currentImageName = document.getElementById('partnershipCurrentImageName');
+        
+        if (currentImageContainer && currentImage && currentImageName) {
+            if (data.image_url) {
+                currentImage.src = data.image_url;
+                const filename = data.image ? data.image.split('/').pop() : 'image';
+                currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
+                currentImageContainer.style.display = 'block';
+            } else {
+                currentImageContainer.style.display = 'none';
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
     } catch (error) {
         console.error('Error:', error);
-        alert('Error loading data');
+        showToast('Error loading data', 'error');
     }
 }
 
+// Partnership Form Handler
 document.getElementById('partnershipForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     let formData = new FormData(this);
@@ -448,49 +772,156 @@ document.getElementById('partnershipForm')?.addEventListener('submit', async fun
         formData.append('_method', 'PUT');
     }
     
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
     try {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
             body: formData
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error saving data');
+            if (response.status === 422 && data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                showToast(errorMessages, 'error');
+            } else {
+                throw new Error(data.message || 'Error saving data');
+            }
+            return;
         }
         
-        bootstrap.Modal.getInstance(document.getElementById('partnershipModal')).hide();
-        location.reload();
+        if (data.success) {
+            if (currentEditId) {
+                const itemElement = document.querySelector(`#partnership-list [data-id="${currentEditId}"]`);
+                if (itemElement) {
+                    itemElement.outerHTML = data.html;
+                }
+            } else {
+                document.getElementById('partnership-list').insertAdjacentHTML('beforeend', data.html);
+            }
+            
+            showToast(data.message, 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('partnershipModal'));
+            if (modal) modal.hide();
+            this.reset();
+            currentEditId = null;
+        }
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 });
 
-// Delete Function
+// ============================================
+// DELETE FUNCTION
+// ============================================
 async function deleteItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
+        showToast('Deleting item...', 'info');
+        
         try {
             const response = await fetch(`/admin/business-content/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             });
             
+            const data = await response.json();
+            
             if (!response.ok) {
-                throw new Error('Error deleting item');
+                throw new Error(data.message || 'Error deleting item');
             }
             
-            location.reload();
+            if (data.success) {
+                // Remove the item from DOM
+                const itemElement = document.querySelector(`[data-id="${id}"]`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                showToast(data.message, 'success');
+            }
         } catch (error) {
-            alert('Error deleting item: ' + error.message);
+            showToast(error.message, 'error');
         }
     }
 }
+
+// ============================================
+// ADD CSS ANIMATIONS IF NOT EXISTS
+// ============================================
+(function addToastStyles() {
+    if (!document.querySelector('#toast-animation-styles')) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'toast-animation-styles';
+        styleSheet.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            
+            .floating-toast {
+                position: relative;
+                margin-bottom: 10px;
+                min-width: 250px;
+                max-width: 350px;
+                background: white;
+                border-radius: 6px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            .floating-toast.hide {
+                animation: slideOut 0.3s ease-in forwards;
+            }
+            
+            .toast-close:hover {
+                opacity: 0.8 !important;
+            }
+            
+            .current-image-wrapper {
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 8px;
+                text-align: center;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    }
+})();
+
+// Log that toast system is ready
+console.log('Business management system loaded successfully');
 </script>

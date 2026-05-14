@@ -518,7 +518,6 @@
                     <li><a href="{{ route('guest.about.location') }}" class="{{ request()->routeIs('guest.about.location') ? 'active' : '' }}">Location</a></li>
                     <li><a href="{{ route('guest.about.history') }}" class="{{ request()->routeIs('guest.about.history') ? 'active' : '' }}">History</a></li>
                     <li><a href="{{ route('guest.about.iso-obtained') }}" class="{{ request()->routeIs('guest.about.iso-obtained') ? 'active' : '' }}">ISO Obtained</a></li>
-                    <li><a href="{{ route('guest.about.privacy-policy') }}" class="{{ request()->routeIs('guest.about.privacy-policy') ? 'active' : '' }}">Privacy Policy</a></li>
                 </ul>
             </li>
 
@@ -591,7 +590,7 @@
                         <li><a href="{{ route('guest.about.location') }}">Location</a></li>
                         <li><a href="{{ route('guest.about.history') }}">History</a></li>
                         <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
-                        <li><a href="{{ route('guest.about.privacy-policy') }}">Privacy Policy</a></li>
+                        
                     </ul>
                 </div>
 
