@@ -182,6 +182,11 @@
 
 <!-- JavaScript -->
 @push('scripts')
+<!-- Add jQuery first (required for the module to work like announcements) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Your custom JS -->
 <script src="{{ asset('js/guest/EventActivity.js') }}"></script>
 @endpush
 

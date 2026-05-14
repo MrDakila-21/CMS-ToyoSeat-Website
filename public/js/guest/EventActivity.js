@@ -1,19 +1,19 @@
 /**
  * EventActivity Module - Guest View
- * Handles real-time search, filtering, modals, and image preview with zoom
+ * Using the SAME approach as announcements module (which works on deployed)
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    let searchTimeout;
-    const searchInput = document.getElementById('searchInput');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const eventsContainer = document.getElementById('eventsContainer');
-    const paginationContainer = document.getElementById('paginationContainer');
-    const noResultsMessage = document.getElementById('noResultsMessage');
+// Make sure jQuery is available (like announcements module)
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery not loaded!');
+}
+
+$(document).ready(function() {
+    console.log('EventActivity.js loaded with jQuery');
     
-    let currentType = currentTypeFromUrl();
-    let currentSearch = currentSearchFromUrl();
+    let searchTimeout;
     let currentPage = 1;
+    let isLoading = false;
     
     // Zoom variables
     let currentZoom = 1;
@@ -23,9 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create fullscreen image preview modal (IDENTICAL to announcements module)
+    // Create fullscreen image preview modal (EXACT same as announcements)
     function createImagePreviewModal() {
-        if (document.getElementById('imagePreviewModal')) {
+        if ($('#imagePreviewModal').length) {
             return;
         }
         
@@ -41,45 +41,30 @@ document.addEventListener('DOMContentLoaded', function() {
             z-index: 10000;
             overflow: hidden;
         ">
-            <!-- Top Blur Overlay -->
             <div style="
                 position: absolute;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 75px;
-                background: linear-gradient(
-                    to bottom,
-                    rgba(0,0,0,0.9),
-                    rgba(0,0,0,0.45),
-                    transparent
-                );
+                background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
                 backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
                 z-index: 10000;
                 pointer-events: none;
             "></div>
 
-            <!-- Bottom Blur Overlay -->
             <div style="
                 position: absolute;
                 bottom: 0;
                 left: 0;
                 width: 100%;
                 height: 75px;
-                background: linear-gradient(
-                    to top,
-                    rgba(0,0,0,0.9),
-                    rgba(0,0,0,0.45),
-                    transparent
-                );
+                background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
                 backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
                 z-index: 10000;
                 pointer-events: none;
             "></div>
 
-            <!-- Top Controls -->
             <div style="
                 position: absolute;
                 top: 20px;
@@ -91,97 +76,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 align-items: center;
             ">
                 <div class="zoom-controls">
-                    <button type="button"
-                        class="btn btn-light btn-sm rounded-circle me-2"
-                        id="zoomOutBtn"
-                        title="Zoom Out">
+                    <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out">
                         <i class="fas fa-search-minus"></i>
                     </button>
-
-                    <span class="text-white mx-2" id="zoomLevel">
-                        100%
-                    </span>
-
-                    <button type="button"
-                        class="btn btn-light btn-sm rounded-circle ms-2"
-                        id="zoomInBtn"
-                        title="Zoom In">
+                    <span class="text-white mx-2" id="zoomLevel">100%</span>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In">
                         <i class="fas fa-search-plus"></i>
                     </button>
-
-                    <button type="button"
-                        class="btn btn-light btn-sm rounded-circle ms-2"
-                        id="resetZoomBtn"
-                        title="Reset Zoom">
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
-
-                <button id="closePreviewBtn" style="
-                    background: rgba(255,255,255,0.2);
-                    border: none;
-                    width: 45px;
-                    height: 45px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    color: white;
-                    font-size: 24px;
-                    backdrop-filter: blur(8px);
-                ">
+                <button id="closePreviewBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px; backdrop-filter: blur(8px);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Image Container -->
-            <div id="fullscreenImageContainer" style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                height: 100%;
-                cursor: grab;
-                overflow: hidden;
-            ">
-                <img
-                    id="fullscreenPreviewImage"
-                    src=""
-                    alt="Preview"
-                    style="
-                        max-width: 90%;
-                        max-height: 90vh;
-                        object-fit: contain;
-                        transition: transform 0.2s ease;
-                        user-select: none;
-                    "
-                >
+            <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
+                <img id="fullscreenPreviewImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
             </div>
 
-            <!-- Bottom Controls -->
-            <div style="
-                position: absolute;
-                bottom: 20px;
-                left: 0;
-                right: 0;
-                text-align: center;
-                z-index: 10001;
-            ">
-                <button
-                    type="button"
-                    class="btn btn-light rounded-pill"
-                    id="downloadImageBtn"
-                    style="
-                        backdrop-filter: blur(8px);
-                        background: rgba(255,255,255,0.9);
-                    "
-                >
-                    <i class="fas fa-download me-2"></i>
-                    Download
+            <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10001;">
+                <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.9);">
+                    <i class="fas fa-download me-2"></i>Download
                 </button>
             </div>
         </div>
         `;
         
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        $('body').append(modalHTML);
         
         // Get elements
         const modal = document.getElementById('imagePreviewModal');
@@ -194,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const imageContainer = document.getElementById('fullscreenImageContainer');
         const zoomLevel = document.getElementById('zoomLevel');
         
-        // Zoom functions
         function zoomIn() {
             if (currentZoom < 3) {
                 currentZoom += 0.25;
@@ -230,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Pan functionality
         function startPan(e) {
             if (currentZoom > 1) {
                 isPanning = true;
@@ -277,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Add event listeners
         if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
         if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
         if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
@@ -300,19 +220,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Pan events
         if (imageContainer) {
             imageContainer.addEventListener('mousedown', startPan);
             window.addEventListener('mousemove', pan);
             window.addEventListener('mouseup', stopPan);
             imageContainer.addEventListener('wheel', handleWheelZoom);
-            
             imageContainer.addEventListener('touchstart', startPan);
             window.addEventListener('touchmove', pan);
             window.addEventListener('touchend', stopPan);
         }
         
-        // Close on background click
         modal.addEventListener('click', function(e) {
             if (e.target === modal) {
                 modal.style.display = 'none';
@@ -320,8 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Close on escape key
-        document.addEventListener('keydown', function(e) {
+        $(document).on('keydown', function(e) {
             if (e.key === 'Escape' && modal.style.display === 'flex') {
                 modal.style.display = 'none';
                 resetZoom();
@@ -329,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Function to show fullscreen image preview
+    // Show image preview
     function showImagePreview(imageUrl, title = 'Image Preview') {
         createImagePreviewModal();
         
@@ -339,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewImg) {
             previewImg.src = imageUrl;
             previewImg.alt = title;
-            
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
@@ -359,102 +274,71 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Get current type from URL
-    function currentTypeFromUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const type = urlParams.get('type');
-        return type && type !== 'all' ? type : 'all';
-    }
-    
-    // Get current search from URL
-    function currentSearchFromUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('search') || '';
-    }
-    
-    // Set search input value
-    if (searchInput && currentSearch) {
-        searchInput.value = currentSearch;
-    }
-    
-    // Function to fetch filtered events via AJAX
-    function fetchFilteredEvents(page = 1) {
-        let url = window.location.pathname + "?ajax=1&page=" + page;
+    // Load events via AJAX (using jQuery like announcements module)
+    function loadEvents(search = '', page = 1, type = 'all') {
+        if (isLoading) return;
+        isLoading = true;
         
-        if (currentSearch) {
-            url += "&search=" + encodeURIComponent(currentSearch);
-        }
+        $('#eventsContainer').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>');
         
-        if (currentType && currentType !== 'all') {
-            url += "&type=" + currentType;
-        }
-        
-        fetch(url, {
+        $.ajax({
+            url: window.location.pathname,
+            type: 'GET',
+            data: {
+                ajax: 1,
+                page: page,
+                search: search,
+                type: type
+            },
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.html) {
+                    $('#eventsContainer').html(response.html);
+                } else if (response.data) {
+                    // Handle JSON response
+                    renderEventsWithjQuery(response.data);
+                    updatePaginationWithjQuery(response);
+                } else {
+                    $('#eventsContainer').html(response);
+                }
+                
+                // Reattach image click handlers
+                attachImageClickHandlers();
+                isLoading = false;
+            },
+            error: function(xhr) {
+                console.error('Error loading events:', xhr);
+                $('#eventsContainer').html('<div class="empty-state"><div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>Error Loading Events</h3><p>Please try again later.</p></div>');
+                isLoading = false;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.total === 0) {
-                if (eventsContainer) eventsContainer.innerHTML = '';
-                if (paginationContainer) paginationContainer.style.display = 'none';
-                if (noResultsMessage) noResultsMessage.style.display = 'block';
-            } else {
-                if (paginationContainer) paginationContainer.style.display = 'flex';
-                if (noResultsMessage) noResultsMessage.style.display = 'none';
-                renderEvents(data.data);
-                updatePagination(data);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
         });
     }
     
-    // Function to render events
-    function renderEvents(events) {
-        if (!eventsContainer) return;
-        
+    // Render events using jQuery
+    function renderEventsWithjQuery(events) {
         let html = '';
-        const defaultImage = "/images/default-image.png";
+        const defaultImage = '/images/default-image.png';
         
-        events.forEach((item, index) => {
-            let imageUrl = item.image_url;
-            if (!imageUrl || imageUrl === '') {
-                imageUrl = defaultImage;
-            }
-            
-            const eventDate = new Date(item.event_date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            const typeBadge = item.type === 'event' 
-                ? '<span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fas fa-calendar-alt me-1"></i> Event</span>'
-                : '<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-users me-1"></i> Activity</span>';
-            
-            const createdDate = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            }) : '';
+        events.forEach(function(item) {
+            let imageUrl = item.image_url || defaultImage;
+            const eventDate = new Date(item.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
             html += `
                 <div class="col-md-6 col-lg-4 event-item" data-type="${item.type}">
-                    <div class="card h-100 shadow-sm border-0 event-card" data-bs-toggle="modal" data-bs-target="#eventModal${item.id}" style="cursor: pointer; transition: all 0.3s ease;">
+                    <div class="card h-100 shadow-sm border-0 event-card" data-bs-toggle="modal" data-bs-target="#eventModal${item.id}">
                         <div class="position-relative overflow-hidden">
                             <img src="${imageUrl}" class="card-img-top" alt="${escapeHtml(item.title)}" style="height: 240px; width: 100%; object-fit: cover;" onerror="this.src='${defaultImage}'">
                             <div class="position-absolute top-0 end-0 m-3">
-                                ${typeBadge}
+                                <span class="badge ${item.type === 'event' ? 'bg-primary' : 'bg-success'} px-3 py-2 rounded-pill">
+                                    <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'} me-1"></i>
+                                    ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                </span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title fw-bold mb-2" style="color: #0E334C; line-height: 1.4;">
-                                ${escapeHtml(item.title).substring(0, 60)}${item.title.length > 60 ? '...' : ''}
-                            </h5>
+                            <h5 class="card-title fw-bold mb-2" style="color: #0E334C;">${escapeHtml(item.title).substring(0, 60)}${item.title.length > 60 ? '...' : ''}</h5>
                             <p class="card-text text-muted mb-0">
                                 <i class="fas fa-calendar-alt me-2" style="color: #3988BD;"></i>
                                 ${eventDate}
@@ -462,112 +346,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </div>
-                
-                <div class="modal fade" id="eventModal${item.id}" tabindex="-1" aria-labelledby="eventModalLabel${item.id}" aria-hidden="true">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content border-0 rounded-4 overflow-hidden">
-                            <div class="modal-header" style="background: linear-gradient(135deg, #0E334C 0%, #1a4d6e 100%);">
-                                <h5 class="modal-title text-white fw-bold">
-                                    <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'} me-2"></i>
-                                    ${escapeHtml(item.title)}
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <div class="row g-4">
-                                    <div class="col-lg-5">
-                                        <div class="modal-image-container position-relative" style="overflow: hidden; border-radius: 12px;">
-                                            <img src="${imageUrl}" 
-                                                 class="modal-image clickable-image w-100 rounded-3" 
-                                                 alt="${escapeHtml(item.title)}" 
-                                                 style="cursor: pointer; transition: transform 0.2s; max-height: 400px; width: 100%; object-fit: cover; display: block;"
-                                                 data-full-image="${imageUrl}"
-                                                 data-image-title="${escapeHtml(item.title)}"
-                                                 onerror="this.src='${defaultImage}'">
-                                            <div class="image-expand-icon" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); padding: 8px 12px; border-radius: 25px; color: white; font-size: 14px; cursor: pointer; transition: all 0.2s ease; z-index: 10;">
-                                                <i class="fas fa-expand-alt me-1"></i> Expand
-                                            </div>
-                                        </div>
-                                        <div class="info-badge mt-3">
-                                            <div class="info-badge-item">
-                                                <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'}"></i>
-                                                <span><strong>Type:</strong> ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span>
-                                            </div>
-                                            <div class="info-badge-item">
-                                                <i class="fas fa-calendar-day"></i>
-                                                <span><strong>Date:</strong> ${eventDate}</span>
-                                            </div>
-                                            ${createdDate ? `
-                                            <div class="info-badge-item">
-                                                <i class="fas fa-clock"></i>
-                                                <span><strong>Published:</strong> ${createdDate}</span>
-                                            </div>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-7">
-                                        <div class="description-wrapper-custom">
-                                            <div class="description-title">
-                                                <i class="fas fa-align-left me-2" style="color: #3988BD;"></i>
-                                                Description
-                                            </div>
-                                            <div class="description-content" style="max-height: 400px; overflow-y: auto;">
-                                                ${escapeHtml(item.description).replace(/\n/g, '<br>')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             `;
         });
         
-        eventsContainer.innerHTML = html;
-        
-        // Attach image click handlers after rendering
-        attachImageClickHandlers();
+        $('#eventsContainer').html(html);
     }
     
-    // Function to attach image click handlers (SAME AS ANNOUNCEMENTS MODULE)
-    function attachImageClickHandlers() {
-        // Handle clickable images
-        document.querySelectorAll('.clickable-image').forEach(img => {
-            img.removeEventListener('click', img.clickHandler);
-            img.clickHandler = function(e) {
-                e.stopPropagation();
-                const imageUrl = this.getAttribute('data-full-image') || this.src;
-                const imageTitle = this.getAttribute('data-image-title') || 'Event Image';
-                if (imageUrl && !imageUrl.includes('default-image.png')) {
-                    showImagePreview(imageUrl, imageTitle);
-                }
-            };
-            img.addEventListener('click', img.clickHandler);
-        });
-        
-        // Handle expand icons
-        document.querySelectorAll('.image-expand-icon').forEach(icon => {
-            icon.removeEventListener('click', icon.clickHandler);
-            icon.clickHandler = function(e) {
-                e.stopPropagation();
-                const container = this.closest('.modal-image-container');
-                const img = container.querySelector('.clickable-image');
-                if (img) {
-                    const imageUrl = img.getAttribute('data-full-image') || img.src;
-                    const imageTitle = img.getAttribute('data-image-title') || 'Event Image';
-                    if (imageUrl && !imageUrl.includes('default-image.png')) {
-                        showImagePreview(imageUrl, imageTitle);
-                    }
-                }
-            };
-            icon.addEventListener('click', icon.clickHandler);
-        });
-    }
-    
-    // Update pagination links
-    function updatePagination(data) {
-        if (!paginationContainer) return;
+    function updatePaginationWithjQuery(data) {
+        if (!data.last_page) return;
         
         let paginationHtml = '<ul class="pagination">';
         
@@ -592,88 +378,98 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         paginationHtml += '</ul>';
-        paginationContainer.innerHTML = paginationHtml;
+        $('#paginationContainer').html(paginationHtml);
         
-        document.querySelectorAll('#paginationContainer .page-link[data-page]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.getAttribute('data-page'));
-                if (!isNaN(page)) {
-                    currentPage = page;
-                    fetchFilteredEvents(page);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+        $('.pagination a').on('click', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (page) {
+                currentPage = page;
+                loadEvents($('#searchInput').val(), currentPage, currentType);
+                $('html, body').animate({ scrollTop: 0 }, 300);
+            }
+        });
+    }
+    
+    // Attach image click handlers (EXACT same as announcements)
+    function attachImageClickHandlers() {
+        $('.clickable-image').off('click').on('click', function(e) {
+            e.stopPropagation();
+            const imageUrl = $(this).data('full-image') || $(this).attr('src');
+            const imageTitle = $(this).data('image-title') || 'Event Image';
+            if (imageUrl && !imageUrl.includes('default-image.png')) {
+                showImagePreview(imageUrl, imageTitle);
+            }
+        });
+        
+        $('.image-expand-icon').off('click').on('click', function(e) {
+            e.stopPropagation();
+            const container = $(this).closest('.modal-image-container');
+            const img = container.find('.clickable-image');
+            if (img.length) {
+                const imageUrl = img.data('full-image') || img.attr('src');
+                const imageTitle = img.data('image-title') || 'Event Image';
+                if (imageUrl && !imageUrl.includes('default-image.png')) {
+                    showImagePreview(imageUrl, imageTitle);
                 }
-            });
+            }
         });
     }
     
     // Escape HTML
     function escapeHtml(text) {
         if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return $('<div>').text(text).html();
     }
     
-    // Search input
-    if (searchInput) {
-        searchInput.addEventListener('keyup', function() {
-            currentSearch = this.value;
+    // Search functionality
+    $('#searchInput').on('input', function() {
+        clearTimeout(searchTimeout);
+        const searchTerm = $(this).val();
+        
+        searchTimeout = setTimeout(function() {
             currentPage = 1;
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                fetchFilteredEvents(1);
-            }, 500);
-        });
-    }
+            loadEvents(searchTerm, currentPage, currentType);
+        }, 500);
+    });
     
     // Filter buttons
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const type = this.getAttribute('data-type');
-            currentType = type;
-            currentPage = 1;
-            
-            filterButtons.forEach(btn => {
-                const btnType = btn.getAttribute('data-type');
-                if (btnType === 'all') {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-outline-primary');
-                } else if (btnType === 'event') {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-outline-primary');
-                } else if (btnType === 'activity') {
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-outline-success');
-                }
-            });
-            
-            if (type === 'all') {
-                this.classList.remove('btn-outline-primary');
-                this.classList.add('btn-primary');
-            } else if (type === 'event') {
-                this.classList.remove('btn-outline-primary');
-                this.classList.add('btn-primary');
-            } else if (type === 'activity') {
-                this.classList.remove('btn-outline-success');
-                this.classList.add('btn-success');
+    let currentType = 'all';
+    $('.filter-btn').on('click', function() {
+        currentType = $(this).data('type');
+        currentPage = 1;
+        
+        $('.filter-btn').each(function() {
+            const btnType = $(this).data('type');
+            if (btnType === 'all') {
+                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+            } else if (btnType === 'event') {
+                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+            } else if (btnType === 'activity') {
+                $(this).removeClass('btn-success').addClass('btn-outline-success');
             }
-            
-            fetchFilteredEvents(1);
         });
+        
+        if (currentType === 'all') {
+            $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+        } else if (currentType === 'event') {
+            $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+        } else if (currentType === 'activity') {
+            $(this).removeClass('btn-outline-success').addClass('btn-success');
+        }
+        
+        loadEvents($('#searchInput').val(), currentPage, currentType);
     });
     
     // Smooth scroll
-    const scrollIndicator = document.querySelector('.hero-scroll-indicator');
-    if (scrollIndicator) {
-        scrollIndicator.addEventListener('click', function() {
-            window.scrollBy({
-                top: window.innerHeight - 100,
-                behavior: 'smooth'
-            });
-        });
-    }
+    $('.hero-scroll-indicator').on('click', function() {
+        $('html, body').animate({
+            scrollTop: $('.search-box').offset().top - 50
+        }, 800);
+    });
     
     // Initialize
     attachImageClickHandlers();
+    
+    console.log('EventActivity.js initialized successfully');
 });
