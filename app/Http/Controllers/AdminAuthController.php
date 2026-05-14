@@ -69,10 +69,22 @@ public function dashboard(Request $request)
     // Prepare data for views that need it
     $events = null;
     $announcements = null;
-    $content = null; // Add this line
+    $content = null;
+    $automotive = null;
+    $organizations = null;
+    $characteristics = null;
+    $partnerships = null;
     
     if ($tab === 'about' && $subtab === 'overview') {
-        $content = \App\Models\OverviewContent::getContent(); // Add this line
+        $content = \App\Models\OverviewContent::getContent();
+    }
+    
+    // Add this for business subtab
+    if ($tab === 'about' && $subtab === 'business') {
+        $automotive = \App\Models\BusinessContent::getAutomotiveSeats();
+        $organizations = \App\Models\BusinessContent::getOrganizationMembers();
+        $characteristics = \App\Models\BusinessContent::getCharacteristics();
+        $partnerships = \App\Models\BusinessContent::getPartnerships();
     }
     
     if ($tab === 'news' && $subtab === 'media') {
@@ -101,7 +113,7 @@ public function dashboard(Request $request)
         abort(404, "View not found: {$viewPath}");
     }
     
-    return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content')); // Add 'content' to compact
+    return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content', 'automotive', 'organizations', 'characteristics', 'partnerships'));
 }
     public function logout(Request $request)
     {
