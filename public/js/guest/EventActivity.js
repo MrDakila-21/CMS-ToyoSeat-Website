@@ -1,0 +1,612 @@
+/**
+ * EventActivity Module - Guest View
+ * Handles real-time search, filtering, modals, and image preview with zoom
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const eventsContainer = document.getElementById('eventsContainer');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    
+    let currentType = currentTypeFromUrl();
+    let currentSearch = currentSearchFromUrl();
+    let currentPage = 1;
+    
+    // Zoom variables
+    let currentZoom = 1;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = 0;
+    let translateY = 0;
+    
+    // Create custom fullscreen preview modal (not Bootstrap)
+    function createFullscreenPreviewModal() {
+        if (document.getElementById('fullscreenPreviewModal')) {
+            return;
+        }
+        
+        const modalHTML = `
+        <div id="fullscreenPreviewModal" style="
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            overflow: hidden;
+        ">
+            <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 75px;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
+                backdrop-filter: blur(10px);
+                z-index: 10001;
+                pointer-events: none;
+            "></div>
+
+            <div style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 75px;
+                background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
+                backdrop-filter: blur(10px);
+                z-index: 10001;
+                pointer-events: none;
+            "></div>
+
+            <div style="
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                z-index: 10002;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="fullscreenZoomOutBtn">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="text-white mx-2" id="fullscreenZoomLevel">100%</span>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="fullscreenZoomInBtn">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="fullscreenResetZoomBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <button id="closeFullscreenBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
+                <img id="fullscreenImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
+            </div>
+
+            <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10002;">
+                <button type="button" class="btn btn-light rounded-pill" id="fullscreenDownloadBtn">
+                    <i class="fas fa-download me-2"></i>Download
+                </button>
+            </div>
+        </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Add event listeners for zoom controls
+        const zoomInBtn = document.getElementById('fullscreenZoomInBtn');
+        const zoomOutBtn = document.getElementById('fullscreenZoomOutBtn');
+        const resetZoomBtn = document.getElementById('fullscreenResetZoomBtn');
+        const zoomLevel = document.getElementById('fullscreenZoomLevel');
+        const previewImage = document.getElementById('fullscreenImage');
+        const imageContainer = document.getElementById('fullscreenImageContainer');
+        const closeBtn = document.getElementById('closeFullscreenBtn');
+        const downloadBtn = document.getElementById('fullscreenDownloadBtn');
+        const modal = document.getElementById('fullscreenPreviewModal');
+        
+        function zoomIn() {
+            if (currentZoom < 3) {
+                currentZoom += 0.25;
+                updateZoomDisplay();
+            }
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.25;
+                updateZoomDisplay();
+            }
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateZoomDisplay();
+            updateImageTransform();
+        }
+        
+        function updateZoomDisplay() {
+            if (zoomLevel) {
+                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+            }
+            updateImageTransform();
+        }
+        
+        function updateImageTransform() {
+            if (previewImage) {
+                previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+        
+        function startPan(e) {
+            if (currentZoom > 1) {
+                isPanning = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        }
+        
+        function pan(e) {
+            if (isPanning && currentZoom > 1 && previewImage) {
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+                
+                const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+                const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
+                
+                translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+                
+                updateImageTransform();
+                e.preventDefault();
+            }
+        }
+        
+        function stopPan() {
+            isPanning = false;
+            if (imageContainer) imageContainer.style.cursor = 'grab';
+        }
+        
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const newZoom = currentZoom + delta;
+            if (newZoom >= 0.5 && newZoom <= 3) {
+                currentZoom = newZoom;
+                updateZoomDisplay();
+            }
+        }
+        
+        if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+        if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+        if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                resetZoom();
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (previewImage && previewImage.src) {
+                    const link = document.createElement('a');
+                    link.href = previewImage.src;
+                    link.download = 'event-image.jpg';
+                    link.click();
+                }
+            });
+        }
+        
+        if (imageContainer) {
+            imageContainer.addEventListener('mousedown', startPan);
+            window.addEventListener('mousemove', pan);
+            window.addEventListener('mouseup', stopPan);
+            imageContainer.addEventListener('wheel', handleWheelZoom);
+            imageContainer.addEventListener('touchstart', startPan);
+            window.addEventListener('touchmove', pan);
+            window.addEventListener('touchend', stopPan);
+        }
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+    }
+    
+    // Show fullscreen image preview
+    function showFullscreenPreview(imageUrl, title) {
+        if (!imageUrl || imageUrl.includes('default-image.png')) return;
+        
+        createFullscreenPreviewModal();
+        
+        const modal = document.getElementById('fullscreenPreviewModal');
+        const previewImg = document.getElementById('fullscreenImage');
+        
+        if (previewImg) {
+            previewImg.src = imageUrl;
+            previewImg.alt = title || 'Image Preview';
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            previewImg.style.transform = 'translate(0px, 0px) scale(1)';
+        }
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.flexDirection = 'column';
+        }
+    }
+    
+    // Get current type from URL
+    function currentTypeFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+        return type && type !== 'all' ? type : 'all';
+    }
+    
+    // Get current search from URL
+    function currentSearchFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('search') || '';
+    }
+    
+    // Set search input value
+    if (searchInput && currentSearch) {
+        searchInput.value = currentSearch;
+    }
+    
+    // Function to fetch filtered events via AJAX
+    function fetchFilteredEvents(page = 1) {
+        let url = window.location.pathname + "?ajax=1&page=" + page;
+        
+        if (currentSearch) {
+            url += "&search=" + encodeURIComponent(currentSearch);
+        }
+        
+        if (currentType && currentType !== 'all') {
+            url += "&type=" + currentType;
+        }
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.total === 0) {
+                if (eventsContainer) eventsContainer.innerHTML = '';
+                if (paginationContainer) paginationContainer.style.display = 'none';
+                if (noResultsMessage) noResultsMessage.style.display = 'block';
+            } else {
+                if (paginationContainer) paginationContainer.style.display = 'flex';
+                if (noResultsMessage) noResultsMessage.style.display = 'none';
+                renderEvents(data.data);
+                updatePagination(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    // Function to render events
+    function renderEvents(events) {
+        if (!eventsContainer) return;
+        
+        let html = '';
+        const defaultImage = "/images/default-image.png";
+        
+        events.forEach((item, index) => {
+            let imageUrl = item.image_url;
+            if (!imageUrl || imageUrl === '') {
+                imageUrl = defaultImage;
+            }
+            
+            const eventDate = new Date(item.event_date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            const typeBadge = item.type === 'event' 
+                ? '<span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fas fa-calendar-alt me-1"></i> Event</span>'
+                : '<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-users me-1"></i> Activity</span>';
+            
+            const createdDate = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            }) : '';
+            
+            html += `
+                <div class="col-md-6 col-lg-4 event-item" data-type="${item.type}">
+                    <div class="card h-100 shadow-sm border-0 event-card" data-bs-toggle="modal" data-bs-target="#eventModal${item.id}" style="cursor: pointer; transition: all 0.3s ease;">
+                        <div class="position-relative overflow-hidden">
+                            <img src="${imageUrl}" class="card-img-top" alt="${escapeHtml(item.title)}" style="height: 240px; width: 100%; object-fit: cover;" onerror="this.src='${defaultImage}'">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                ${typeBadge}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2" style="color: #0E334C; line-height: 1.4;">
+                                ${escapeHtml(item.title).substring(0, 60)}${item.title.length > 60 ? '...' : ''}
+                            </h5>
+                            <p class="card-text text-muted mb-0">
+                                <i class="fas fa-calendar-alt me-2" style="color: #3988BD;"></i>
+                                ${eventDate}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal fade" id="eventModal${item.id}" tabindex="-1" aria-labelledby="eventModalLabel${item.id}" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content border-0 rounded-4 overflow-hidden">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #0E334C 0%, #1a4d6e 100%);">
+                                <h5 class="modal-title text-white fw-bold">
+                                    <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'} me-2"></i>
+                                    ${escapeHtml(item.title)}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-lg-5">
+                                        <div class="modal-image-container position-relative" style="overflow: hidden; border-radius: 12px;">
+                                            <img src="${imageUrl}" 
+                                                 class="modal-image clickable-image w-100 rounded-3" 
+                                                 alt="${escapeHtml(item.title)}" 
+                                                 style="cursor: pointer; transition: transform 0.2s; max-height: 400px; width: 100%; object-fit: cover; display: block;"
+                                                 data-full-image="${imageUrl}"
+                                                 data-image-title="${escapeHtml(item.title)}"
+                                                 onerror="this.src='${defaultImage}'">
+                                            <div class="image-expand-icon" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); padding: 8px 12px; border-radius: 25px; color: white; font-size: 14px; cursor: pointer; transition: all 0.2s ease; z-index: 10;">
+                                                <i class="fas fa-expand-alt me-1"></i> Expand
+                                            </div>
+                                        </div>
+                                        <div class="info-badge mt-3">
+                                            <div class="info-badge-item">
+                                                <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'}"></i>
+                                                <span><strong>Type:</strong> ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span>
+                                            </div>
+                                            <div class="info-badge-item">
+                                                <i class="fas fa-calendar-day"></i>
+                                                <span><strong>Date:</strong> ${eventDate}</span>
+                                            </div>
+                                            ${createdDate ? `
+                                            <div class="info-badge-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span><strong>Published:</strong> ${createdDate}</span>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="description-wrapper-custom">
+                                            <div class="description-title">
+                                                <i class="fas fa-align-left me-2" style="color: #3988BD;"></i>
+                                                Description
+                                            </div>
+                                            <div class="description-content" style="max-height: 400px; overflow-y: auto;">
+                                                ${escapeHtml(item.description).replace(/\n/g, '<br>')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        eventsContainer.innerHTML = html;
+        
+        // CRITICAL: Attach event handlers for dynamically created modals
+        attachImagePreviewHandlers();
+    }
+    
+    // Attach handlers for image preview - THIS IS THE KEY FIX
+    function attachImagePreviewHandlers() {
+        // Use event delegation for dynamically created elements
+        // This handles clicks on images that are added after page load
+        
+        // Remove any existing listeners to avoid duplicates
+        document.removeEventListener('click', handleImageClick);
+        document.removeEventListener('click', handleExpandIconClick);
+        
+        // Add click listener for images with class 'clickable-image'
+        document.addEventListener('click', handleImageClick);
+        
+        // Add click listener for expand icons
+        document.addEventListener('click', handleExpandIconClick);
+        
+        // Also handle clicks on cards to prevent modal from opening when clicking image/expand
+        document.querySelectorAll('.event-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.clickable-image') || e.target.closest('.image-expand-icon')) {
+                    e.stopPropagation();
+                }
+            });
+        });
+    }
+    
+    // Handler for image clicks
+    function handleImageClick(e) {
+        const image = e.target.closest('.clickable-image');
+        if (image) {
+            e.stopPropagation();
+            e.preventDefault();
+            const imageUrl = image.getAttribute('data-full-image') || image.src;
+            const imageTitle = image.getAttribute('data-image-title') || 'Event Image';
+            if (imageUrl && !imageUrl.includes('default-image.png')) {
+                showFullscreenPreview(imageUrl, imageTitle);
+            }
+        }
+    }
+    
+    // Handler for expand icon clicks
+    function handleExpandIconClick(e) {
+        const expandIcon = e.target.closest('.image-expand-icon');
+        if (expandIcon) {
+            e.stopPropagation();
+            e.preventDefault();
+            const container = expandIcon.closest('.modal-image-container');
+            if (container) {
+                const img = container.querySelector('.clickable-image');
+                if (img) {
+                    const imageUrl = img.getAttribute('data-full-image') || img.src;
+                    const imageTitle = img.getAttribute('data-image-title') || 'Event Image';
+                    if (imageUrl && !imageUrl.includes('default-image.png')) {
+                        showFullscreenPreview(imageUrl, imageTitle);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Update pagination links
+    function updatePagination(data) {
+        if (!paginationContainer) return;
+        
+        let paginationHtml = '<ul class="pagination">';
+        
+        if (data.current_page > 1) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page - 1}">Previous</a></li>`;
+        } else {
+            paginationHtml += `<li class="page-item disabled"><span class="page-link">Previous</span></li>`;
+        }
+        
+        for (let i = 1; i <= data.last_page; i++) {
+            if (i === data.current_page) {
+                paginationHtml += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+            } else {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+            }
+        }
+        
+        if (data.current_page < data.last_page) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page + 1}">Next</a></li>`;
+        } else {
+            paginationHtml += `<li class="page-item disabled"><span class="page-link">Next</span></li>`;
+        }
+        
+        paginationHtml += '</ul>';
+        paginationContainer.innerHTML = paginationHtml;
+        
+        document.querySelectorAll('#paginationContainer .page-link[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.getAttribute('data-page'));
+                if (!isNaN(page)) {
+                    currentPage = page;
+                    fetchFilteredEvents(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        });
+    }
+    
+    // Escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Search input
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            currentSearch = this.value;
+            currentPage = 1;
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetchFilteredEvents(1);
+            }, 500);
+        });
+    }
+    
+    // Filter buttons
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            currentType = type;
+            currentPage = 1;
+            
+            filterButtons.forEach(btn => {
+                const btnType = btn.getAttribute('data-type');
+                if (btnType === 'all') {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                } else if (btnType === 'event') {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                } else if (btnType === 'activity') {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                }
+            });
+            
+            if (type === 'all') {
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+            } else if (type === 'event') {
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+            } else if (type === 'activity') {
+                this.classList.remove('btn-outline-success');
+                this.classList.add('btn-success');
+            }
+            
+            fetchFilteredEvents(1);
+        });
+    });
+    
+    // Smooth scroll
+    const scrollIndicator = document.querySelector('.hero-scroll-indicator');
+    if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', function() {
+            window.scrollBy({
+                top: window.innerHeight - 100,
+                behavior: 'smooth'
+            });
+        });
+    }
+    
+    // Initialize image preview handlers
+    attachImagePreviewHandlers();
+});

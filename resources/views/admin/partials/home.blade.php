@@ -54,7 +54,7 @@
                                 <div class="col-md-3 col-sm-6 mb-3 slide-item" data-id="{{ $slide->id }}" data-order="{{ $slide->order }}">
                                     <div class="card h-100">
                                         <div class="position-relative">
-                                            <img src="{{ asset('storage/' . $slide->image_path) }}" class="card-img-top" alt="Slide {{ $index + 1 }}" style="height: 150px; object-fit: cover; width: 100%;">
+                                            <img src="{{ '/storage.php?file=' . $slide->image_path }}" class="card-img-top" alt="Slide {{ $index + 1 }}" style="height: 150px; object-fit: cover; width: 100%;">
                                             <div class="position-absolute top-0 start-0 m-2">
                                                 <div class="form-check">
                                                     <input type="checkbox" 
