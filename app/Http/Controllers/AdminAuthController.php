@@ -105,34 +105,28 @@ public function dashboard(Request $request)
     
     return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content')); // Add 'content' to compact
 }
-   public function logout(Request $request)
-{
-    // Clear all session data
-    Auth::logout();
-    
-    // Invalidate the session completely
-    $request->session()->invalidate();
-    
-    // Regenerate the CSRF token
-    $request->session()->regenerateToken();
-    
-    // Clear all session data explicitly
-    $request->session()->flush();
-    
-    // Clear any remember me cookies
-    if ($request->hasCookie(Auth::getRecallerName())) {
-        $cookie = \Cookie::forget(Auth::getRecallerName());
-        return redirect('/admin/login')->with('success', 'Successfully logged out!')->withCookie($cookie);
+    public function logout(Request $request)
+    {
+        // Clear all session data
+        Auth::logout();
+        
+        // Invalidate the session completely
+        $request->session()->invalidate();
+        
+        // Regenerate the CSRF token
+        $request->session()->regenerateToken();
+        
+        // Clear all session data explicitly
+        $request->session()->flush();
+        
+        // Clear any remember me cookies
+        if ($request->hasCookie(Auth::getRecallerName())) {
+            $cookie = \Cookie::forget(Auth::getRecallerName());
+            return redirect('/admin/login')->with('success', 'Successfully logged out!')->withCookie($cookie);
+        }
+        
+        return redirect('/admin/login')->with('success', 'Successfully logged out!');
     }
-    
-    return redirect('/admin/login')->with('success', 'Successfully logged out!');
-}
-
-    // Add this method to your AdminAuthController.php
-public function logoutViaGet(Request $request)
-{
-    return $this->logout($request);
-}
     
     // REMOVED: checkAuth() method - no longer needed for AJAX
     // REMOVED: loadContent() method - no longer needed for AJAX

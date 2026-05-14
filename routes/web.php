@@ -68,7 +68,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
         Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
-        Route::get('/logout', [AdminAuthController::class, 'logoutViaGet'])->name('admin.logout.get');
+        
 
         // IMPORTANT: Make sure these routes are correctly defined
         // Homepage slideshow management routes
