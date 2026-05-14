@@ -540,6 +540,16 @@
             <li class="nav-item">
                 <a href="{{ route('guest.inquiry.index') }}" class="nav-link-custom {{ request()->routeIs('guest.inquiry.*') ? 'active' : '' }}">Contact Us</a>
             </li>
+
+
+            {{-- ADD ADMIN DASHBOARD LINK FOR AUTHENTICATED USERS --}}
+    @auth
+        <li class="nav-item">
+            <a href="{{ route('admin.dashboard') }}" class="nav-link-custom {{ request()->routeIs('admin.dashboard*') ? 'active' : '' }}" style="background: rgba(128, 204, 255, 0.2); border-left: 3px solid #80CCFF;">
+                <i class="fas fa-tachometer-alt me-1"></i> Admin Dashboard
+            </a>
+        </li>
+    @endauth
         </ul>
     </div>
 </div>
