@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create image preview modal with zoom controls
+    // Create fullscreen image preview modal (same as announcements module)
     function createImagePreviewModal() {
         // Check if modal already exists
         if (document.getElementById('imagePreviewModal')) {
@@ -31,50 +31,171 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const modalHTML = `
-            <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-fullscreen">
-                    <div class="modal-content bg-dark" style="border-radius: 0 !important;">
-                        <div class="modal-header border-0" style="position: absolute; top: 0; left: 0; right: 0; z-index: 1050; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
-                            <div class="zoom-controls">
-                                <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out">
-                                    <i class="fas fa-search-minus"></i>
-                                </button>
-                                <span class="text-white mx-2" id="zoomLevel">100%</span>
-                                <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In">
-                                    <i class="fas fa-search-plus"></i>
-                                </button>
-                                <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body d-flex align-items-center justify-content-center p-0 overflow-hidden" id="previewModalBody">
-                            <div id="imageContainer" style="cursor: grab; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-                                <img id="previewImage" src="" alt="Preview" style="max-width: 100%; max-height: 100vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0 justify-content-center" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
-                            <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn">
-                                <i class="fas fa-download me-2"></i>Download
-                            </button>
-                        </div>
+            <div id="imagePreviewModal" style="
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #000;
+                z-index: 10000;
+                overflow: hidden;
+            ">
+                <!-- Top Blur Overlay -->
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 75px;
+                    background: linear-gradient(
+                        to bottom,
+                        rgba(0,0,0,0.9),
+                        rgba(0,0,0,0.45),
+                        transparent
+                    );
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    z-index: 10000;
+                    pointer-events: none;
+                "></div>
+
+                <!-- Bottom Blur Overlay -->
+                <div style="
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 75px;
+                    background: linear-gradient(
+                        to top,
+                        rgba(0,0,0,0.9),
+                        rgba(0,0,0,0.45),
+                        transparent
+                    );
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    z-index: 10000;
+                    pointer-events: none;
+                "></div>
+
+                <!-- Top Controls -->
+                <div style="
+                    position: absolute;
+                    top: 20px;
+                    left: 20px;
+                    right: 20px;
+                    z-index: 10001;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <div class="zoom-controls">
+                        <button type="button"
+                            class="btn btn-light btn-sm rounded-circle me-2"
+                            id="zoomOutBtn"
+                            title="Zoom Out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+
+                        <span class="text-white mx-2" id="zoomLevel">
+                            100%
+                        </span>
+
+                        <button type="button"
+                            class="btn btn-light btn-sm rounded-circle ms-2"
+                            id="zoomInBtn"
+                            title="Zoom In">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+
+                        <button type="button"
+                            class="btn btn-light btn-sm rounded-circle ms-2"
+                            id="resetZoomBtn"
+                            title="Reset Zoom">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
+
+                    <button id="closePreviewBtn" style="
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        width: 45px;
+                        height: 45px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        color: white;
+                        font-size: 24px;
+                        backdrop-filter: blur(8px);
+                    ">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Image Container -->
+                <div id="fullscreenImageContainer" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    cursor: grab;
+                    overflow: hidden;
+                ">
+                    <img
+                        id="fullscreenPreviewImage"
+                        src=""
+                        alt="Preview"
+                        style="
+                            max-width: 90%;
+                            max-height: 90vh;
+                            object-fit: contain;
+                            transition: transform 0.2s ease;
+                            user-select: none;
+                        "
+                    >
+                </div>
+
+                <!-- Bottom Controls -->
+                <div style="
+                    position: absolute;
+                    bottom: 20px;
+                    left: 0;
+                    right: 0;
+                    text-align: center;
+                    z-index: 10001;
+                ">
+                    <button
+                        type="button"
+                        class="btn btn-light rounded-pill"
+                        id="downloadImageBtn"
+                        style="
+                            backdrop-filter: blur(8px);
+                            background: rgba(255,255,255,0.9);
+                        "
+                    >
+                        <i class="fas fa-download me-2"></i>
+                        Download
+                    </button>
                 </div>
             </div>
         `;
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
-        // Add zoom functionality
+        // Get elements
+        const modal = document.getElementById('imagePreviewModal');
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const closeBtn = document.getElementById('closePreviewBtn');
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        const previewImage = document.getElementById('fullscreenPreviewImage');
+        const imageContainer = document.getElementById('fullscreenImageContainer');
         const zoomLevel = document.getElementById('zoomLevel');
-        const previewImage = document.getElementById('previewImage');
-        const imageContainer = document.getElementById('imageContainer');
         
-        // Zoom in function
+        // Zoom functions
         function zoomIn() {
             if (currentZoom < 3) {
                 currentZoom += 0.25;
@@ -82,7 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Zoom out function
         function zoomOut() {
             if (currentZoom > 0.5) {
                 currentZoom -= 0.25;
@@ -90,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Reset zoom function
         function resetZoom() {
             currentZoom = 1;
             translateX = 0;
@@ -99,7 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTransform();
         }
         
-        // Update zoom display and image transform
         function updateZoom() {
             if (zoomLevel) {
                 zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
@@ -107,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTransform();
         }
         
-        // Update image transform with pan
         function updateTransform() {
             if (previewImage) {
                 previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
@@ -118,19 +235,23 @@ document.addEventListener('DOMContentLoaded', function() {
         function startPan(e) {
             if (currentZoom > 1) {
                 isPanning = true;
-                startX = e.clientX - translateX;
-                startY = e.clientY - translateY;
-                imageContainer.style.cursor = 'grabbing';
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
                 e.preventDefault();
             }
         }
         
         function pan(e) {
-            if (isPanning && currentZoom > 1) {
-                translateX = e.clientX - startX;
-                translateY = e.clientY - startY;
+            if (isPanning && currentZoom > 1 && previewImage) {
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                translateX = clientX - startX;
+                translateY = clientY - startY;
                 
-                // Limit panning based on zoom level
+                // Limit panning
                 const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
                 const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
                 
@@ -144,10 +265,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         function stopPan() {
             isPanning = false;
-            imageContainer.style.cursor = 'grab';
+            if (imageContainer) imageContainer.style.cursor = 'grab';
         }
         
-        // Mouse wheel zoom
         function handleWheelZoom(e) {
             e.preventDefault();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
@@ -159,84 +279,66 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Add event listeners for zoom controls
+        // Add event listeners
         if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
         if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
         if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
         
-        // Add pan event listeners
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                resetZoom();
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (previewImage && previewImage.src) {
+                    const link = document.createElement('a');
+                    link.href = previewImage.src;
+                    link.download = 'event-image.jpg';
+                    link.click();
+                }
+            });
+        }
+        
+        // Pan events
         if (imageContainer) {
             imageContainer.addEventListener('mousedown', startPan);
             window.addEventListener('mousemove', pan);
             window.addEventListener('mouseup', stopPan);
             imageContainer.addEventListener('wheel', handleWheelZoom);
             
-            // Touch events for mobile
-            imageContainer.addEventListener('touchstart', function(e) {
-                if (currentZoom > 1) {
-                    isPanning = true;
-                    startX = e.touches[0].clientX - translateX;
-                    startY = e.touches[0].clientY - translateY;
-                    e.preventDefault();
-                }
-            });
-            
-            window.addEventListener('touchmove', function(e) {
-                if (isPanning && currentZoom > 1) {
-                    translateX = e.touches[0].clientX - startX;
-                    translateY = e.touches[0].clientY - startY;
-                    
-                    const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
-                    const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
-                    
-                    translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
-                    translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
-                    
-                    updateTransform();
-                    e.preventDefault();
-                }
-            });
-            
-            window.addEventListener('touchend', function() {
-                isPanning = false;
-            });
+            // Touch events
+            imageContainer.addEventListener('touchstart', startPan);
+            window.addEventListener('touchmove', pan);
+            window.addEventListener('touchend', stopPan);
         }
         
-        // Reset zoom when modal is closed
-        const modal = document.getElementById('imagePreviewModal');
-        if (modal) {
-            modal.addEventListener('hidden.bs.modal', function() {
+        // Close on background click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
                 resetZoom();
-            });
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                }
-            });
-        }
+            }
+        });
         
-        // Add download functionality
-        const downloadBtn = document.getElementById('downloadImageBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', function() {
-                const img = document.getElementById('previewImage');
-                if (img && img.src) {
-                    const link = document.createElement('a');
-                    link.href = img.src;
-                    link.download = 'event-image.jpg';
-                    link.click();
-                }
-            });
-        }
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
     }
     
-    // Function to show image preview
-    window.showImagePreview = function(imageUrl, title = 'Image Preview') {
+    // Function to show fullscreen image preview
+    function showImagePreview(imageUrl, title = 'Image Preview') {
         createImagePreviewModal();
         
-        const previewImg = document.getElementById('previewImage');
+        const modal = document.getElementById('imagePreviewModal');
+        const previewImg = document.getElementById('fullscreenPreviewImage');
+        
         if (previewImg) {
             previewImg.src = imageUrl;
             previewImg.alt = title;
@@ -245,21 +347,18 @@ document.addEventListener('DOMContentLoaded', function() {
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
-            if (document.getElementById('previewImage')) {
-                document.getElementById('previewImage').style.transform = `translate(0px, 0px) scale(1)`;
-            }
+            updateTransform();
         }
         
-        const modalElement = document.getElementById('imagePreviewModal');
-        if (modalElement && typeof bootstrap !== 'undefined') {
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.flexDirection = 'column';
         }
     }
     
-    // Helper function to update transform (needs to be accessible globally within this scope)
+    // Helper function to update transform
     function updateTransform() {
-        const previewImage = document.getElementById('previewImage');
+        const previewImage = document.getElementById('fullscreenPreviewImage');
         if (previewImage) {
             previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
         }
@@ -433,44 +532,44 @@ document.addEventListener('DOMContentLoaded', function() {
         
         eventsContainer.innerHTML = html;
         
-        // CRITICAL FIX: Attach event handlers for image preview
-        attachImagePreviewHandlers();
+        // Attach image click handlers after rendering
+        attachImageClickHandlers();
     }
     
-    // NEW FUNCTION: Attach handlers for image preview
-    function attachImagePreviewHandlers() {
+    // Function to attach image click handlers (same as announcements module)
+    function attachImageClickHandlers() {
+        // Handle clickable images in event cards
+        document.querySelectorAll('.clickable-image').forEach(img => {
+            img.removeEventListener('click', img._clickHandler);
+            const handler = function(e) {
+                e.stopPropagation();
+                const imageUrl = this.getAttribute('data-full-image') || this.src;
+                const imageTitle = this.getAttribute('data-image-title') || 'Event Image';
+                if (imageUrl && !imageUrl.includes('default-image.png')) {
+                    showImagePreview(imageUrl, imageTitle);
+                }
+            };
+            img.addEventListener('click', handler);
+            img._clickHandler = handler;
+        });
+        
         // Handle expand icon clicks
         document.querySelectorAll('.image-expand-icon').forEach(icon => {
-            // Remove existing listener to avoid duplicates
-            icon.removeEventListener('click', icon._listener);
-            // Create new listener
-            const listener = function(e) {
+            icon.removeEventListener('click', icon._clickHandler);
+            const handler = function(e) {
                 e.stopPropagation();
                 const container = this.closest('.modal-image-container');
                 const img = container.querySelector('.clickable-image');
                 if (img) {
                     const imageUrl = img.getAttribute('data-full-image') || img.src;
-                    const imageTitle = img.getAttribute('data-image-title') || 'Image Preview';
-                    window.showImagePreview(imageUrl, imageTitle);
+                    const imageTitle = img.getAttribute('data-image-title') || 'Event Image';
+                    if (imageUrl && !imageUrl.includes('default-image.png')) {
+                        showImagePreview(imageUrl, imageTitle);
+                    }
                 }
             };
-            icon.addEventListener('click', listener);
-            icon._listener = listener;
-        });
-        
-        // Handle image clicks
-        document.querySelectorAll('.clickable-image').forEach(img => {
-            // Remove existing listener to avoid duplicates
-            img.removeEventListener('click', img._listener);
-            // Create new listener
-            const listener = function(e) {
-                e.stopPropagation();
-                const imageUrl = this.getAttribute('data-full-image') || this.src;
-                const imageTitle = this.getAttribute('data-image-title') || 'Image Preview';
-                window.showImagePreview(imageUrl, imageTitle);
-            };
-            img.addEventListener('click', listener);
-            img._listener = listener;
+            icon.addEventListener('click', handler);
+            icon._clickHandler = handler;
         });
     }
     
@@ -588,6 +687,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize image preview for initial page load
-    attachImagePreviewHandlers();
+    // Initialize image click handlers for initial page load
+    attachImageClickHandlers();
 });
