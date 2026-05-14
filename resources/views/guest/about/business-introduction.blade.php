@@ -1,3 +1,5 @@
+in characteristics section, if theres one item, just like other sections it should be default placing in center
+
 {{-- resources/views/guest/about/business-introduction.blade.php --}}
 @extends('layouts.app')
 
@@ -5,13 +7,182 @@
 
 @section('content')
 <style>
-    .business-header {
-        background: linear-gradient(135deg, #0E334C 0%, #1a5a7a 100%);
-        color: white;
-        padding: 60px 0;
-        margin-bottom: 50px;
+    /* Hero Section Styles - Copied from overview blade */
+    .hero-section-wrapper {
+        background: linear-gradient(135deg, #0A2640 0%, #0E334C 50%, #1A4D6F 100%);
+        position: relative;
+        overflow: hidden;
+        margin-top: -1.5rem;
+        padding: 2rem 0 0.5rem 0;
+        isolation: isolate;
     }
-    
+
+    .hero-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 2px, transparent 2px),
+            radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 1px, transparent 1px);
+        background-size: 50px 50px, 30px 30px;
+        pointer-events: none;
+    }
+
+    .hero-section-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -20%;
+        width: 140%;
+        height: 140%;
+        background: radial-gradient(circle, rgba(57, 136, 189, 0.15) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .hero-section-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, transparent, #3A8EB5, #1A6D8F, #3A8EB5, transparent);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.3; }
+    }
+
+    .hero-section {
+        position: relative;
+        z-index: 2;
+        padding: 0.5rem 0;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.4rem 1.5rem;
+        border-radius: 50px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        margin-bottom: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .hero-badge:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-top: 1rem;
+        margin-bottom: 0.75rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #FFFFFF, #E0F0F8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-line {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin: 1rem auto;
+    }
+
+    .hero-line-main {
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #3A8EB5, #3A8EB5, transparent);
+    }
+
+    .hero-line-dot {
+        width: 8px;
+        height: 8px;
+        background: #3A8EB5;
+        border-radius: 50%;
+        box-shadow: 0 0 12px rgba(91, 163, 212, 0.6);
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 600px;
+        margin: 0 auto;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    .hero-scroll-indicator {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .hero-scroll-indicator:hover {
+        transform: translateY(3px);
+    }
+
+    .scroll-text {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 500;
+    }
+
+    .hero-scroll-indicator i {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(8px); }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+        opacity: 0;
+    }
+
+    /* Original Business Introduction Styles - Updated for centering */
     .section-title {
         font-size: 2rem;
         font-weight: 700;
@@ -19,6 +190,12 @@
         color: #0E334C;
         position: relative;
         padding-bottom: 15px;
+    }
+    
+    /* Center alignment for section titles */
+    .section-title.text-center,
+    .text-center .section-title {
+        text-align: center;
     }
     
     .section-title:after {
@@ -31,14 +208,24 @@
         background: #3988BD;
     }
     
+    /* Center the line for centered titles */
+    .section-title.text-center:after,
     .text-center .section-title:after {
         left: 50%;
         transform: translateX(-50%);
     }
     
+    /* Section description styling */
+    .section-description {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+    }
+    
     .automotive-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: none;
+        border: solid 3px #e0e0e0;
         border-radius: 15px;
         overflow: hidden;
     }
@@ -50,7 +237,7 @@
     
     .organization-card {
         transition: all 0.3s ease;
-        border: none;
+        border: solid 3px #e0e0e0;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 2px 10px rgba(0,0,0,0.08);
@@ -81,7 +268,7 @@
         border-radius: 15px;
         transition: all 0.3s ease;
         height: 100%;
-        border: 1px solid #e0e0e0;
+        border: solid 3px #e0e0e0;
     }
     
     .characteristic-card:hover {
@@ -98,7 +285,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid #e0e0e0;
+        border: solid 3px #e0e0e0;
     }
     
     .partnership-logo:hover {
@@ -134,32 +321,82 @@
             font-size: 1.5rem;
         }
         
-        .business-header {
-            padding: 40px 0;
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .hero-line-main {
+            width: 35px;
+        }
+        
+        .hero-line-dot {
+            width: 6px;
+            height: 6px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .hero-title {
+            font-size: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.85rem;
+        }
+        
+        .hero-line {
+            margin: 0.75rem auto;
+        }
+        
+        .hero-line-main {
+            width: 25px;
+        }
+        
+        .scroll-text {
+            font-size: 0.6rem;
+        }
+        
+        .hero-scroll-indicator i {
+            font-size: 0.75rem;
         }
     }
 </style>
 
-<div class="business-header">
+<!-- Hero Section - Modern Gradient with Subtle Animation (Copied from overview blade) -->
+<div class="hero-section-wrapper">
+    <div class="hero-particles"></div>
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h1 class="display-4 fw-bold mb-3">Business Introduction</h1>
-                <div class="line-custom" style="width: 80px; height: 3px; background: #3988BD; margin: 20px auto;"></div>
-                <p class="lead">Discover our comprehensive business portfolio and commitment to excellence</p>
+        <div class="hero-section text-center fade-in-up">
+            <div class="hero-badge">
+                <i class="fas fa-chart-line me-1"></i> About Us
+            </div>
+            <h1 class="hero-title">Business Introduction</h1>
+            <div class="hero-line">
+                <div class="hero-line-main"></div>
+                <div class="hero-line-dot"></div>
+                <div class="hero-line-main"></div>
+            </div>
+            <p class="hero-subtitle">Discover our comprehensive business portfolio and commitment to excellence</p>
+            <div class="hero-scroll-indicator">
+                <span class="scroll-text">Discover More</span>
+                <i class="fas fa-chevron-down"></i>
             </div>
         </div>
     </div>
 </div>
 
 <div class="container py-5">
-    <!-- Automotive Seat Cover Section -->
+    <!-- Automotive Seat Cover Section - CENTERED -->
     @if($automotiveSeats->count() > 0)
-    <div class="mb-5">
+    <div class="mb-5 fade-in-up">
         <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="section-title">Automotive Seat Cover</h2>
-                <p class="text-muted">Premium quality seat covers designed for comfort and durability</p>
+            <div class="col-12 text-center">
+                <h2 class="section-title text-center">Automotive Seat Cover</h2>
+                <p class="section-description">Premium quality seat covers designed for comfort and durability</p>
             </div>
         </div>
         <div class="row">
@@ -186,13 +423,13 @@
     </div>
     @endif
 
-    <!-- Organization Structure Section -->
+    <!-- Organization Structure Section - CENTERED -->
     @if($organizationMembers->count() > 0)
-    <div class="mb-5">
+    <div class="mb-5 fade-in-up">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title">Organizational Structure</h2>
-                <p class="text-muted">Meet our dedicated leadership team</p>
+                <h2 class="section-title text-center">Organizational Structure</h2>
+                <p class="section-description">Meet our dedicated leadership team</p>
             </div>
         </div>
         <div class="row justify-content-center">
@@ -219,19 +456,19 @@
     </div>
     @endif
 
-    <!-- Characteristics Section -->
+       <!-- Characteristics Section - CENTERED -->
     @if($characteristics->count() > 0)
-    <div class="mb-5 py-4" style="background: #f8f9fa; border-radius: 20px;">
+    <div class="mb-5 py-4 fade-in-up" style="background: #f8f9fa; border-radius: 20px;">
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
-                    <h2 class="section-title">Business Characteristics</h2>
-                    <p class="text-muted">What makes us unique in the industry</p>
+                    <h2 class="section-title text-center">Business Characteristics</h2>
+                    <p class="section-description">What makes us unique in the industry</p>
                 </div>
             </div>
-            <div class="row">
+            <div class="row justify-content-center">
                 @foreach($characteristics as $characteristic)
-                <div class="col-md-4 mb-4">
+                <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
                     <div class="characteristic-card">
                         @if($characteristic->image)
                         <img src="{{ $characteristic->image_url }}" alt="{{ $characteristic->title }}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 1rem;">
@@ -250,13 +487,13 @@
     </div>
     @endif
 
-    <!-- Partnership Section -->
+    <!-- Partnership Section - CENTERED -->
     @if($partnerships->count() > 0)
-    <div class="mb-5">
+    <div class="mb-5 fade-in-up">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title">Our Partners</h2>
-                <p class="text-muted">Trusted partnerships that drive excellence</p>
+                <h2 class="section-title text-center">Our Partners</h2>
+                <p class="section-description">Trusted partnerships that drive excellence</p>
             </div>
         </div>
         <div class="row align-items-center justify-content-center">
@@ -278,4 +515,22 @@
     </div>
     @endif
 </div>
+
+<!-- Font Awesome 6 -->
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@endpush
+
+<!-- Smooth Scroll Script -->
+@push('scripts')
+<script>
+    document.querySelector('.hero-scroll-indicator')?.addEventListener('click', function() {
+        const nextSection = document.querySelector('.container.py-5');
+        if (nextSection) {
+            nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+</script>
+@endpush
+
 @endsection
