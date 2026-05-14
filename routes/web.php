@@ -35,13 +35,10 @@ Route::prefix('guest')->name('guest.')->group(function () {
         Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
     });
     
-    // Recruitment pages
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
-        Route::view('/information', 'guest.recruitment.recruitment-information')->name('information');
-        Route::view('/new-graduate', 'guest.recruitment.new-graduate')->name('new-graduate');
-        Route::view('/career', 'guest.recruitment.career')->name('career');
+    Route::get('/information', [\App\Http\Controllers\Guest\RecruitmentController::class, 'index'])->name('information');
+    Route::get('/api/published', [\App\Http\Controllers\Guest\RecruitmentController::class, 'getPublished'])->name('api.published');
     });
-    
     // News pages
     Route::prefix('news')->name('news.')->group(function () {
         Route::get('/media-information', [GuestEventActivityController::class, 'index'])->name('media-information');
