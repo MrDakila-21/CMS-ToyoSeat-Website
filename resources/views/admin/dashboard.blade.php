@@ -135,7 +135,7 @@
     <!-- Navbar with Logo matching app.blade -->
     <div class="navbar-custom">
         <div class="navbar-container">
-            <a href="{{ url('/') }}" class="navbar-brand-custom">
+            <a class="navbar-brand-custom">
                 <img src="{{ asset('images/logo.svg') }}" 
                      alt="Toyoseat Logo" 
                      class="company-logo"
@@ -363,5 +363,147 @@
             });
         })();
     </script>
+    <script>
+    // Tab/browser close confirmation and auto-logout
+    let isLoggingOut = false;
+    let logoutConfirmed = false;
+    
+    // Function to perform logout via AJAX
+    function performAutoLogout() {
+        if (isLoggingOut) return;
+        isLoggingOut = true;
+        
+        // Use sendBeacon for reliable delivery during page unload
+        const logoutUrl = '{{ route("admin.logout") }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Try sendBeacon first (works better during page/tab close)
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        
+        const beaconSent = navigator.sendBeacon(logoutUrl, formData);
+        
+        // Fallback to fetch if sendBeacon fails
+        if (!beaconSent) {
+            fetch(logoutUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).catch(err => console.log('Logout error:', err));
+        }
+    }
+    
+    // Show confirmation dialog when user tries to leave/close the page
+    window.addEventListener('beforeunload', function(e) {
+        // Don't show if already logging out or if logout was confirmed
+        if (isLoggingOut || logoutConfirmed) {
+            return;
+        }
+        
+        // Standard cross-browser confirmation message
+        const confirmationMessage = 'Are you sure you want to leave? This will log you out of the admin panel.';
+        
+        // For modern browsers
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        
+        // Perform logout immediately (synchronous for unload)
+        performAutoLogout();
+        
+        return confirmationMessage;
+    });
+    
+    // Handle page visibility changes (for mobile/tab switching)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && !isLoggingOut && !logoutConfirmed) {
+            // User switched to another tab - we don't auto-logout for tab switching
+            // Only when actually closing the tab/window
+        }
+    });
+    
+    // Modify the logout form submission to prevent double logout
+    document.querySelectorAll('form[action*="admin/logout"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            logoutConfirmed = true;
+            isLoggingOut = true;
+        });
+    });
+    
+    // Optional: Add a custom modal for better UX (modern approach)
+    // This creates a modal that appears when trying to leave
+    let showCustomModal = true; // Set to false if you want native browser confirm
+    
+    if (showCustomModal) {
+        // Create modal element
+        const customModal = document.createElement('div');
+        customModal.id = 'leaveConfirmModal';
+        customModal.className = 'modal fade';
+        customModal.tabIndex = '-1';
+        customModal.setAttribute('aria-labelledby', 'leaveConfirmModalLabel');
+        customModal.setAttribute('aria-hidden', 'true');
+        customModal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="leaveConfirmModalLabel">Confirm Leave</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to leave the admin panel?</p>
+                        <p class="text-danger mb-0"><small>This will log you out and you'll need to login again.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="stayOnPageBtn">Stay</button>
+                        <button type="button" class="btn btn-danger" id="leavePageBtn">Leave & Logout</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(customModal);
+        
+        let isLeaving = false;
+        let userChoice = false;
+        
+        // Initialize modal
+        const leaveModal = new bootstrap.Modal(customModal);
+        
+        // Handle beforeunload with custom modal
+        window.addEventListener('beforeunload', function(e) {
+            if (isLoggingOut || logoutConfirmed || isLeaving) {
+                return;
+            }
+            
+            // Prevent default and show custom modal instead
+            e.preventDefault();
+            e.returnValue = '';
+            
+            // Show custom modal
+            leaveModal.show();
+            
+            // Handle stay button
+            document.getElementById('stayOnPageBtn').onclick = function() {
+                leaveModal.hide();
+                isLeaving = false;
+            };
+            
+            // Handle leave button
+            document.getElementById('leavePageBtn').onclick = function() {
+                isLeaving = true;
+                logoutConfirmed = true;
+                leaveModal.hide();
+                performAutoLogout();
+                // Small delay to ensure logout is processed
+                setTimeout(() => {
+                    window.close(); // May not work in all browsers
+                }, 100);
+            };
+            
+            return false;
+        });
+    }
+</script>
 </body>
 </html>
