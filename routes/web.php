@@ -14,8 +14,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\InquiryController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AnnouncementController;
-use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController;
 use App\Http\Controllers\Admin\BusinessContentController;
 use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
 use App\Http\Controllers\Admin\RecruitmentController; 

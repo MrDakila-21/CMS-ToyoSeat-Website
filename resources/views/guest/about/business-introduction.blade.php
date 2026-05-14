@@ -1,5 +1,3 @@
-in characteristics section, if theres one item, just like other sections it should be default placing in center
-
 {{-- resources/views/guest/about/business-introduction.blade.php --}}
 @extends('layouts.app')
 
@@ -371,9 +369,6 @@ in characteristics section, if theres one item, just like other sections it shou
     <div class="hero-particles"></div>
     <div class="container">
         <div class="hero-section text-center fade-in-up">
-            <div class="hero-badge">
-                <i class="fas fa-chart-line me-1"></i> About Us
-            </div>
             <h1 class="hero-title">Business Introduction</h1>
             <div class="hero-line">
                 <div class="hero-line-main"></div>
@@ -458,7 +453,7 @@ in characteristics section, if theres one item, just like other sections it shou
 
        <!-- Characteristics Section - CENTERED -->
     @if($characteristics->count() > 0)
-    <div class="mb-5 py-4 fade-in-up" style="background: #f8f9fa; border-radius: 20px;">
+    <div class="mb-5 py-4 fade-in-up">
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
