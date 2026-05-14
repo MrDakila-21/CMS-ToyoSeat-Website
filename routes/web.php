@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController;
 use App\Http\Controllers\Admin\BusinessContentController;
 use App\Http\Controllers\Guest\BusinessIntroductionController;
+use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController; // ADD THIS LINE
+use App\Http\Controllers\Admin\RecruitmentController; 
+
 
 // Add this at the beginning of your routes file
 Route::get('/login', function () {
@@ -36,13 +39,10 @@ Route::prefix('guest')->name('guest.')->group(function () {
         Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
     });
     
-    // Recruitment pages
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
-        Route::view('/information', 'guest.recruitment.recruitment-information')->name('information');
-        Route::view('/new-graduate', 'guest.recruitment.new-graduate')->name('new-graduate');
-        Route::view('/career', 'guest.recruitment.career')->name('career');
+    Route::get('/information', [\App\Http\Controllers\Guest\RecruitmentController::class, 'index'])->name('information');
+    Route::get('/api/published', [\App\Http\Controllers\Guest\RecruitmentController::class, 'getPublished'])->name('api.published');
     });
-    
     // News pages
     Route::prefix('news')->name('news.')->group(function () {
         Route::get('/media-information', [GuestEventActivityController::class, 'index'])->name('media-information');
@@ -100,6 +100,11 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/upload-direct', [AnnouncementController::class, 'uploadDirectImage'])->name('admin.announcements.uploadDirect');
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
+
+                // Recruitment management routes
+        Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
+        Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
+        Route::patch('recruitments/{id}/status/{status}', [RecruitmentController::class, 'updateStatus'])->name('admin.recruitments.updateStatus');
 
         Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
         
