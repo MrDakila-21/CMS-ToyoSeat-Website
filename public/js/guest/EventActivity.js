@@ -1,19 +1,19 @@
 /**
  * EventActivity Module - Guest View
- * Using the SAME approach as announcements module (which works on deployed)
+ * Handles real-time search, filtering, modals, and image preview with zoom
  */
 
-// Make sure jQuery is available (like announcements module)
-if (typeof jQuery === 'undefined') {
-    console.error('jQuery not loaded!');
-}
-
-$(document).ready(function() {
-    console.log('EventActivity.js loaded with jQuery');
-    
+document.addEventListener('DOMContentLoaded', function() {
     let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const eventsContainer = document.getElementById('eventsContainer');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    
+    let currentType = currentTypeFromUrl();
+    let currentSearch = currentSearchFromUrl();
     let currentPage = 1;
-    let isLoading = false;
     
     // Zoom variables
     let currentZoom = 1;
@@ -23,14 +23,14 @@ $(document).ready(function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create fullscreen image preview modal (EXACT same as announcements)
-    function createImagePreviewModal() {
-        if ($('#imagePreviewModal').length) {
+    // Create custom fullscreen preview modal (not Bootstrap)
+    function createFullscreenPreviewModal() {
+        if (document.getElementById('fullscreenPreviewModal')) {
             return;
         }
         
         const modalHTML = `
-        <div id="imagePreviewModal" style="
+        <div id="fullscreenPreviewModal" style="
             display: none;
             position: fixed;
             top: 0;
@@ -49,7 +49,7 @@ $(document).ready(function() {
                 height: 75px;
                 background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
                 backdrop-filter: blur(10px);
-                z-index: 10000;
+                z-index: 10001;
                 pointer-events: none;
             "></div>
 
@@ -61,7 +61,7 @@ $(document).ready(function() {
                 height: 75px;
                 background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent);
                 backdrop-filter: blur(10px);
-                z-index: 10000;
+                z-index: 10001;
                 pointer-events: none;
             "></div>
 
@@ -70,64 +70,64 @@ $(document).ready(function() {
                 top: 20px;
                 left: 20px;
                 right: 20px;
-                z-index: 10001;
+                z-index: 10002;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
             ">
-                <div class="zoom-controls">
-                    <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out">
+                <div>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="fullscreenZoomOutBtn">
                         <i class="fas fa-search-minus"></i>
                     </button>
-                    <span class="text-white mx-2" id="zoomLevel">100%</span>
-                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In">
+                    <span class="text-white mx-2" id="fullscreenZoomLevel">100%</span>
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="fullscreenZoomInBtn">
                         <i class="fas fa-search-plus"></i>
                     </button>
-                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom">
+                    <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="fullscreenResetZoomBtn">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
-                <button id="closePreviewBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px; backdrop-filter: blur(8px);">
+                <button id="closeFullscreenBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
             <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
-                <img id="fullscreenPreviewImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
+                <img id="fullscreenImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
             </div>
 
-            <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10001;">
-                <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.9);">
+            <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10002;">
+                <button type="button" class="btn btn-light rounded-pill" id="fullscreenDownloadBtn">
                     <i class="fas fa-download me-2"></i>Download
                 </button>
             </div>
         </div>
         `;
         
-        $('body').append(modalHTML);
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
         
-        // Get elements
-        const modal = document.getElementById('imagePreviewModal');
-        const zoomInBtn = document.getElementById('zoomInBtn');
-        const zoomOutBtn = document.getElementById('zoomOutBtn');
-        const resetZoomBtn = document.getElementById('resetZoomBtn');
-        const closeBtn = document.getElementById('closePreviewBtn');
-        const downloadBtn = document.getElementById('downloadImageBtn');
-        const previewImage = document.getElementById('fullscreenPreviewImage');
+        // Add event listeners for zoom controls
+        const zoomInBtn = document.getElementById('fullscreenZoomInBtn');
+        const zoomOutBtn = document.getElementById('fullscreenZoomOutBtn');
+        const resetZoomBtn = document.getElementById('fullscreenResetZoomBtn');
+        const zoomLevel = document.getElementById('fullscreenZoomLevel');
+        const previewImage = document.getElementById('fullscreenImage');
         const imageContainer = document.getElementById('fullscreenImageContainer');
-        const zoomLevel = document.getElementById('zoomLevel');
+        const closeBtn = document.getElementById('closeFullscreenBtn');
+        const downloadBtn = document.getElementById('fullscreenDownloadBtn');
+        const modal = document.getElementById('fullscreenPreviewModal');
         
         function zoomIn() {
             if (currentZoom < 3) {
                 currentZoom += 0.25;
-                updateZoom();
+                updateZoomDisplay();
             }
         }
         
         function zoomOut() {
             if (currentZoom > 0.5) {
                 currentZoom -= 0.25;
-                updateZoom();
+                updateZoomDisplay();
             }
         }
         
@@ -135,18 +135,18 @@ $(document).ready(function() {
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
-            updateZoom();
-            updateTransform();
+            updateZoomDisplay();
+            updateImageTransform();
         }
         
-        function updateZoom() {
+        function updateZoomDisplay() {
             if (zoomLevel) {
                 zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
             }
-            updateTransform();
+            updateImageTransform();
         }
         
-        function updateTransform() {
+        function updateImageTransform() {
             if (previewImage) {
                 previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
             }
@@ -177,7 +177,7 @@ $(document).ready(function() {
                 translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
                 translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
                 
-                updateTransform();
+                updateImageTransform();
                 e.preventDefault();
             }
         }
@@ -191,10 +191,9 @@ $(document).ready(function() {
             e.preventDefault();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
             const newZoom = currentZoom + delta;
-            
             if (newZoom >= 0.5 && newZoom <= 3) {
                 currentZoom = newZoom;
-                updateZoom();
+                updateZoomDisplay();
             }
         }
         
@@ -237,7 +236,7 @@ $(document).ready(function() {
             }
         });
         
-        $(document).on('keydown', function(e) {
+        document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && modal.style.display === 'flex') {
                 modal.style.display = 'none';
                 resetZoom();
@@ -245,20 +244,22 @@ $(document).ready(function() {
         });
     }
     
-    // Show image preview
-    function showImagePreview(imageUrl, title = 'Image Preview') {
-        createImagePreviewModal();
+    // Show fullscreen image preview
+    function showFullscreenPreview(imageUrl, title) {
+        if (!imageUrl || imageUrl.includes('default-image.png')) return;
         
-        const modal = document.getElementById('imagePreviewModal');
-        const previewImg = document.getElementById('fullscreenPreviewImage');
+        createFullscreenPreviewModal();
+        
+        const modal = document.getElementById('fullscreenPreviewModal');
+        const previewImg = document.getElementById('fullscreenImage');
         
         if (previewImg) {
             previewImg.src = imageUrl;
-            previewImg.alt = title;
+            previewImg.alt = title || 'Image Preview';
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
-            updateTransform();
+            previewImg.style.transform = 'translate(0px, 0px) scale(1)';
         }
         
         if (modal) {
@@ -267,78 +268,102 @@ $(document).ready(function() {
         }
     }
     
-    function updateTransform() {
-        const previewImage = document.getElementById('fullscreenPreviewImage');
-        if (previewImage) {
-            previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
-        }
+    // Get current type from URL
+    function currentTypeFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+        return type && type !== 'all' ? type : 'all';
     }
     
-    // Load events via AJAX (using jQuery like announcements module)
-    function loadEvents(search = '', page = 1, type = 'all') {
-        if (isLoading) return;
-        isLoading = true;
+    // Get current search from URL
+    function currentSearchFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('search') || '';
+    }
+    
+    // Set search input value
+    if (searchInput && currentSearch) {
+        searchInput.value = currentSearch;
+    }
+    
+    // Function to fetch filtered events via AJAX
+    function fetchFilteredEvents(page = 1) {
+        let url = window.location.pathname + "?ajax=1&page=" + page;
         
-        $('#eventsContainer').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>');
+        if (currentSearch) {
+            url += "&search=" + encodeURIComponent(currentSearch);
+        }
         
-        $.ajax({
-            url: window.location.pathname,
-            type: 'GET',
-            data: {
-                ajax: 1,
-                page: page,
-                search: search,
-                type: type
-            },
+        if (currentType && currentType !== 'all') {
+            url += "&type=" + currentType;
+        }
+        
+        fetch(url, {
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            success: function(response) {
-                if (response.html) {
-                    $('#eventsContainer').html(response.html);
-                } else if (response.data) {
-                    // Handle JSON response
-                    renderEventsWithjQuery(response.data);
-                    updatePaginationWithjQuery(response);
-                } else {
-                    $('#eventsContainer').html(response);
-                }
-                
-                // Reattach image click handlers
-                attachImageClickHandlers();
-                isLoading = false;
-            },
-            error: function(xhr) {
-                console.error('Error loading events:', xhr);
-                $('#eventsContainer').html('<div class="empty-state"><div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>Error Loading Events</h3><p>Please try again later.</p></div>');
-                isLoading = false;
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.total === 0) {
+                if (eventsContainer) eventsContainer.innerHTML = '';
+                if (paginationContainer) paginationContainer.style.display = 'none';
+                if (noResultsMessage) noResultsMessage.style.display = 'block';
+            } else {
+                if (paginationContainer) paginationContainer.style.display = 'flex';
+                if (noResultsMessage) noResultsMessage.style.display = 'none';
+                renderEvents(data.data);
+                updatePagination(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
         });
     }
     
-    // Render events using jQuery
-    function renderEventsWithjQuery(events) {
-        let html = '';
-        const defaultImage = '/images/default-image.png';
+    // Function to render events
+    function renderEvents(events) {
+        if (!eventsContainer) return;
         
-        events.forEach(function(item) {
-            let imageUrl = item.image_url || defaultImage;
-            const eventDate = new Date(item.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        let html = '';
+        const defaultImage = "/images/default-image.png";
+        
+        events.forEach((item, index) => {
+            let imageUrl = item.image_url;
+            if (!imageUrl || imageUrl === '') {
+                imageUrl = defaultImage;
+            }
+            
+            const eventDate = new Date(item.event_date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            const typeBadge = item.type === 'event' 
+                ? '<span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fas fa-calendar-alt me-1"></i> Event</span>'
+                : '<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-users me-1"></i> Activity</span>';
+            
+            const createdDate = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            }) : '';
             
             html += `
                 <div class="col-md-6 col-lg-4 event-item" data-type="${item.type}">
-                    <div class="card h-100 shadow-sm border-0 event-card" data-bs-toggle="modal" data-bs-target="#eventModal${item.id}">
+                    <div class="card h-100 shadow-sm border-0 event-card" data-bs-toggle="modal" data-bs-target="#eventModal${item.id}" style="cursor: pointer; transition: all 0.3s ease;">
                         <div class="position-relative overflow-hidden">
                             <img src="${imageUrl}" class="card-img-top" alt="${escapeHtml(item.title)}" style="height: 240px; width: 100%; object-fit: cover;" onerror="this.src='${defaultImage}'">
                             <div class="position-absolute top-0 end-0 m-3">
-                                <span class="badge ${item.type === 'event' ? 'bg-primary' : 'bg-success'} px-3 py-2 rounded-pill">
-                                    <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'} me-1"></i>
-                                    ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                                </span>
+                                ${typeBadge}
                             </div>
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title fw-bold mb-2" style="color: #0E334C;">${escapeHtml(item.title).substring(0, 60)}${item.title.length > 60 ? '...' : ''}</h5>
+                            <h5 class="card-title fw-bold mb-2" style="color: #0E334C; line-height: 1.4;">
+                                ${escapeHtml(item.title).substring(0, 60)}${item.title.length > 60 ? '...' : ''}
+                            </h5>
                             <p class="card-text text-muted mb-0">
                                 <i class="fas fa-calendar-alt me-2" style="color: #3988BD;"></i>
                                 ${eventDate}
@@ -346,14 +371,136 @@ $(document).ready(function() {
                         </div>
                     </div>
                 </div>
+                
+                <div class="modal fade" id="eventModal${item.id}" tabindex="-1" aria-labelledby="eventModalLabel${item.id}" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content border-0 rounded-4 overflow-hidden">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #0E334C 0%, #1a4d6e 100%);">
+                                <h5 class="modal-title text-white fw-bold">
+                                    <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'} me-2"></i>
+                                    ${escapeHtml(item.title)}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-lg-5">
+                                        <div class="modal-image-container position-relative" style="overflow: hidden; border-radius: 12px;">
+                                            <img src="${imageUrl}" 
+                                                 class="modal-image clickable-image w-100 rounded-3" 
+                                                 alt="${escapeHtml(item.title)}" 
+                                                 style="cursor: pointer; transition: transform 0.2s; max-height: 400px; width: 100%; object-fit: cover; display: block;"
+                                                 data-full-image="${imageUrl}"
+                                                 data-image-title="${escapeHtml(item.title)}"
+                                                 onerror="this.src='${defaultImage}'">
+                                            <div class="image-expand-icon" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); padding: 8px 12px; border-radius: 25px; color: white; font-size: 14px; cursor: pointer; transition: all 0.2s ease; z-index: 10;">
+                                                <i class="fas fa-expand-alt me-1"></i> Expand
+                                            </div>
+                                        </div>
+                                        <div class="info-badge mt-3">
+                                            <div class="info-badge-item">
+                                                <i class="fas ${item.type === 'event' ? 'fa-calendar-alt' : 'fa-users'}"></i>
+                                                <span><strong>Type:</strong> ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span>
+                                            </div>
+                                            <div class="info-badge-item">
+                                                <i class="fas fa-calendar-day"></i>
+                                                <span><strong>Date:</strong> ${eventDate}</span>
+                                            </div>
+                                            ${createdDate ? `
+                                            <div class="info-badge-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span><strong>Published:</strong> ${createdDate}</span>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="description-wrapper-custom">
+                                            <div class="description-title">
+                                                <i class="fas fa-align-left me-2" style="color: #3988BD;"></i>
+                                                Description
+                                            </div>
+                                            <div class="description-content" style="max-height: 400px; overflow-y: auto;">
+                                                ${escapeHtml(item.description).replace(/\n/g, '<br>')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         });
         
-        $('#eventsContainer').html(html);
+        eventsContainer.innerHTML = html;
+        
+        // CRITICAL: Attach event handlers for dynamically created modals
+        attachImagePreviewHandlers();
     }
     
-    function updatePaginationWithjQuery(data) {
-        if (!data.last_page) return;
+    // Attach handlers for image preview - THIS IS THE KEY FIX
+    function attachImagePreviewHandlers() {
+        // Use event delegation for dynamically created elements
+        // This handles clicks on images that are added after page load
+        
+        // Remove any existing listeners to avoid duplicates
+        document.removeEventListener('click', handleImageClick);
+        document.removeEventListener('click', handleExpandIconClick);
+        
+        // Add click listener for images with class 'clickable-image'
+        document.addEventListener('click', handleImageClick);
+        
+        // Add click listener for expand icons
+        document.addEventListener('click', handleExpandIconClick);
+        
+        // Also handle clicks on cards to prevent modal from opening when clicking image/expand
+        document.querySelectorAll('.event-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.clickable-image') || e.target.closest('.image-expand-icon')) {
+                    e.stopPropagation();
+                }
+            });
+        });
+    }
+    
+    // Handler for image clicks
+    function handleImageClick(e) {
+        const image = e.target.closest('.clickable-image');
+        if (image) {
+            e.stopPropagation();
+            e.preventDefault();
+            const imageUrl = image.getAttribute('data-full-image') || image.src;
+            const imageTitle = image.getAttribute('data-image-title') || 'Event Image';
+            if (imageUrl && !imageUrl.includes('default-image.png')) {
+                showFullscreenPreview(imageUrl, imageTitle);
+            }
+        }
+    }
+    
+    // Handler for expand icon clicks
+    function handleExpandIconClick(e) {
+        const expandIcon = e.target.closest('.image-expand-icon');
+        if (expandIcon) {
+            e.stopPropagation();
+            e.preventDefault();
+            const container = expandIcon.closest('.modal-image-container');
+            if (container) {
+                const img = container.querySelector('.clickable-image');
+                if (img) {
+                    const imageUrl = img.getAttribute('data-full-image') || img.src;
+                    const imageTitle = img.getAttribute('data-image-title') || 'Event Image';
+                    if (imageUrl && !imageUrl.includes('default-image.png')) {
+                        showFullscreenPreview(imageUrl, imageTitle);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Update pagination links
+    function updatePagination(data) {
+        if (!paginationContainer) return;
         
         let paginationHtml = '<ul class="pagination">';
         
@@ -378,98 +525,88 @@ $(document).ready(function() {
         }
         
         paginationHtml += '</ul>';
-        $('#paginationContainer').html(paginationHtml);
+        paginationContainer.innerHTML = paginationHtml;
         
-        $('.pagination a').on('click', function(e) {
-            e.preventDefault();
-            const page = $(this).data('page');
-            if (page) {
-                currentPage = page;
-                loadEvents($('#searchInput').val(), currentPage, currentType);
-                $('html, body').animate({ scrollTop: 0 }, 300);
-            }
-        });
-    }
-    
-    // Attach image click handlers (EXACT same as announcements)
-    function attachImageClickHandlers() {
-        $('.clickable-image').off('click').on('click', function(e) {
-            e.stopPropagation();
-            const imageUrl = $(this).data('full-image') || $(this).attr('src');
-            const imageTitle = $(this).data('image-title') || 'Event Image';
-            if (imageUrl && !imageUrl.includes('default-image.png')) {
-                showImagePreview(imageUrl, imageTitle);
-            }
-        });
-        
-        $('.image-expand-icon').off('click').on('click', function(e) {
-            e.stopPropagation();
-            const container = $(this).closest('.modal-image-container');
-            const img = container.find('.clickable-image');
-            if (img.length) {
-                const imageUrl = img.data('full-image') || img.attr('src');
-                const imageTitle = img.data('image-title') || 'Event Image';
-                if (imageUrl && !imageUrl.includes('default-image.png')) {
-                    showImagePreview(imageUrl, imageTitle);
+        document.querySelectorAll('#paginationContainer .page-link[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.getAttribute('data-page'));
+                if (!isNaN(page)) {
+                    currentPage = page;
+                    fetchFilteredEvents(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
-            }
+            });
         });
     }
     
     // Escape HTML
     function escapeHtml(text) {
         if (!text) return '';
-        return $('<div>').text(text).html();
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
-    // Search functionality
-    $('#searchInput').on('input', function() {
-        clearTimeout(searchTimeout);
-        const searchTerm = $(this).val();
-        
-        searchTimeout = setTimeout(function() {
+    // Search input
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            currentSearch = this.value;
             currentPage = 1;
-            loadEvents(searchTerm, currentPage, currentType);
-        }, 500);
-    });
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetchFilteredEvents(1);
+            }, 500);
+        });
+    }
     
     // Filter buttons
-    let currentType = 'all';
-    $('.filter-btn').on('click', function() {
-        currentType = $(this).data('type');
-        currentPage = 1;
-        
-        $('.filter-btn').each(function() {
-            const btnType = $(this).data('type');
-            if (btnType === 'all') {
-                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
-            } else if (btnType === 'event') {
-                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
-            } else if (btnType === 'activity') {
-                $(this).removeClass('btn-success').addClass('btn-outline-success');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            currentType = type;
+            currentPage = 1;
+            
+            filterButtons.forEach(btn => {
+                const btnType = btn.getAttribute('data-type');
+                if (btnType === 'all') {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                } else if (btnType === 'event') {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                } else if (btnType === 'activity') {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                }
+            });
+            
+            if (type === 'all') {
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+            } else if (type === 'event') {
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+            } else if (type === 'activity') {
+                this.classList.remove('btn-outline-success');
+                this.classList.add('btn-success');
             }
+            
+            fetchFilteredEvents(1);
         });
-        
-        if (currentType === 'all') {
-            $(this).removeClass('btn-outline-primary').addClass('btn-primary');
-        } else if (currentType === 'event') {
-            $(this).removeClass('btn-outline-primary').addClass('btn-primary');
-        } else if (currentType === 'activity') {
-            $(this).removeClass('btn-outline-success').addClass('btn-success');
-        }
-        
-        loadEvents($('#searchInput').val(), currentPage, currentType);
     });
     
     // Smooth scroll
-    $('.hero-scroll-indicator').on('click', function() {
-        $('html, body').animate({
-            scrollTop: $('.search-box').offset().top - 50
-        }, 800);
-    });
+    const scrollIndicator = document.querySelector('.hero-scroll-indicator');
+    if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', function() {
+            window.scrollBy({
+                top: window.innerHeight - 100,
+                behavior: 'smooth'
+            });
+        });
+    }
     
-    // Initialize
-    attachImageClickHandlers();
-    
-    console.log('EventActivity.js initialized successfully');
+    // Initialize image preview handlers
+    attachImagePreviewHandlers();
 });
