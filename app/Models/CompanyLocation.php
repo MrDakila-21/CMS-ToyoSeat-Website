@@ -19,7 +19,7 @@ class CompanyLocation extends Model
         'latitude',
         'longitude',
         'phone',
-        'telephone',  // ← Make SURE this line exists!
+        'telephone',
         'email',
         'working_hours',
         'is_active'
@@ -54,5 +54,48 @@ class CompanyLocation extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    // New method to parse working hours with custom titles
+    public function getParsedWorkingHoursAttribute()
+    {
+        if (empty($this->working_hours)) {
+            return [];
+        }
+
+        $hours = [];
+        $lines = explode("\n", $this->working_hours);
+        
+        foreach ($lines as $line) {
+            if (trim($line)) {
+                // Support format: "Title|Day Range: Time" or "Day Range: Time"
+                if (strpos($line, '|') !== false) {
+                    $parts = explode('|', $line, 2);
+                    $title = trim($parts[0]);
+                    $rest = trim($parts[1]);
+                    
+                    if (strpos($rest, ':') !== false) {
+                        $timeParts = explode(':', $rest, 2);
+                        $dayRange = trim($timeParts[0]);
+                        $timeRange = trim($timeParts[1]);
+                        
+                        $hours[] = [
+                            'title' => $title,
+                            'day_range' => $dayRange,
+                            'time' => $timeRange
+                        ];
+                    }
+                } else if (strpos($line, ':') !== false) {
+                    $parts = explode(':', $line, 2);
+                    $hours[] = [
+                        'title' => null,
+                        'day_range' => trim($parts[0]),
+                        'time' => trim($parts[1])
+                    ];
+                }
+            }
+        }
+        
+        return $hours;
     }
 }
