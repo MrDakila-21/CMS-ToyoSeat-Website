@@ -361,7 +361,7 @@
     <div class="hero-particles"></div>
     <div class="container">
         <div class="hero-section text-center fade-in-up">
-            <h1 class="hero-title">ISO Obtained</h1>
+            <h1 class="hero-title">ISO Certificate</h1>
             <div class="hero-line">
                 <div class="hero-line-main"></div>
                 <div class="hero-line-dot"></div>

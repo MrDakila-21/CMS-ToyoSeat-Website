@@ -188,7 +188,7 @@
                 <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
                 <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
                 <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Certificate</a></li>
             </ul>
         </li>
 

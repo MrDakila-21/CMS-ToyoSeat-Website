@@ -517,7 +517,7 @@
                     <li><a href="{{ route('guest.about.business-introduction') }}" class="{{ request()->routeIs('guest.about.business-introduction') ? 'active' : '' }}">Business introduction</a></li>
                     <li><a href="{{ route('guest.about.location') }}" class="{{ request()->routeIs('guest.about.location') ? 'active' : '' }}">Location</a></li>
                     <li><a href="{{ route('guest.about.history') }}" class="{{ request()->routeIs('guest.about.history') ? 'active' : '' }}">History</a></li>
-                    <li><a href="{{ route('guest.about.iso-obtained') }}" class="{{ request()->routeIs('guest.about.iso-obtained') ? 'active' : '' }}">ISO Obtained</a></li>
+                    <li><a href="{{ route('guest.about.iso-obtained') }}" class="{{ request()->routeIs('guest.about.iso-obtained') ? 'active' : '' }}">ISO Certificate</a></li>
                 </ul>
             </li>
 
@@ -589,7 +589,7 @@
                         <li><a href="{{ route('guest.about.business-introduction') }}">Business introduction</a></li>
                         <li><a href="{{ route('guest.about.location') }}">Location</a></li>
                         <li><a href="{{ route('guest.about.history') }}">History</a></li>
-                        <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
+                        <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Certificate</a></li>
                         
                     </ul>
                 </div>
