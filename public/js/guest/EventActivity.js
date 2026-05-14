@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create image preview modal with zoom controls
+    // Create image preview modal with zoom controls (only once)
     function createImagePreviewModal() {
         // Check if modal already exists
         if (document.getElementById('imagePreviewModal')) {
@@ -66,7 +66,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
-        // Add zoom functionality
+        // Add zoom functionality after modal is created
+        setTimeout(() => {
+            attachZoomEventListeners();
+        }, 100);
+    }
+    
+    // Attach zoom event listeners
+    function attachZoomEventListeners() {
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const resetZoomBtn = document.getElementById('resetZoomBtn');
@@ -96,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             translateX = 0;
             translateY = 0;
             updateZoom();
-            updateTransform();
+            updatePreviewTransform();
         }
         
         // Update zoom display and image transform
@@ -104,11 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (zoomLevel) {
                 zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
             }
-            updateTransform();
+            updatePreviewTransform();
         }
         
         // Update image transform with pan
-        function updateTransform() {
+        function updatePreviewTransform() {
             if (previewImage) {
                 previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
             }
@@ -120,13 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPanning = true;
                 startX = e.clientX - translateX;
                 startY = e.clientY - translateY;
-                imageContainer.style.cursor = 'grabbing';
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
                 e.preventDefault();
             }
         }
         
         function pan(e) {
-            if (isPanning && currentZoom > 1) {
+            if (isPanning && currentZoom > 1 && previewImage) {
                 translateX = e.clientX - startX;
                 translateY = e.clientY - startY;
                 
@@ -137,19 +144,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
                 translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
                 
-                updateTransform();
+                updatePreviewTransform();
                 e.preventDefault();
             }
         }
         
         function stopPan() {
             isPanning = false;
-            imageContainer.style.cursor = 'grab';
+            if (imageContainer) imageContainer.style.cursor = 'grab';
         }
         
         // Mouse wheel zoom
         function handleWheelZoom(e) {
-            e.preventDefault();
+            if (e.preventDefault) e.preventDefault();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
             const newZoom = currentZoom + delta;
             
@@ -157,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentZoom = newZoom;
                 updateZoom();
             }
+            return false;
         }
         
         // Add event listeners for zoom controls
@@ -167,11 +175,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add pan event listeners
         if (imageContainer) {
             imageContainer.addEventListener('mousedown', startPan);
-            window.addEventListener('mousemove', pan);
-            window.addEventListener('mouseup', stopPan);
             imageContainer.addEventListener('wheel', handleWheelZoom);
-            
-            // Touch events for mobile
+            imageContainer.style.cursor = 'grab';
+        }
+        
+        // Global event listeners for panning
+        window.addEventListener('mousemove', pan);
+        window.addEventListener('mouseup', stopPan);
+        
+        // Touch events for mobile
+        if (imageContainer) {
             imageContainer.addEventListener('touchstart', function(e) {
                 if (currentZoom > 1) {
                     isPanning = true;
@@ -180,40 +193,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                 }
             });
-            
-            window.addEventListener('touchmove', function(e) {
-                if (isPanning && currentZoom > 1) {
-                    translateX = e.touches[0].clientX - startX;
-                    translateY = e.touches[0].clientY - startY;
-                    
-                    const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
-                    const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
-                    
-                    translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
-                    translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
-                    
-                    updateTransform();
-                    e.preventDefault();
-                }
-            });
-            
-            window.addEventListener('touchend', function() {
-                isPanning = false;
-            });
         }
+        
+        window.addEventListener('touchmove', function(e) {
+            if (isPanning && currentZoom > 1 && previewImage) {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                
+                const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+                const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
+                
+                translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+                
+                updatePreviewTransform();
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('touchend', function() {
+            isPanning = false;
+        });
         
         // Reset zoom when modal is closed
         const modal = document.getElementById('imagePreviewModal');
         if (modal) {
             modal.addEventListener('hidden.bs.modal', function() {
                 resetZoom();
-            });
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                }
             });
         }
         
@@ -233,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Function to show image preview
-    function showImagePreview(imageUrl, title = 'Image Preview') {
+    window.showImagePreview = function(imageUrl, title = 'Image Preview') {
         createImagePreviewModal();
         
         const previewImg = document.getElementById('previewImage');
@@ -245,14 +251,20 @@ document.addEventListener('DOMContentLoaded', function() {
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
-            updateTransform();
+            const previewImage = document.getElementById('previewImage');
+            if (previewImage) {
+                previewImage.style.transform = `translate(0px, 0px) scale(1)`;
+            }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-        modal.show();
+        const modalElement = document.getElementById('imagePreviewModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
     }
     
-    // Helper function to update transform (needs to be accessible globally within this scope)
+    // Helper function to update transform
     function updateTransform() {
         const previewImage = document.getElementById('previewImage');
         if (previewImage) {
@@ -428,31 +440,46 @@ document.addEventListener('DOMContentLoaded', function() {
         
         eventsContainer.innerHTML = html;
         
-        // Attach expand button click handlers and image click handlers for modal images
+        // Attach expand button click handlers after rendering
+        attachImagePreviewHandlers();
+    }
+    
+    // Attach handlers for image preview
+    function attachImagePreviewHandlers() {
+        // Handle expand icon clicks
         document.querySelectorAll('.image-expand-icon').forEach(icon => {
-            icon.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const container = this.closest('.modal-image-container');
-                const img = container.querySelector('.clickable-image');
-                const imageUrl = img.getAttribute('data-full-image') || img.src;
-                const imageTitle = img.getAttribute('data-image-title') || 'Image Preview';
-                showImagePreview(imageUrl, imageTitle);
-            });
+            if (!icon.hasAttribute('data-listener')) {
+                icon.setAttribute('data-listener', 'true');
+                icon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const container = this.closest('.modal-image-container');
+                    const img = container.querySelector('.clickable-image');
+                    if (img) {
+                        const imageUrl = img.getAttribute('data-full-image') || img.src;
+                        const imageTitle = img.getAttribute('data-image-title') || 'Image Preview';
+                        window.showImagePreview(imageUrl, imageTitle);
+                    }
+                });
+            }
         });
         
+        // Handle image clicks
         document.querySelectorAll('.clickable-image').forEach(img => {
-            img.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const imageUrl = this.getAttribute('data-full-image') || this.src;
-                const imageTitle = this.getAttribute('data-image-title') || 'Image Preview';
-                showImagePreview(imageUrl, imageTitle);
-            });
+            if (!img.hasAttribute('data-listener')) {
+                img.setAttribute('data-listener', 'true');
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const imageUrl = this.getAttribute('data-full-image') || this.src;
+                    const imageTitle = this.getAttribute('data-image-title') || 'Image Preview';
+                    window.showImagePreview(imageUrl, imageTitle);
+                });
+            }
         });
         
-        // Reinitialize modal triggers
+        // Prevent card click when clicking on expand icon or image
         document.querySelectorAll('.event-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                if (e.target.closest('.badge') || e.target.closest('.clickable-image') || e.target.closest('.image-expand-icon')) {
+                if (e.target.closest('.image-expand-icon') || e.target.closest('.clickable-image')) {
                     e.stopPropagation();
                 }
             });
@@ -573,32 +600,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize image preview for initial page load
-    setTimeout(() => {
-        document.querySelectorAll('.image-expand-icon').forEach(icon => {
-            if (!icon.hasAttribute('data-listener')) {
-                icon.setAttribute('data-listener', 'true');
-                icon.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const container = this.closest('.modal-image-container');
-                    const img = container.querySelector('.clickable-image');
-                    const imageUrl = img.getAttribute('data-full-image') || img.src;
-                    const imageTitle = img.getAttribute('data-image-title') || 'Image Preview';
-                    showImagePreview(imageUrl, imageTitle);
-                });
-            }
-        });
-        
-        document.querySelectorAll('.clickable-image').forEach(img => {
-            if (!img.hasAttribute('data-listener')) {
-                img.setAttribute('data-listener', 'true');
-                img.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const imageUrl = this.getAttribute('data-full-image') || this.src;
-                    const imageTitle = this.getAttribute('data-image-title') || 'Image Preview';
-                    showImagePreview(imageUrl, imageTitle);
-                });
-            }
-        });
-    }, 100);
+    // Initialize image preview handlers for initial page load
+    attachImagePreviewHandlers();
 });
