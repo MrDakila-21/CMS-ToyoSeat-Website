@@ -23,163 +23,162 @@ document.addEventListener('DOMContentLoaded', function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create fullscreen image preview modal (same as announcements module)
+    // Create fullscreen image preview modal (IDENTICAL to announcements module)
     function createImagePreviewModal() {
-        // Check if modal already exists
         if (document.getElementById('imagePreviewModal')) {
             return;
         }
         
         const modalHTML = `
-            <div id="imagePreviewModal" style="
-                display: none;
-                position: fixed;
+        <div id="imagePreviewModal" style="
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            overflow: hidden;
+        ">
+            <!-- Top Blur Overlay -->
+            <div style="
+                position: absolute;
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 100%;
-                background: #000;
+                height: 75px;
+                background: linear-gradient(
+                    to bottom,
+                    rgba(0,0,0,0.9),
+                    rgba(0,0,0,0.45),
+                    transparent
+                );
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
                 z-index: 10000;
+                pointer-events: none;
+            "></div>
+
+            <!-- Bottom Blur Overlay -->
+            <div style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 75px;
+                background: linear-gradient(
+                    to top,
+                    rgba(0,0,0,0.9),
+                    rgba(0,0,0,0.45),
+                    transparent
+                );
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                z-index: 10000;
+                pointer-events: none;
+            "></div>
+
+            <!-- Top Controls -->
+            <div style="
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                z-index: 10001;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="zoom-controls">
+                    <button type="button"
+                        class="btn btn-light btn-sm rounded-circle me-2"
+                        id="zoomOutBtn"
+                        title="Zoom Out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+
+                    <span class="text-white mx-2" id="zoomLevel">
+                        100%
+                    </span>
+
+                    <button type="button"
+                        class="btn btn-light btn-sm rounded-circle ms-2"
+                        id="zoomInBtn"
+                        title="Zoom In">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+
+                    <button type="button"
+                        class="btn btn-light btn-sm rounded-circle ms-2"
+                        id="resetZoomBtn"
+                        title="Reset Zoom">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+
+                <button id="closePreviewBtn" style="
+                    background: rgba(255,255,255,0.2);
+                    border: none;
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    color: white;
+                    font-size: 24px;
+                    backdrop-filter: blur(8px);
+                ">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Image Container -->
+            <div id="fullscreenImageContainer" style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                cursor: grab;
                 overflow: hidden;
             ">
-                <!-- Top Blur Overlay -->
-                <div style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 75px;
-                    background: linear-gradient(
-                        to bottom,
-                        rgba(0,0,0,0.9),
-                        rgba(0,0,0,0.45),
-                        transparent
-                    );
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    z-index: 10000;
-                    pointer-events: none;
-                "></div>
-
-                <!-- Bottom Blur Overlay -->
-                <div style="
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 75px;
-                    background: linear-gradient(
-                        to top,
-                        rgba(0,0,0,0.9),
-                        rgba(0,0,0,0.45),
-                        transparent
-                    );
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
-                    z-index: 10000;
-                    pointer-events: none;
-                "></div>
-
-                <!-- Top Controls -->
-                <div style="
-                    position: absolute;
-                    top: 20px;
-                    left: 20px;
-                    right: 20px;
-                    z-index: 10001;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                ">
-                    <div class="zoom-controls">
-                        <button type="button"
-                            class="btn btn-light btn-sm rounded-circle me-2"
-                            id="zoomOutBtn"
-                            title="Zoom Out">
-                            <i class="fas fa-search-minus"></i>
-                        </button>
-
-                        <span class="text-white mx-2" id="zoomLevel">
-                            100%
-                        </span>
-
-                        <button type="button"
-                            class="btn btn-light btn-sm rounded-circle ms-2"
-                            id="zoomInBtn"
-                            title="Zoom In">
-                            <i class="fas fa-search-plus"></i>
-                        </button>
-
-                        <button type="button"
-                            class="btn btn-light btn-sm rounded-circle ms-2"
-                            id="resetZoomBtn"
-                            title="Reset Zoom">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-
-                    <button id="closePreviewBtn" style="
-                        background: rgba(255,255,255,0.2);
-                        border: none;
-                        width: 45px;
-                        height: 45px;
-                        border-radius: 50%;
-                        cursor: pointer;
-                        color: white;
-                        font-size: 24px;
-                        backdrop-filter: blur(8px);
-                    ">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <!-- Image Container -->
-                <div id="fullscreenImageContainer" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-                    height: 100%;
-                    cursor: grab;
-                    overflow: hidden;
-                ">
-                    <img
-                        id="fullscreenPreviewImage"
-                        src=""
-                        alt="Preview"
-                        style="
-                            max-width: 90%;
-                            max-height: 90vh;
-                            object-fit: contain;
-                            transition: transform 0.2s ease;
-                            user-select: none;
-                        "
-                    >
-                </div>
-
-                <!-- Bottom Controls -->
-                <div style="
-                    position: absolute;
-                    bottom: 20px;
-                    left: 0;
-                    right: 0;
-                    text-align: center;
-                    z-index: 10001;
-                ">
-                    <button
-                        type="button"
-                        class="btn btn-light rounded-pill"
-                        id="downloadImageBtn"
-                        style="
-                            backdrop-filter: blur(8px);
-                            background: rgba(255,255,255,0.9);
-                        "
-                    >
-                        <i class="fas fa-download me-2"></i>
-                        Download
-                    </button>
-                </div>
+                <img
+                    id="fullscreenPreviewImage"
+                    src=""
+                    alt="Preview"
+                    style="
+                        max-width: 90%;
+                        max-height: 90vh;
+                        object-fit: contain;
+                        transition: transform 0.2s ease;
+                        user-select: none;
+                    "
+                >
             </div>
+
+            <!-- Bottom Controls -->
+            <div style="
+                position: absolute;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                z-index: 10001;
+            ">
+                <button
+                    type="button"
+                    class="btn btn-light rounded-pill"
+                    id="downloadImageBtn"
+                    style="
+                        backdrop-filter: blur(8px);
+                        background: rgba(255,255,255,0.9);
+                    "
+                >
+                    <i class="fas fa-download me-2"></i>
+                    Download
+                </button>
+            </div>
+        </div>
         `;
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -251,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 translateX = clientX - startX;
                 translateY = clientY - startY;
                 
-                // Limit panning
                 const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
                 const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
                 
@@ -309,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.addEventListener('mouseup', stopPan);
             imageContainer.addEventListener('wheel', handleWheelZoom);
             
-            // Touch events
             imageContainer.addEventListener('touchstart', startPan);
             window.addEventListener('touchmove', pan);
             window.addEventListener('touchend', stopPan);
@@ -343,7 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
             previewImg.src = imageUrl;
             previewImg.alt = title;
             
-            // Reset zoom when loading new image
             currentZoom = 1;
             translateX = 0;
             translateY = 0;
@@ -356,7 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Helper function to update transform
     function updateTransform() {
         const previewImage = document.getElementById('fullscreenPreviewImage');
         if (previewImage) {
@@ -384,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to fetch filtered events via AJAX
     function fetchFilteredEvents(page = 1) {
-        // Get the base URL from the current page
         let url = window.location.pathname + "?ajax=1&page=" + page;
         
         if (currentSearch) {
@@ -419,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Function to render events with correct image URLs
+    // Function to render events
     function renderEvents(events) {
         if (!eventsContainer) return;
         
@@ -536,12 +530,12 @@ document.addEventListener('DOMContentLoaded', function() {
         attachImageClickHandlers();
     }
     
-    // Function to attach image click handlers (same as announcements module)
+    // Function to attach image click handlers (SAME AS ANNOUNCEMENTS MODULE)
     function attachImageClickHandlers() {
-        // Handle clickable images in event cards
+        // Handle clickable images
         document.querySelectorAll('.clickable-image').forEach(img => {
-            img.removeEventListener('click', img._clickHandler);
-            const handler = function(e) {
+            img.removeEventListener('click', img.clickHandler);
+            img.clickHandler = function(e) {
                 e.stopPropagation();
                 const imageUrl = this.getAttribute('data-full-image') || this.src;
                 const imageTitle = this.getAttribute('data-image-title') || 'Event Image';
@@ -549,14 +543,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     showImagePreview(imageUrl, imageTitle);
                 }
             };
-            img.addEventListener('click', handler);
-            img._clickHandler = handler;
+            img.addEventListener('click', img.clickHandler);
         });
         
-        // Handle expand icon clicks
+        // Handle expand icons
         document.querySelectorAll('.image-expand-icon').forEach(icon => {
-            icon.removeEventListener('click', icon._clickHandler);
-            const handler = function(e) {
+            icon.removeEventListener('click', icon.clickHandler);
+            icon.clickHandler = function(e) {
                 e.stopPropagation();
                 const container = this.closest('.modal-image-container');
                 const img = container.querySelector('.clickable-image');
@@ -568,8 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             };
-            icon.addEventListener('click', handler);
-            icon._clickHandler = handler;
+            icon.addEventListener('click', icon.clickHandler);
         });
     }
     
@@ -579,14 +571,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let paginationHtml = '<ul class="pagination">';
         
-        // Previous button
         if (data.current_page > 1) {
             paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page - 1}">Previous</a></li>`;
         } else {
             paginationHtml += `<li class="page-item disabled"><span class="page-link">Previous</span></li>`;
         }
         
-        // Page numbers
         for (let i = 1; i <= data.last_page; i++) {
             if (i === data.current_page) {
                 paginationHtml += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
@@ -595,7 +585,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Next button
         if (data.current_page < data.last_page) {
             paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page + 1}">Next</a></li>`;
         } else {
@@ -605,7 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
         paginationHtml += '</ul>';
         paginationContainer.innerHTML = paginationHtml;
         
-        // Attach pagination click events
         document.querySelectorAll('#paginationContainer .page-link[data-page]').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -619,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Escape HTML to prevent XSS
+    // Escape HTML
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -627,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return div.innerHTML;
     }
     
-    // Search input with debounce
+    // Search input
     if (searchInput) {
         searchInput.addEventListener('keyup', function() {
             currentSearch = this.value;
@@ -646,7 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
             currentType = type;
             currentPage = 1;
             
-            // Update button styles
             filterButtons.forEach(btn => {
                 const btnType = btn.getAttribute('data-type');
                 if (btnType === 'all') {
@@ -676,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Smooth scroll for hero indicator
+    // Smooth scroll
     const scrollIndicator = document.querySelector('.hero-scroll-indicator');
     if (scrollIndicator) {
         scrollIndicator.addEventListener('click', function() {
@@ -687,6 +674,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize image click handlers for initial page load
+    // Initialize
     attachImageClickHandlers();
 });
