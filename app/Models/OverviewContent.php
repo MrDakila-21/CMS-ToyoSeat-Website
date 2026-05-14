@@ -23,13 +23,13 @@ class OverviewContent extends Model
         'business_description',
         'employees',
         'dynamic_categories',
-        'category_metadata'   // Add this
+        'category_metadata'
     ];
     
     protected $casts = [
         'business_principles' => 'array',
         'dynamic_categories' => 'array',
-        'category_metadata' => 'array'   // Add this
+        'category_metadata' => 'array'
     ];
     
     public static function getContent()
@@ -49,9 +49,28 @@ class OverviewContent extends Model
                 'business_description' => 'Manufacturing and sales of automotive seats',
                 'employees' => 1000,
                 'dynamic_categories' => [],
-                'category_metadata' => []  // Add this
+                'category_metadata' => []
             ]);
         }
         return $content;
     }
+    
+    // ADD THIS ACCESSOR - Same pattern as Announcement
+    public function getPresidentImageUrlAttribute()
+    {
+        if ($this->president_image) {
+            return '/storage.php?file=' . $this->president_image;
+        }
+        return null;
+    }
+    
+public function getCompanyProfileImageUrlAttribute()
+{
+    if ($this->company_profile_image) {
+        $path = storage_path('app/public/' . $this->company_profile_image);
+        $mtime = file_exists($path) ? filemtime($path) : time();
+        return '/storage.php?file=' . $this->company_profile_image . '&t=' . $mtime;
+    }
+    return null;
+}
 }

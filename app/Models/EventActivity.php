@@ -28,7 +28,7 @@ class EventActivity extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - Organized in EventActivity folder
+    // Helper to get full image URL - FIXED for storage.php
     public function getImageUrlAttribute()
     {
         // PRIORITY 1: Check for image in public/images/EventActivity folder with ID as filename
@@ -36,19 +36,19 @@ class EventActivity extends Model
         
         foreach ($imageExtensions as $ext) {
             // Check in public/images/EventActivity directory
-            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
-                return asset("images/EventActivity/{$this->id}.{$ext}");
+                return "/storage.php?file=events-activities/{$this->id}.{$ext}";
             }
         }
         
         // PRIORITY 2: Check if there's a stored image path in database (from upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+            return '/storage.php?file=' . $this->image;
         }
         
         // PRIORITY 3: Return default image if no image found
-        return asset('images/default-image.png');
+        return '/storage.php?file=images/default-image.png';
     }
     
     // Method to check if folder image exists
@@ -57,7 +57,7 @@ class EventActivity extends Model
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
                 return true;
             }
@@ -72,8 +72,8 @@ class EventActivity extends Model
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            // Check in public/images/EventActivity directory
-            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            // Check in public/events-activities directory
+            $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
                 // If folder image exists, clear database image path to prioritize folder
                 if ($this->image) {
@@ -94,7 +94,7 @@ class EventActivity extends Model
         $deleted = false;
         
         foreach ($imageExtensions as $ext) {
-            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
                 unlink($eventActivityImagePath);
                 $deleted = true;
@@ -110,7 +110,7 @@ class EventActivity extends Model
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            $eventActivityImagePath = public_path("images/EventActivity/{$this->id}.{$ext}");
+            $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
                 return $eventActivityImagePath;
             }
