@@ -518,7 +518,6 @@
                     <li><a href="{{ route('guest.about.location') }}" class="{{ request()->routeIs('guest.about.location') ? 'active' : '' }}">Location</a></li>
                     <li><a href="{{ route('guest.about.history') }}" class="{{ request()->routeIs('guest.about.history') ? 'active' : '' }}">History</a></li>
                     <li><a href="{{ route('guest.about.iso-obtained') }}" class="{{ request()->routeIs('guest.about.iso-obtained') ? 'active' : '' }}">ISO Obtained</a></li>
-                    <li><a href="{{ route('guest.about.privacy-policy') }}" class="{{ request()->routeIs('guest.about.privacy-policy') ? 'active' : '' }}">Privacy Policy</a></li>
                 </ul>
             </li>
 
@@ -540,6 +539,16 @@
             <li class="nav-item">
                 <a href="{{ route('guest.inquiry.index') }}" class="nav-link-custom {{ request()->routeIs('guest.inquiry.*') ? 'active' : '' }}">Contact Us</a>
             </li>
+
+
+            {{-- ADD ADMIN DASHBOARD LINK FOR AUTHENTICATED USERS --}}
+    @auth
+        <li class="nav-item">
+            <a href="{{ route('admin.dashboard') }}" class="nav-link-custom {{ request()->routeIs('admin.dashboard*') ? 'active' : '' }}" style="background: rgba(128, 204, 255, 0.2); border-left: 3px solid #80CCFF;">
+                <i class="fas fa-tachometer-alt me-1"></i> Admin Dashboard
+            </a>
+        </li>
+    @endauth
         </ul>
     </div>
 </div>
@@ -581,7 +590,7 @@
                         <li><a href="{{ route('guest.about.location') }}">Location</a></li>
                         <li><a href="{{ route('guest.about.history') }}">History</a></li>
                         <li><a href="{{ route('guest.about.iso-obtained') }}">ISO Obtained</a></li>
-                        <li><a href="{{ route('guest.about.privacy-policy') }}">Privacy Policy</a></li>
+                        
                     </ul>
                 </div>
 

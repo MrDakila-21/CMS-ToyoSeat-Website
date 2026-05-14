@@ -14,6 +14,11 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\InquiryController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController;
+use App\Http\Controllers\Admin\BusinessContentController;
+use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
+use App\Http\Controllers\Admin\RecruitmentController; 
 
 // Image serving route
 Route::get('/image/{path}', [ImageController::class, 'serve'])
@@ -34,7 +39,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
     // About Us pages
     Route::prefix('about')->name('about.')->group(function () {
         Route::view('/overview', 'guest.about.overview')->name('overview');
-        Route::view('/business-introduction', 'guest.about.business-introduction')->name('business-introduction');
+        // FIXED: Corrected route definition for business introduction
+        Route::get('/business-introduction', [BusinessIntroductionController::class, 'index'])->name('business-introduction');
         Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
         Route::view('/history', 'guest.about.history')->name('history');
         Route::get('/iso-obtained', [IsoObtainedController::class, 'index'])->name('iso-obtained');
@@ -43,9 +49,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
 
     // Recruitment pages
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
-        Route::view('/information', 'guest.recruitment.recruitment-information')->name('information');
-        Route::view('/new-graduate', 'guest.recruitment.new-graduate')->name('new-graduate');
-        Route::view('/career', 'guest.recruitment.career')->name('career');
+    Route::get('/information', [\App\Http\Controllers\Guest\RecruitmentController::class, 'index'])->name('information');
+    Route::get('/api/published', [\App\Http\Controllers\Guest\RecruitmentController::class, 'getPublished'])->name('api.published');
     });
 
     // News pages
@@ -105,6 +110,11 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
 
+                // Recruitment management routes
+        Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
+        Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
+        Route::patch('recruitments/{id}/status/{status}', [RecruitmentController::class, 'updateStatus'])->name('admin.recruitments.updateStatus');
+
         Route::post('/overview/add-category', [OverviewController::class, 'addCategory'])->name('admin.overview.addCategory');
 
         // Overview management routes
@@ -138,6 +148,31 @@ Route::prefix('admin')->group(function () {
         Route::patch('/iso-obtained/{id}/status/{status}', [App\Http\Controllers\Admin\IsoObtainedController::class, 'updateStatus'])->name('admin.iso.status');
         Route::delete('/iso-obtained/{id}', [App\Http\Controllers\Admin\IsoObtainedController::class, 'destroy'])->name('admin.iso.destroy');
         Route::delete('/iso-obtained/{id}/remove-image', [App\Http\Controllers\Admin\IsoObtainedController::class, 'removeImage'])->name('admin.iso.removeImage');
+        // Add this inside the admin middleware group in web.php
+        Route::prefix('business-content')->name('admin.business.')->group(function () {
+            Route::get('/', [BusinessContentController::class, 'index'])->name('index');
+            Route::get('/{id}/edit', [BusinessContentController::class, 'edit'])->name('edit');
+            
+            // Automotive routes
+            Route::post('/automotive', [BusinessContentController::class, 'storeAutomotive'])->name('automotive.store');
+            Route::put('/automotive/{id}', [BusinessContentController::class, 'updateAutomotive'])->name('automotive.update');
+            
+            // Organization routes
+            Route::post('/organization', [BusinessContentController::class, 'storeOrganization'])->name('organization.store');
+            Route::put('/organization/{id}', [BusinessContentController::class, 'updateOrganization'])->name('organization.update');
+            
+            // Characteristic routes
+            Route::post('/characteristic', [BusinessContentController::class, 'storeCharacteristic'])->name('characteristic.store');
+            Route::put('/characteristic/{id}', [BusinessContentController::class, 'updateCharacteristic'])->name('characteristic.update');
+            
+            // Partnership routes
+            Route::post('/partnership', [BusinessContentController::class, 'storePartnership'])->name('partnership.store');
+            Route::put('/partnership/{id}', [BusinessContentController::class, 'updatePartnership'])->name('partnership.update');
+            
+            // Delete and order routes
+            Route::delete('/{id}', [BusinessContentController::class, 'destroy'])->name('destroy');
+            Route::post('/update-order', [BusinessContentController::class, 'updateOrder'])->name('update-order');
+        });
 
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function () {

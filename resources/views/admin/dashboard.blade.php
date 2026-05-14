@@ -159,72 +159,63 @@
 
     <div class="dashboard-wrapper">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
-                <small>Manage website content</small>
+        <!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
+        <small>Manage website content</small>
+    </div>
+    <ul class="sidebar-menu">
+        <!-- Home Tab -->
+        <li class="sidebar-item">
+            <a class="sidebar-link {{ $tab === 'home' ? 'active' : '' }}" 
+               href="{{ route('admin.dashboard', ['tab' => 'home']) }}">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+
+        <!-- About Us Dropdown -->
+        <li class="sidebar-item">
+            <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['about']) ? 'active' : '' }}" 
+                 data-dropdown="aboutDropdown">
+                <i class="fas fa-info-circle"></i>
+                <span>About Us</span>
+                <i class="fas fa-chevron-down chevron-icon"></i>
             </div>
-            <ul class="sidebar-menu">
-                <!-- Home Tab -->
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ $tab === 'home' ? 'active' : '' }}" 
-                       href="{{ route('admin.dashboard', ['tab' => 'home']) }}">
-                        <i class="fas fa-home"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-
-                <!-- About Us Dropdown -->
-                <li class="sidebar-item">
-                    <a class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['about']) ? 'active' : '' }}" 
-                       data-dropdown="aboutDropdown">
-                        <i class="fas fa-info-circle"></i>
-                        <span>About Us</span>
-                        <i class="fas fa-chevron-down chevron-icon"></i>
-                    </a>
-                    <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'privacy']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'privacy' ? 'active' : '' }}">Privacy Policy</a></li>
-                    </ul>
-                </li>
-
-                <!-- Recruitment Tab -->
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ $tab === 'recruitment' ? 'active' : '' }}" 
-                       href="{{ route('admin.dashboard', ['tab' => 'recruitment']) }}">
-                        <i class="fas fa-briefcase"></i>
-                        <span>Recruitment Information</span>
-                    </a>
-                </li>
-
-                <!-- News Dropdown -->
-                <li class="sidebar-item">
-                    <a class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['news']) ? 'active' : '' }}" 
-                       data-dropdown="newsDropdown">
-                        <i class="fas fa-newspaper"></i>
-                        <span>News</span>
-                        <i class="fas fa-chevron-down chevron-icon"></i>
-                    </a>
-                    <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Events & Activities</a></li>
-                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
-                    </ul>
-                </li>
-
-                <!-- Inquiry Tab -->
-                <li class="sidebar-item">
-                    <a class="sidebar-link {{ $tab === 'inquiry' ? 'active' : '' }}" 
-                       href="{{ route('admin.dashboard', ['tab' => 'inquiry']) }}">
-                        <i class="fas fa-envelope"></i>
-                        <span>Inquiry</span>
-                    </a>
-                </li>
+            <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Obtained</a></li>
             </ul>
-        </aside>
+        </li>
+
+        <!-- Recruitment Tab -->
+        <li class="sidebar-item">
+            <a class="sidebar-link {{ $tab === 'recruitment' ? 'active' : '' }}" 
+               href="{{ route('admin.dashboard', ['tab' => 'recruitment']) }}">
+                <i class="fas fa-briefcase"></i>
+                <span>Recruitment Information</span>
+            </a>
+        </li>
+
+        <!-- News Dropdown -->
+        <li class="sidebar-item">
+            <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['news']) ? 'active' : '' }}" 
+                 data-dropdown="newsDropdown">
+                <i class="fas fa-newspaper"></i>
+                <span>News</span>
+                <i class="fas fa-chevron-down chevron-icon"></i>
+            </div>
+            <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Events & Activities</a></li>
+                <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
+            </ul>
+        </li>
+    </ul>
+</aside>
 
         <!-- Main Content Area -->
         <main class="main-content">
@@ -278,90 +269,127 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Initialize sidebar dropdowns
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup dropdown toggles
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle-main');
-            
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const dropdownId = this.getAttribute('data-dropdown');
-                    const dropdown = document.getElementById(dropdownId);
-                    const chevron = this.querySelector('.chevron-icon');
-                    
-                    if (dropdown) {
-                        dropdown.classList.toggle('open');
-                        if (chevron) {
-                            chevron.style.transform = dropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
-                        }
+    // Initialize sidebar dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup dropdown toggles (now using div elements)
+        const dropdownToggles = document.querySelectorAll('.dropdown-toggle-main');
+        
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const dropdownId = this.getAttribute('data-dropdown');
+                const dropdown = document.getElementById(dropdownId);
+                const chevron = this.querySelector('.chevron-icon');
+                
+                if (dropdown) {
+                    dropdown.classList.toggle('open');
+                    if (chevron) {
+                        chevron.style.transform = dropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
                     }
-                });
+                }
             });
-            
-            // Auto-hide toast messages after 5 seconds
-            const toasts = document.querySelectorAll('.login-toast');
-            toasts.forEach(toast => {
-                setTimeout(() => {
-                    toast.classList.add('hide');
-                    setTimeout(() => {
-                        if (toast.parentNode) toast.remove();
-                    }, 300);
-                }, 5000);
-            });
-            
-            // Auto-hide alerts after 5 seconds
-            const alerts = document.querySelectorAll('.alert:not(.alert-info)');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.classList.add('fade');
-                    setTimeout(() => {
-                        if (alert.parentNode) alert.remove();
-                    }, 500);
-                }, 5000);
-            });
-            
-            // If we're on media tab, initialize media management
-            @if($tab === 'news' && $subtab === 'media')
-                setTimeout(function() {
-                    if (typeof window.initMediaManagement === 'function') {
-                        window.initMediaManagement();
-                    }
-                }, 100);
-            @endif
         });
         
-        // Prevent back button access after logout
-        (function() {
-            // Push a new state to prevent back button from accessing protected pages
-            history.pushState(null, null, location.href);
-            
-            window.addEventListener('popstate', function(event) {
-                // Check if we're still authenticated
-                fetch('/admin/check-auth', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    },
-                    cache: 'no-store'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.authenticated) {
-                        window.location.replace('/admin/login');
-                    } else {
-                        // Push state again to prevent back navigation
-                        history.pushState(null, null, location.href);
+        // Auto-hide toast messages after 5 seconds
+        const toasts = document.querySelectorAll('.login-toast');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 300);
+            }, 5000);
+        });
+        
+        // Auto-hide alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert:not(.alert-info)');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.add('fade');
+                setTimeout(() => {
+                    if (alert.parentNode) alert.remove();
+                }, 500);
+            }, 5000);
+        });
+        
+        // RESTORE BUSINESS TAB STATE
+        const lastBusinessTab = localStorage.getItem('lastBusinessTab');
+        if (lastBusinessTab) {
+            setTimeout(() => {
+                const businessTabButton = document.querySelector(`#businessTab button[data-bs-target="${lastBusinessTab}"]`);
+                if (businessTabButton && typeof bootstrap !== 'undefined') {
+                    try {
+                        const tab = new bootstrap.Tab(businessTabButton);
+                        tab.show();
+                    } catch(e) {
+                        console.log('Tab initialization error:', e);
                     }
-                })
-                .catch(() => {
-                    window.location.replace('/admin/login');
+                }
+            }, 200);
+        }
+        
+        // SAVE BUSINESS TAB STATE
+        const observer = new MutationObserver(function(mutations) {
+            const businessTabs = document.querySelectorAll('#businessTab button');
+            if (businessTabs.length > 0) {
+                businessTabs.forEach(tab => {
+                    tab.removeEventListener('shown.bs.tab', saveBusinessTabHandler);
+                    tab.addEventListener('shown.bs.tab', saveBusinessTabHandler);
                 });
+            }
+        });
+        
+        function saveBusinessTabHandler(event) {
+            const target = event.target;
+            const targetId = target.getAttribute('data-bs-target');
+            if (targetId) {
+                localStorage.setItem('lastBusinessTab', targetId);
+            }
+        }
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // If we're on media tab, initialize media management
+        @if($tab === 'news' && $subtab === 'media')
+            setTimeout(function() {
+                if (typeof window.initMediaManagement === 'function') {
+                    window.initMediaManagement();
+                }
+            }, 100);
+        @endif
+    });
+    
+    // Prevent back button access after logout
+    (function() {
+        history.pushState(null, null, location.href);
+        
+        window.addEventListener('popstate', function(event) {
+            fetch('/admin/check-auth', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                cache: 'no-store'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.replace('/admin/login');
+                } else {
+                    history.pushState(null, null, location.href);
+                }
+            })
+            .catch(() => {
+                window.location.replace('/admin/login');
             });
-        })();
-    </script>
+        });
+    })();
+</script>
 </body>
 </html>

@@ -88,59 +88,65 @@
             </div>
 
             <!-- Modal for each item -->
-            <div class="modal fade" id="eventModal{{ $item->id }}" tabindex="-1" aria-labelledby="eventModalLabel{{ $item->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered">
-                    <div class="modal-content border-0 rounded-4 overflow-hidden">
-                        <div class="modal-header" style="background: linear-gradient(135deg, #0E334C 0%, #1a4d6e 100%);">
-                            <h5 class="modal-title text-white fw-bold" id="eventModalLabel{{ $item->id }}">
-                                <i class="fas {{ $item->type === 'event' ? 'fa-calendar-alt' : 'fa-users' }} me-2"></i>
-                                {{ $item->title }}
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Modal for each item - Enhanced with image preview icon at bottom right -->
+<div class="modal fade" id="eventModal{{ $item->id }}" tabindex="-1" aria-labelledby="eventModalLabel{{ $item->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 overflow-hidden">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0E334C 0%, #1a4d6e 100%);">
+                <h5 class="modal-title text-white fw-bold" id="eventModalLabel{{ $item->id }}">
+                    <i class="fas {{ $item->type === 'event' ? 'fa-calendar-alt' : 'fa-users' }} me-2"></i>
+                    {{ $item->title }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="modal-image-container position-relative" style="overflow: hidden; border-radius: 12px;">
+                            <img src="{{ $item->image_url ?: asset('images/default-image.png') }}" 
+                                 class="modal-image clickable-image w-100 rounded-3" 
+                                 alt="{{ $item->title }}"
+                                 style="cursor: pointer; transition: transform 0.2s; max-height: 400px; width: 100%; object-fit: cover; display: block;"
+                                 data-full-image="{{ $item->image_url ?: asset('images/default-image.png') }}"
+                                 data-image-title="{{ $item->title }}"
+                                 onerror="this.src='{{ asset('images/default-image.png') }}'">
+                            <div class="image-expand-icon" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); padding: 8px 12px; border-radius: 25px; color: white; font-size: 14px; cursor: pointer; transition: all 0.2s ease; z-index: 10;">
+                                <i class="fas fa-expand-alt me-1"></i> Expand
+                            </div>
                         </div>
-                        <div class="modal-body p-4">
-                            <div class="row g-4">
-                                <div class="col-lg-5">
-                                    <div class="modal-image-container">
-                                        @if($item->image_url)
-                                            <img src="{{ $item->image_url }}" class="modal-image" alt="{{ $item->title }}">
-                                        @else
-                                            <img src="{{ asset('images/default-image.png') }}" class="modal-image" alt="Default Image">
-                                        @endif
-                                    </div>
-                                    <div class="info-badge mt-3">
-                                        <div class="info-badge-item">
-                                            <i class="fas {{ $item->type === 'event' ? 'fa-calendar-alt' : 'fa-users' }}"></i>
-                                            <span><strong>Type:</strong> {{ ucfirst($item->type) }}</span>
-                                        </div>
-                                        <div class="info-badge-item">
-                                            <i class="fas fa-calendar-day"></i>
-                                            <span><strong>Date:</strong> {{ $item->event_date instanceof \Carbon\Carbon ? $item->event_date->format('F d, Y') : \Carbon\Carbon::parse($item->event_date)->format('F d, Y') }}</span>
-                                        </div>
-                                        @if($item->created_at)
-                                        <div class="info-badge-item">
-                                            <i class="fas fa-clock"></i>
-                                            <span><strong>Published:</strong> {{ $item->created_at instanceof \Carbon\Carbon ? $item->created_at->format('F d, Y') : \Carbon\Carbon::parse($item->created_at)->format('F d, Y') }}</span>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="col-lg-7">
-                                    <div class="description-wrapper-custom">
-                                        <div class="description-title">
-                                            <i class="fas fa-align-left me-2" style="color: #3988BD;"></i>
-                                            Description
-                                        </div>
-                                        <div class="description-content">
-                                            {!! nl2br(e($item->description)) !!}
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="info-badge mt-3">
+                            <div class="info-badge-item">
+                                <i class="fas {{ $item->type === 'event' ? 'fa-calendar-alt' : 'fa-users' }}"></i>
+                                <span><strong>Type:</strong> {{ ucfirst($item->type) }}</span>
+                            </div>
+                            <div class="info-badge-item">
+                                <i class="fas fa-calendar-day"></i>
+                                <span><strong>Date:</strong> {{ $item->event_date instanceof \Carbon\Carbon ? $item->event_date->format('F d, Y') : \Carbon\Carbon::parse($item->event_date)->format('F d, Y') }}</span>
+                            </div>
+                            @if($item->created_at)
+                            <div class="info-badge-item">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Published:</strong> {{ $item->created_at instanceof \Carbon\Carbon ? $item->created_at->format('F d, Y') : \Carbon\Carbon::parse($item->created_at)->format('F d, Y') }}</span>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="description-wrapper-custom">
+                            <div class="description-title">
+                                <i class="fas fa-align-left me-2" style="color: #3988BD;"></i>
+                                Description
+                            </div>
+                            <div class="description-content" style="max-height: 400px; overflow-y: auto;">
+                                {!! nl2br(e($item->description)) !!}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
             @endforeach
         @else
             <div class="col-12 text-center py-5">
@@ -176,6 +182,11 @@
 
 <!-- JavaScript -->
 @push('scripts')
+<!-- Add jQuery first (required for the module to work like announcements) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Your custom JS -->
 <script src="{{ asset('js/guest/EventActivity.js') }}"></script>
 @endpush
 
