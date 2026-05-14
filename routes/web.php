@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController;
+use App\Http\Controllers\Admin\BusinessContentController;
+use App\Http\Controllers\Guest\BusinessIntroductionController;
 use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController; // ADD THIS LINE
 use App\Http\Controllers\Admin\RecruitmentController; 
 
@@ -28,7 +31,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
     // About Us pages
     Route::prefix('about')->name('about.')->group(function () {
         Route::view('/overview', 'guest.about.overview')->name('overview');
-        Route::view('/business-introduction', 'guest.about.business-introduction')->name('business-introduction');
+        // FIXED: Corrected route definition for business introduction
+        Route::get('/business-introduction', [BusinessIntroductionController::class, 'index'])->name('business-introduction');
         Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
         Route::view('/history', 'guest.about.history')->name('history');
         Route::view('/iso-obtained', 'guest.about.iso-obtained')->name('iso-obtained');
@@ -87,7 +91,7 @@ Route::prefix('admin')->group(function () {
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
 
-                // Announcements management routes
+        // Announcements management routes
         Route::get('announcements/all', [AnnouncementController::class, 'getAll'])->name('admin.announcements.all');
         Route::resource('announcements', AnnouncementController::class)->names('admin.announcements');
         Route::patch('announcements/{id}/status/{status}', [AnnouncementController::class, 'updateStatus'])->name('admin.announcements.updateStatus');
@@ -126,6 +130,32 @@ Route::prefix('admin')->group(function () {
         Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
         Route::post('media/sync-images', [EventActivityController::class, 'syncAllImages'])->name('admin.media.syncImages');
         Route::post('media/batch-upload', [EventActivityController::class, 'batchUploadToFolder'])->name('admin.media.batchUpload');
+
+        // Add this inside the admin middleware group in web.php
+        Route::prefix('business-content')->name('admin.business.')->group(function () {
+            Route::get('/', [BusinessContentController::class, 'index'])->name('index');
+            Route::get('/{id}/edit', [BusinessContentController::class, 'edit'])->name('edit');
+            
+            // Automotive routes
+            Route::post('/automotive', [BusinessContentController::class, 'storeAutomotive'])->name('automotive.store');
+            Route::put('/automotive/{id}', [BusinessContentController::class, 'updateAutomotive'])->name('automotive.update');
+            
+            // Organization routes
+            Route::post('/organization', [BusinessContentController::class, 'storeOrganization'])->name('organization.store');
+            Route::put('/organization/{id}', [BusinessContentController::class, 'updateOrganization'])->name('organization.update');
+            
+            // Characteristic routes
+            Route::post('/characteristic', [BusinessContentController::class, 'storeCharacteristic'])->name('characteristic.store');
+            Route::put('/characteristic/{id}', [BusinessContentController::class, 'updateCharacteristic'])->name('characteristic.update');
+            
+            // Partnership routes
+            Route::post('/partnership', [BusinessContentController::class, 'storePartnership'])->name('partnership.store');
+            Route::put('/partnership/{id}', [BusinessContentController::class, 'updatePartnership'])->name('partnership.update');
+            
+            // Delete and order routes
+            Route::delete('/{id}', [BusinessContentController::class, 'destroy'])->name('destroy');
+            Route::post('/update-order', [BusinessContentController::class, 'updateOrder'])->name('update-order');
+        });
 
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function() {
