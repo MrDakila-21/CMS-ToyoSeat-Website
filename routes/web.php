@@ -12,8 +12,7 @@ use App\Http\Controllers\Guest\LocationController as GuestLocationController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController;
 use App\Http\Controllers\Admin\BusinessContentController;
-use App\Http\Controllers\Guest\BusinessIntroductionController;
-use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementController; // ADD THIS LINE
+use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
 use App\Http\Controllers\Admin\RecruitmentController; 
 
 
