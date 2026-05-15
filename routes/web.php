@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BusinessContentController;
 use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
 use App\Http\Controllers\Admin\RecruitmentController; 
+use App\Http\Controllers\Admin\HistoryController; 
 
 // Image serving route
 Route::get('/image/{path}', [ImageController::class, 'serve'])
@@ -108,6 +109,11 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
 
+    // History management routes - MAKE SURE THESE ARE EXACTLY HERE
+Route::get('histories/all', [App\Http\Controllers\Admin\HistoryController::class, 'getAll'])->name('admin.histories.all');
+Route::resource('histories', App\Http\Controllers\Admin\HistoryController::class)->names('admin.histories');
+Route::patch('histories/{id}/status/{status}', [App\Http\Controllers\Admin\HistoryController::class, 'updateStatus'])->name('admin.histories.updateStatus');
+Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryController::class, 'uploadDirectImage'])->name('admin.histories.uploadDirect');
                 // Recruitment management routes
         Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
         Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
