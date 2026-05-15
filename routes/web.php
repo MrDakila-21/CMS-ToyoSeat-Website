@@ -10,6 +10,7 @@ use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementContro
 use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
 use App\Http\Controllers\Guest\IsoObtainedController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
+use App\Http\Controllers\Guest\HistoryController as GuestHistoryController; 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\InquiryController;
@@ -41,7 +42,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
         // FIXED: Corrected route definition for business introduction
         Route::get('/business-introduction', [BusinessIntroductionController::class, 'index'])->name('business-introduction');
         Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
-        Route::view('/history', 'guest.about.history')->name('history');
+        Route::get('/history', [GuestHistoryController::class, 'index'])->name('history');
+        Route::get('/history-data', [GuestHistoryController::class, 'getPublished'])->name('history-data');
         Route::get('/iso-obtained', [IsoObtainedController::class, 'index'])->name('iso-obtained');
         Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
     });
