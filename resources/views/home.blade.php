@@ -11,9 +11,34 @@
 @php
 use App\Models\Homepage;
 use App\Models\HomepageSlide;
+use App\Models\Announcement;
+use App\Models\EventActivity;
+use App\Models\Recruitment;
+
 $image = Homepage::where('key', 'hero_background')->first();
 $slides = HomepageSlide::where('is_active', true)->orderBy('order', 'asc')->get();
 $hasSlides = $slides->count() > 0;
+
+// Fetch top 3 latest announcements (published only)
+$announcements = Announcement::where('status', 'published')
+    ->orderBy('date', 'desc')
+    ->orderBy('created_at', 'desc')
+    ->limit(3)
+    ->get();
+
+// Fetch top 3 latest event activities (published only)
+$eventActivities = EventActivity::where('status', 'published')
+    ->orderBy('event_date', 'desc')
+    ->orderBy('created_at', 'desc')
+    ->limit(3)
+    ->get();
+
+// Fetch recruitment statistics
+$totalRecruitments = Recruitment::where('status', 'published')->count();
+$recentRecruitments = Recruitment::where('status', 'published')
+    ->orderBy('created_at', 'desc')
+    ->limit(2)
+    ->get();
 @endphp
 
 <!-- SECTION 1: Hero Section -->
@@ -115,25 +140,34 @@ $hasSlides = $slides->count() > 0;
                 <div class="underline announcements-underline"></div>
 
                 <div class="news-cards">
-                    @php
-                        $announcements = [
-                            ['date' => '2024/04/06', 'text' => 'Recruitment for 2027 graduates is now open for ongoing applications.'],
-                            ['date' => '2024/02/18', 'text' => 'Our company brochure is available here.'],
-                            ['date' => '2025/04/25', 'text' => 'We have opened applications for positions targeting 2026 graduates.'],
-                        ];
-                    @endphp
-
-                    @foreach($announcements as $announcement)
+                    @forelse($announcements as $announcement)
                     <div class="news-card">
                         <div class="news-date-box">
-                            <span>{{ $announcement['date'] }}</span>
+                            <span>{{ date('Y/m/d', strtotime($announcement->date)) }}</span>
                         </div>
                         <div class="news-text">
-                            {{ $announcement['text'] }}
+                            {{ Str::limit($announcement->title, 80) }}
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="news-card">
+                        <div class="news-date-box">
+                            <span>No Data</span>
+                        </div>
+                        <div class="news-text">
+                            No announcements available at the moment.
+                        </div>
+                    </div>
+                    @endforelse
                 </div>
+
+                @if($announcements->count() > 0)
+                <div class="view-all-link">
+                    <a href="{{ route('guest.news.announcements') }}" class="view-all-btn">
+                        View All Announcements <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                @endif
 
             </div>
 
@@ -142,34 +176,131 @@ $hasSlides = $slides->count() > 0;
 
                 <div class="section-header">
                     <img src="{{ asset('images/media.svg') }}" class="section-icon" alt="icon">
-                    <h2 class="mediainfo-title">Media Information</h2>
+                    <h2 class="mediainfo-title">Events & Activities</h2>
                 </div>
 
                 <div class="underline mediainfo-underline"></div>
 
                 <div class="news-cards">
-                    @php
-                        $mediaItems = [
-                            ['date' => '2024/07/31', 'text' => 'Our company was featured in the Chugoku Shimbun newspaper.'],
-                            ['date' => '2023/03/27', 'text' => 'Signing of solar power generation PPA agreement.'],
-                            ['date' => '2022/11/04', 'text' => 'Featured on RCC "E-Town Sports."'],
-                        ];
-                    @endphp
-
-                    @foreach($mediaItems as $media)
+                    @forelse($eventActivities as $event)
                     <div class="news-card">
                         <div class="news-date-box">
-                            <span>{{ $media['date'] }}</span>
+                            <span>{{ $event->event_date instanceof \Carbon\Carbon ? $event->event_date->format('Y/m/d') : \Carbon\Carbon::parse($event->event_date)->format('Y/m/d') }}</span>
                         </div>
                         <div class="news-text">
-                            {{ $media['text'] }}
+                            {{ Str::limit($event->title, 80) }}
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="news-card">
+                        <div class="news-date-box">
+                            <span>No Data</span>
+                        </div>
+                        <div class="news-text">
+                            No media information available at the moment.
+                        </div>
+                    </div>
+                    @endforelse
                 </div>
+
+                @if($eventActivities->count() > 0)
+                <div class="view-all-link">
+                    <a href="{{ route('guest.news.media-information') }}" class="view-all-btn">
+                        View All Events & Activities <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                @endif
 
             </div>
 
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 3: RECRUITMENT -->
+<div class="section3">
+    <div class="section3-container">
+        <!-- Background decorative element -->
+        <div class="section3-bg-pattern"></div>
+        
+        <div class="section3-content">
+            <!-- Left Side - Welcome Message & Info -->
+            <div class="section3-left fade-in-up">
+                <div class="recruitment-badge">
+                    <img src="{{ asset('images/recruitment-icon.svg') }}" alt="Recruitment" class="recruitment-icon" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%233988BD\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z\'/%3E%3C/svg%3E'">
+                </div>
+                
+                <h2 class="section3-title">Join Our Team</h2>
+                
+                <div class="section3-divider"></div>
+                
+                <p class="section3-welcome-text">
+                    We're always looking for talented individuals to join our growing family. 
+                    At Mazda Seating Systems, we believe in fostering innovation, encouraging growth, 
+                    and building a workplace where every voice matters.
+                </p>
+                
+                <!-- Recent Job Posts Preview -->
+                @if($recentRecruitments->count() > 0)
+                <div class="recent-jobs">
+                    <h4 class="recent-jobs-title">Recent Opportunities</h4>
+                    <div class="recent-jobs-list">
+                        @foreach($recentRecruitments as $job)
+                        <div class="recent-job-item">
+                            <div class="recent-job-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="recent-job-info">
+                                <div class="recent-job-title">{{ Str::limit($job->title, 50) }}</div>
+                                <div class="recent-job-date">Posted: {{ $job->created_at->format('M d, Y') }}</div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+            
+            <!-- Right Side - CTA Button -->
+            <div class="section3-right fade-in-up delay-1">
+                <div class="recruitment-cta-card">
+                    <div class="cta-icon-wrapper">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="cta-title">Ready to make an impact?</h3>
+                    <p class="cta-description">
+                        Explore our current openings and find the perfect role that matches your skills and aspirations.
+                    </p>
+                    <a href="{{ route('guest.recruitment.information') }}" class="recruitment-cta-btn">
+                        <span>View All Job Openings</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <div class="cta-footer">
+                        <small>Join us in shaping the future of seating solutions</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 4: HISTORY -->
+<div class="section4">
+    <div class="section4-container">
+        <div class="section4-content fade-in-up">
+            <div class="history-badge">
+                <i class="fas fa-landmark"></i>
+            </div>
+            <h2 class="section4-title">Our History</h2>
+            <div class="section4-divider"></div>
+            <p class="section4-description">
+                Discover the journey, milestones, and achievements that have defined our legacy of excellence.
+            </p>
+            <a href="{{ route('guest.about.history') }}" class="history-cta-btn">
+                <span>Explore Our Journey</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
     </div>
 </div>
