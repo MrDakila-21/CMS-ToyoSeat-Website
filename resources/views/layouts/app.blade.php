@@ -26,6 +26,8 @@
 
         main {
             flex: 1;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         /* Full width navbar container - STICKY HEADER */
@@ -300,11 +302,17 @@
             }
         }
 
+        .section4 {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 0;
+            position: relative;
+        }
+
         /* FOOTER STYLES */
         .footer-custom {
             background: linear-gradient(135deg, #0a1e2c 0%, #0E334C 100%);
             color: #ffffff;
-            margin-top: 4rem;
+            margin-top: 0;
             padding: 3rem 0 1.5rem;
         }
 
@@ -577,7 +585,7 @@
                 <div class="footer-social">
                     <a href="https://www.facebook.com/profile.php?id=100057821552844" target="_blank"><i class="fab fa-facebook-f"></i></a>
                     <a href="https://www.youtube.com/@ToyoSeatPhilippinesCorporation" target="_blank"><i class="fab fa-youtube"></i></a>
-                    <a href="#"><i class="fas fa-envelope"></i></a>
+                    <a href="{{ route('guest.inquiry.index') }}"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
@@ -617,7 +625,7 @@
                 &copy; {{ date('Y') }} Toyo Seat Philippines Corporation. All Rights Reserved.
             </div>
             <div class="footer-credit">
-                Made with passion by Constantino, Dakila and Maniaul.
+                Made with passion by R. Constantino, E. Dakila, and P. Maniaul, with Joey Manarin.
             </div>
         </div>
     </div>
