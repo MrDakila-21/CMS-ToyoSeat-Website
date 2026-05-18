@@ -387,128 +387,128 @@
 <div class="container py-5">
     <!-- Automotive Seat Cover Section - CENTERED -->
     @if($automotiveSeats->count() > 0)
-    <div class="mb-5 fade-in-up">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2 class="section-title text-center">Automotive Seat Cover</h2>
-                <p class="section-description">Premium quality seat covers designed for comfort and durability</p>
-            </div>
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Automotive Seat Cover</h2>
+            <p class="section-description">Premium quality seat covers designed for comfort and durability</p>
         </div>
-        <div class="row">
-            @foreach($automotiveSeats as $seat)
-            <div class="col-md-6 mb-4">
-                <div class="card automotive-card h-100">
-                    <div class="row g-0 h-100">
-                        @if($seat->image)
-                        <div class="col-md-5">
-                            <img src="{{ $seat->image_url }}" class="img-fluid rounded-start h-100" alt="{{ $seat->title }}" style="object-fit: cover;">
-                        </div>
-                        @endif
-                        <div class="col-md-7">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ $seat->title }}</h5>
-                                <p class="card-text">{{ $seat->description }}</p>
-                            </div>
+    </div>
+    <div class="row">
+        @foreach($automotiveSeats as $seat)
+        <div class="col-md-6 mb-4">
+            <div class="card automotive-card h-100">
+                <div class="row g-0 h-100">
+                    @if($seat->image)
+                    <div class="col-md-5">
+                        <img src="{{ $seat->image_url }}" class="img-fluid rounded-start h-100" alt="{{ $seat->title }}" style="object-fit: cover;">
+                    </div>
+                    @endif
+                    <div class="col-md-7">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ $seat->title }}</h5>
+                            <p class="card-text">{{ $seat->description }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            @endforeach
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+   <!-- Organization Section -->
+@if($organizationMembers->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Organizational Structure</h2>
+            <p class="section-description">Meet our dedicated leadership team</p>
         </div>
     </div>
-    @endif
+    <div class="row justify-content-center">
+        @foreach($organizationMembers as $member)
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card organization-card h-100 text-center">
+                @if($member->image)
+                <div class="overflow-hidden">
+                    <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
+                </div>
+                @else
+                <div class="bg-light p-5 text-center">
+                    <i class="fas fa-user-circle fa-4x text-muted"></i>
+                </div>
+                @endif
+                <div class="card-body">
+                    <h5 class="card-title mb-1">{{ $member->name }}</h5>
+                    <p class="text-primary mb-0">{{ $member->position }}</p>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
 
-    <!-- Organization Structure Section - CENTERED -->
-    @if($organizationMembers->count() > 0)
-    <div class="mb-5 fade-in-up">
+<!-- Characteristics Section -->
+@if($characteristics->count() > 0)
+<div class="mb-5 py-4 fade-in-up">
+    <div class="container">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title text-center">Organizational Structure</h2>
-                <p class="section-description">Meet our dedicated leadership team</p>
+                <h2 class="section-title text-center">Business Characteristics</h2>
+                <p class="section-description">What makes us unique in the industry</p>
             </div>
         </div>
         <div class="row justify-content-center">
-            @foreach($organizationMembers as $member)
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card organization-card h-100 text-center">
-                    @if($member->image)
-                    <div class="overflow-hidden">
-                        <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
-                    </div>
+            @foreach($characteristics as $characteristic)
+            <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
+                <div class="characteristic-card">
+                    @if($characteristic->image)
+                    <img src="{{ $characteristic->image_url }}" alt="{{ $characteristic->title }}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 1rem;">
                     @else
-                    <div class="bg-light p-5 text-center">
-                        <i class="fas fa-user-circle fa-4x text-muted"></i>
+                    <div class="characteristic-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
                     @endif
-                    <div class="card-body">
-                        <h5 class="card-title mb-1">{{ $member->name }}</h5>
-                        <p class="text-primary mb-0">{{ $member->position }}</p>
-                    </div>
+                    <h4>{{ $characteristic->title }}</h4>
+                    <p class="text-muted">{{ $characteristic->description }}</p>
                 </div>
             </div>
             @endforeach
         </div>
     </div>
-    @endif
+</div>
+@endif
 
-       <!-- Characteristics Section - CENTERED -->
-    @if($characteristics->count() > 0)
-    <div class="mb-5 py-4 fade-in-up">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <h2 class="section-title text-center">Business Characteristics</h2>
-                    <p class="section-description">What makes us unique in the industry</p>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                @foreach($characteristics as $characteristic)
-                <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
-                    <div class="characteristic-card">
-                        @if($characteristic->image)
-                        <img src="{{ $characteristic->image_url }}" alt="{{ $characteristic->title }}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 1rem;">
-                        @else
-                        <div class="characteristic-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        @endif
-                        <h4>{{ $characteristic->title }}</h4>
-                        <p class="text-muted">{{ $characteristic->description }}</p>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+<!-- Partnership Section -->
+@if($partnerships->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Our Partners</h2>
+            <p class="section-description">Trusted partnerships that drive excellence</p>
         </div>
     </div>
-    @endif
-
-    <!-- Partnership Section - CENTERED -->
-    @if($partnerships->count() > 0)
-    <div class="mb-5 fade-in-up">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2 class="section-title text-center">Our Partners</h2>
-                <p class="section-description">Trusted partnerships that drive excellence</p>
-            </div>
-        </div>
-        <div class="row align-items-center justify-content-center">
-            @foreach($partnerships as $partner)
-            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-                <div class="partnership-logo">
-                    @if($partner->image)
-                    <img src="{{ $partner->image_url }}" alt="{{ $partner->title }}" class="img-fluid">
-                    @else
-                    <div class="text-center">
-                        <i class="fas fa-building fa-3x text-muted"></i>
-                        <p class="mt-2 mb-0 small">{{ $partner->title }}</p>
-                    </div>
-                    @endif
+    <div class="row align-items-center justify-content-center">
+        @foreach($partnerships as $partner)
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+            <div class="partnership-logo">
+                @if($partner->image)
+                <img src="{{ $partner->image_url }}" alt="{{ $partner->title }}" class="img-fluid">
+                @else
+                <div class="text-center">
+                    <i class="fas fa-building fa-3x text-muted"></i>
+                    <p class="mt-2 mb-0 small">{{ $partner->title }}</p>
                 </div>
+                @endif
             </div>
-            @endforeach
         </div>
+        @endforeach
     </div>
-    @endif
+</div>
+@endif
 </div>
 
 <!-- Font Awesome 6 -->

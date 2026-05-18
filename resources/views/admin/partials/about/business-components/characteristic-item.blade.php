@@ -4,7 +4,7 @@
         <div class="row">
             <div class="col-md-3">
                 @if($char->image)
-                    <img src="{{ Storage::url($char->image) }}" class="img-fluid rounded" alt="{{ $char->title }}">
+                    <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}">
                 @endif
             </div>
             <div class="col-md-9">
