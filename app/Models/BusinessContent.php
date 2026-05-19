@@ -11,7 +11,7 @@ class BusinessContent extends Model
     protected $table = 'business_contents';
     
     protected $fillable = [
-        'section', 'title', 'description', 'image', 
+        'section', 'title', 'subtitle', 'description', 'image', 
         'original_filename', 'name', 'position', 'order', 'is_active'
     ];
     

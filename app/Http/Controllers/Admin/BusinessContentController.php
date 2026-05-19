@@ -166,79 +166,80 @@ public function updateOrganization(Request $request, $id)
     ]);
 }
     
-    // Characteristic Section Methods
     public function storeCharacteristic(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        
-        $data = $request->except('image');
-        $data['section'] = 'characteristic';
-        $data['order'] = BusinessContent::where('section', 'characteristic')->max('order') + 1;
-        
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = $file->store('business/characteristics', 'public');
-            $data['image'] = $path;
-            $data['original_filename'] = $file->getClientOriginalName();
-        }
-        
-        $content = BusinessContent::create($data);
-        
-        $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Characteristic added successfully',
-            'data' => $content,
-            'html' => $html
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'subtitle' => 'nullable|string|max:255',
+        'description' => 'required|string',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
     
-    public function updateCharacteristic(Request $request, $id)
-    {
-        $content = BusinessContent::findOrFail($id);
-        
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        
-        $data = $request->except('image');
-        
-        if ($request->hasFile('image')) {
-            if ($content->image && Storage::disk('public')->exists($content->image)) {
-                Storage::disk('public')->delete($content->image);
-            }
-            $file = $request->file('image');
-            $path = $file->store('business/characteristics', 'public');
-            $data['image'] = $path;
-            $data['original_filename'] = $file->getClientOriginalName();
-        }
-        
-        $content->update($data);
-        
-        $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Characteristic updated successfully',
-            'data' => $content,
-            'html' => $html
-        ]);
+    $data = $request->except('image');
+    $data['section'] = 'characteristic';
+    $data['order'] = BusinessContent::where('section', 'characteristic')->max('order') + 1;
+    
+    if ($request->hasFile('image')) {
+        $file = $request->file('image');
+        $path = $file->store('business/characteristics', 'public');
+        $data['image'] = $path;
+        $data['original_filename'] = $file->getClientOriginalName();
     }
+    
+    $content = BusinessContent::create($data);
+    
+    $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Characteristic added successfully',
+        'data' => $content,
+        'html' => $html
+    ]);
+}
+
+public function updateCharacteristic(Request $request, $id)
+{
+    $content = BusinessContent::findOrFail($id);
+    
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'subtitle' => 'nullable|string|max:255',
+        'description' => 'required|string',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+    
+    $data = $request->except('image');
+    
+    if ($request->hasFile('image')) {
+        if ($content->image && Storage::disk('public')->exists($content->image)) {
+            Storage::disk('public')->delete($content->image);
+        }
+        $file = $request->file('image');
+        $path = $file->store('business/characteristics', 'public');
+        $data['image'] = $path;
+        $data['original_filename'] = $file->getClientOriginalName();
+    }
+    
+    $content->update($data);
+    
+    $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Characteristic updated successfully',
+        'data' => $content,
+        'html' => $html
+    ]);
+}
     
     // Partnership Section Methods
     public function storePartnership(Request $request)

@@ -106,7 +106,7 @@
     </div>
 </div>
 
-            <!-- Characteristics Section -->
+<!-- Characteristics Section -->
 <div class="tab-pane fade" id="characteristics" role="tabpanel">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>Business Characteristics</h4>
@@ -119,11 +119,13 @@
         <div class="card mb-3" data-id="{{ $char->id }}">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3 d-flex align-items-center">
+                    <div class="col-md-3">
                         @if($char->image)
-                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
+                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 150px; width: 100%;">
                         @else
-                            <div class="bg-light text-center p-4 rounded w-100">No Image</div>
+                            <div class="bg-light text-center p-4 rounded w-100 d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
                         @endif
                     </div>
                     <div class="col-md-9">
@@ -703,11 +705,13 @@ async function editCharacteristic(id) {
         const modalLabel = document.getElementById('characteristicModalLabel');
         const idField = document.getElementById('characteristicId');
         const titleField = document.getElementById('characteristic_title');
+        const subtitleField = document.getElementById('characteristic_subtitle');  // ADD THIS
         const descField = document.getElementById('characteristic_description');
         
         if (modalLabel) modalLabel.textContent = 'Edit Characteristic';
         if (idField) idField.value = data.id;
         if (titleField) titleField.value = data.title;
+        if (subtitleField) subtitleField.value = data.subtitle || '';  // ADD THIS
         if (descField) descField.value = data.description;
         currentEditId = data.id;
         

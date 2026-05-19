@@ -99,11 +99,13 @@
                 @csrf
                 <input type="hidden" id="characteristicId" name="id">
                 <div class="modal-body">
-                    <!-- Current Image Display Field -->
-                    
                     <div class="mb-3">
                         <label>Title *</label>
                         <input type="text" name="title" id="characteristic_title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Subtitle</label>
+                        <input type="text" name="subtitle" id="characteristic_subtitle" class="form-control" placeholder="Optional subtitle">
                     </div>
                     <div class="mb-3">
                         <label>Description *</label>
