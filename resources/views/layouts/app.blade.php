@@ -625,7 +625,7 @@
                 &copy; {{ date('Y') }} Toyo Seat Philippines Corporation. All Rights Reserved.
             </div>
             <div class="footer-credit">
-                Made with passion by R. Constantino, E. Dakila, and P. Maniaul, with Joey Manarin.
+                • Joey Manarin • Rizza Constantino • Earl Dakila • Patrick Maniaul •
             </div>
         </div>
     </div>
