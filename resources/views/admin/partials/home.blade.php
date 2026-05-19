@@ -13,7 +13,7 @@
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="multipleImages" class="form-label">Select Images (Max 10, up to 10MB each)</label>
-                                <input type="file" class="form-control" id="multipleImages" name="images[]" multiple accept="image/jpeg,image/png,image/gif,image/webp">
+                               <input type="file" class="form-control" id="multipleImages" name="images[]" multiple accept="image/jpeg,image/png,image/gif,image/webp,image/jfif">
                                 <div class="form-text">You can select multiple images at once. Hold Ctrl/Cmd to select multiple. Max 10MB per image.</div>
                             </div>
                             <!-- Preview Container -->
@@ -185,42 +185,50 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.setAttribute('multiple', 'multiple');
         
         fileInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            selectedFiles = files;
-            
-            // Validate each file (10MB limit)
-            const validFiles = [];
-            const errors = [];
-            
-            files.forEach((file) => {
-                // Check file size (10MB = 10 * 1024 * 1024)
-                if (file.size > 10 * 1024 * 1024) {
-                    errors.push(`${file.name}: File exceeds the 10MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-                } else {
-                    validFiles.push(file);
-                }
-            });
-            
-            if (errors.length > 0) {
-                showFloatingToast(errors.join('\n'), 'error');
-                
-                // Clear the file input and preview
-                fileInput.value = '';
-                selectedFiles = [];
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-                return;
-            }
-            
-            if (validFiles.length === 0) {
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-                return;
-            }
+    const files = Array.from(e.target.files);
+    selectedFiles = files;
+    
+    // Validate each file (10MB limit and allowed types)
+    const validFiles = [];
+    const errors = [];
+    
+    files.forEach((file) => {
+        // Get file extension
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'jfif'];
+        
+        // Check file type by extension
+        if (!allowedExtensions.includes(fileExtension)) {
+            errors.push(`${file.name}: Invalid file type. Allowed: JPG, PNG, GIF, WEBP, JFIF`);
+        }
+        // Check file size (10MB = 10 * 1024 * 1024)
+        else if (file.size > 10 * 1024 * 1024) {
+            errors.push(`${file.name}: File exceeds the 10MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        } else {
+            validFiles.push(file);
+        }
+    });
+    
+    if (errors.length > 0) {
+        showFloatingToast(errors.join('\n'), 'error');
+        
+        // Clear the file input and preview
+        fileInput.value = '';
+        selectedFiles = [];
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        return;
+    }
+    
+    if (validFiles.length === 0) {
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        return;
+    }
             
             // Show preview for valid files
             if (previewContainer) {
@@ -290,121 +298,107 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle form submission with AJAX
-if (form) {
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // ====== ADD THIS VALIDATION FIRST ======
-        // Check if files exist
-        if (!fileInput || fileInput.files.length === 0) {
-            showFloatingToast('Please select at least one image to upload.', 'error');
-            return;
-        }
-        
-        // Validate file count
-        if (fileInput.files.length > 10) {
-            showFloatingToast('You can only upload up to 10 images at once.', 'error');
-            return;
-        }
-        
-        // ====== ADD FILE TYPE VALIDATION ======
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        const invalidFiles = [];
-        
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!fileInput || fileInput.files.length === 0) {
+                showFloatingToast('Please select at least one image to upload.', 'error');
+                return;
+            }
+            
+            if (fileInput.files.length > 10) {
+                showFloatingToast('You can only upload up to 10 images at once.', 'error');
+                return;
+            }
+            
+            // Validate all files before upload
         for (let i = 0; i < fileInput.files.length; i++) {
             const file = fileInput.files[i];
-            const fileExt = file.name.split('.').pop().toLowerCase();
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'jfif'];
             
-            // Check by MIME type and extension
-            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
-                invalidFiles.push(file.name);
+            if (!allowedExtensions.includes(fileExtension)) {
+                showFloatingToast(`${file.name}: Invalid file type. Allowed: JPG, PNG, GIF, WEBP, JFIF`, 'error');
+                return;
             }
-            
-            // Check file size
             if (file.size > 10 * 1024 * 1024) {
-                invalidFiles.push(`${file.name} (exceeds 10MB)`);
+                showFloatingToast(`${file.name}: File exceeds 10MB limit.`, 'error');
+                return;
             }
         }
-        
-        if (invalidFiles.length > 0) {
-            showFloatingToast(`Invalid files: ${invalidFiles.join(', ')}`, 'error');
-            return;
-        }
-        
-        const formData = new FormData();
-        for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('images[]', fileInput.files[i]);
-        }
-        
-        if (csrfToken) {
-            formData.append('_token', csrfToken);
-        }
-        
-        const uploadBtn = document.getElementById('uploadMultipleBtn');
-        const originalText = uploadBtn ? uploadBtn.innerHTML : '';
-        if (uploadBtn) {
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
-        }
-        
-        // Show modal
-        const modalElement = document.getElementById('uploadingModal');
-        let modal = null;
-        if (modalElement) {
-            modal = new bootstrap.Modal(modalElement);
-            modal.show();
-        }
-        
-        try {
-            const response = await fetch('/admin/homepage/upload-multiple', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
             
-            // Check if response is JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Non-JSON response:', text.substring(0, 500));
-                throw new Error('Server returned HTML instead of JSON. Please check if you are logged in.');
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('images[]', fileInput.files[i]);
             }
             
-            const data = await response.json();
-            
-            // ALWAYS hide modal first
-            if (modal) modal.hide();
-            
-            if (data.success) {
-                showFloatingToast(data.message, 'success');
-                fileInput.value = '';
-                selectedFiles = [];
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-                // Reload page to show new slides
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showFloatingToast(data.message || 'Upload failed', 'error');
+            if (csrfToken) {
+                formData.append('_token', csrfToken);
             }
-        } catch (error) {
-            console.error('Upload error:', error);
-            // ALWAYS hide modal on error
-            if (modal) modal.hide();
-            showFloatingToast(error.message || 'Upload failed. Please try again.', 'error');
-        } finally {
+            
+            const uploadBtn = document.getElementById('uploadMultipleBtn');
+            const originalText = uploadBtn ? uploadBtn.innerHTML : '';
             if (uploadBtn) {
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
             }
-        }
-    });
-}
+            
+            // Show modal
+            const modalElement = document.getElementById('uploadingModal');
+            let modal = null;
+            if (modalElement) {
+                modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+            
+            try {
+                const response = await fetch('/admin/homepage/upload-multiple', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned HTML instead of JSON. Please check if you are logged in.');
+                }
+                
+                const data = await response.json();
+                
+                if (modal) modal.hide();
+                
+                if (data.success) {
+                    showFloatingToast(data.message, 'success');
+                    fileInput.value = '';
+                    selectedFiles = [];
+                    if (previewContainer) {
+                        previewContainer.style.display = 'none';
+                        previewContainer.innerHTML = '';
+                    }
+                    // Reload page to show new slides
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showFloatingToast(data.message || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                if (modal) modal.hide();
+                showFloatingToast(error.message || 'Upload failed. Please try again.', 'error');
+            } finally {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = originalText;
+                }
+            }
+        });
+    }
     
     // ============================================
     // Delete Slide Functionality
