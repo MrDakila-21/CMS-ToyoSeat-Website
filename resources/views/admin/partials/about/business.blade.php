@@ -8,7 +8,7 @@
         <ul class="nav nav-tabs" id="businessTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="automotive-tab" data-bs-toggle="tab" data-bs-target="#automotive" type="button" role="tab">
-                    <i class="fas fa-car"></i> Automotive Seat Cover
+                    <i class="fas fa-car"></i> Products & Services
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -32,7 +32,7 @@
             <!-- Automotive Section -->
             <div class="tab-pane fade show active" id="automotive" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Automotive Seat Cover Items</h4>
+                    <h4>Products & Services</h4>
                     <button class="btn btn-primary" onclick="showAddAutomotiveModal()">
                         <i class="fas fa-plus"></i> Add New Item
                     </button>
@@ -69,7 +69,7 @@
             <!-- Organization Section -->
             <div class="tab-pane fade" id="organization" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Organization Members</h4>
+                    <h4>Organization Structure</h4>
                     <button class="btn btn-primary" onclick="showAddOrganizationModal()">
                         <i class="fas fa-plus"></i> Add Member
                     </button>
