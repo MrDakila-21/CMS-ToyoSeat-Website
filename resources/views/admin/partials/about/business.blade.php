@@ -106,7 +106,7 @@
     </div>
 </div>
 
-<!-- Characteristics Section -->
+            <!-- Characteristics Section -->
 <div class="tab-pane fade" id="characteristics" role="tabpanel">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>Business Characteristics</h4>
@@ -119,13 +119,11 @@
         <div class="card mb-3" data-id="{{ $char->id }}">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-3 d-flex align-items-center">
                         @if($char->image)
-                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 150px; width: 100%;">
+                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
                         @else
-                            <div class="bg-light text-center p-4 rounded w-100 d-flex align-items-center justify-content-center" style="height: 150px;">
-                                <i class="fas fa-image fa-3x text-muted"></i>
-                            </div>
+                            <div class="bg-light text-center p-4 rounded w-100">No Image</div>
                         @endif
                     </div>
                     <div class="col-md-9">
@@ -672,11 +670,13 @@ function showAddCharacteristicModal() {
     const modalLabel = document.getElementById('characteristicModalLabel');
     const form = document.getElementById('characteristicForm');
     const idField = document.getElementById('characteristicId');
+    const subtitleField = document.getElementById('characteristic_subtitle'); 
     const container = document.getElementById('characteristicCurrentImageContainer');
     
     if (modalLabel) modalLabel.textContent = 'Add Characteristic';
     if (form) form.reset();
     if (idField) idField.value = '';
+    if (subtitleField) subtitleField.value = ''; // NEW - Clear subtitle
     if (container) container.style.display = 'none';
     currentEditId = null;
     
@@ -705,13 +705,13 @@ async function editCharacteristic(id) {
         const modalLabel = document.getElementById('characteristicModalLabel');
         const idField = document.getElementById('characteristicId');
         const titleField = document.getElementById('characteristic_title');
-        const subtitleField = document.getElementById('characteristic_subtitle');  // ADD THIS
+        const subtitleField = document.getElementById('characteristic_subtitle'); // NEW
         const descField = document.getElementById('characteristic_description');
         
         if (modalLabel) modalLabel.textContent = 'Edit Characteristic';
         if (idField) idField.value = data.id;
         if (titleField) titleField.value = data.title;
-        if (subtitleField) subtitleField.value = data.subtitle || '';  // ADD THIS
+        if (subtitleField) subtitleField.value = data.subtitle || ''; // NEW
         if (descField) descField.value = data.description;
         currentEditId = data.id;
         

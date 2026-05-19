@@ -10,6 +10,7 @@ class BusinessContent extends Model
 {
     protected $table = 'business_contents';
     
+// app/Models/BusinessContent.php
     protected $fillable = [
         'section', 'title', 'subtitle', 'description', 'image', 
         'original_filename', 'name', 'position', 'order', 'is_active'

@@ -87,7 +87,7 @@
     </div>
 </div>
 
-<!-- Characteristic Modal -->
+<!-- Characteristic Modal - Add subtitle field -->
 <div class="modal fade" id="characteristicModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -103,9 +103,11 @@
                         <label>Title *</label>
                         <input type="text" name="title" id="characteristic_title" class="form-control" required>
                     </div>
+                    <!-- NEW SUBTITLE FIELD -->
                     <div class="mb-3">
-                        <label>Subtitle</label>
-                        <input type="text" name="subtitle" id="characteristic_subtitle" class="form-control" placeholder="Optional subtitle">
+                        <label>Subtitle <span class="text-muted">(Optional)</span></label>
+                        <input type="text" name="subtitle" id="characteristic_subtitle" class="form-control" placeholder="e.g., Industry Leader, Innovation Driven, Quality Focused">
+                        <small class="text-muted">A short supporting text that appears below the title</small>
                     </div>
                     <div class="mb-3">
                         <label>Description *</label>

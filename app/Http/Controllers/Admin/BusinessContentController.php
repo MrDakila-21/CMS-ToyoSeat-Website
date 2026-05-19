@@ -166,11 +166,12 @@ public function updateOrganization(Request $request, $id)
     ]);
 }
     
-    public function storeCharacteristic(Request $request)
+// In BusinessContentController.php - update storeCharacteristic method
+public function storeCharacteristic(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'subtitle' => 'nullable|string|max:255',
+        'subtitle' => 'nullable|string|max:255',  // NEW
         'description' => 'required|string',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);
@@ -201,14 +202,15 @@ public function updateOrganization(Request $request, $id)
         'html' => $html
     ]);
 }
-
+    
+// In BusinessContentController.php - update updateCharacteristic method
 public function updateCharacteristic(Request $request, $id)
 {
     $content = BusinessContent::findOrFail($id);
     
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'subtitle' => 'nullable|string|max:255',
+        'subtitle' => 'nullable|string|max:255',  // NEW
         'description' => 'required|string',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);

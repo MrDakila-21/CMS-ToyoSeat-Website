@@ -267,12 +267,57 @@
         transition: all 0.3s ease;
         height: 100%;
         border: solid 3px #e0e0e0;
+        background: white;
+        display: flex;
+        flex-direction: column;
     }
-    
-    .characteristic-card:hover {
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        transform: translateY(-5px);
-    }
+
+.characteristic-card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transform: translateY(-5px);
+}
+
+.characteristic-image-wrapper {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.characteristic-img {
+    max-width: 100%;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.characteristic-icon {
+    font-size: 3rem;
+    color: #3988BD;
+}
+
+/* Ensure consistent card content spacing */
+.characteristic-card h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #0E334C;
+}
+
+.characteristic-card h6 {
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.description-wrapper {
+    margin-top: auto;
+}
+
+.characteristic-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
     
     .partnership-logo {
         padding: 20px;
@@ -565,59 +610,68 @@
 </div>
 @endif
 
-    <!-- Characteristics Section -->
-    @if($characteristics->count() > 0)
-    <div class="mb-5 py-4 fade-in-up">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <h2 class="section-title text-center">Business Characteristics</h2>
-                    <p class="section-description">What makes us unique in the industry</p>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                @foreach($characteristics as $characteristic)
-                @php
-                    $description = $characteristic->description;
-                    $shortDesc = Str::limit($description, 100);
-                    $needsReadMore = strlen($description) > 100;
-                    $uniqueId = 'char-desc-' . $characteristic->id;
-                @endphp
-                <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
-                    <div class="characteristic-card">
-                        @if($characteristic->image)
-                        <img src="{{ $characteristic->image_url }}" alt="{{ $characteristic->title }}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 1rem;">
-                        @else
-                        <div class="characteristic-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        @endif
-                        <h4>{{ $characteristic->title }}</h4>
-                        <div class="description-wrapper" id="{{ $uniqueId }}">
-                            <div class="short-description">
-                                <p class="text-muted characteristic-description">{{ $shortDesc }}</p>
-                                @if($needsReadMore)
-                                <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                    Read More <i class="fas fa-chevron-down"></i>
-                                </button>
-                                @endif
-                            </div>
-                            @if($needsReadMore)
-                            <div class="full-description">
-                                <p class="text-muted characteristic-description">{{ $description }}</p>
-                                <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                    Read Less <i class="fas fa-chevron-up"></i>
-                                </button>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endforeach
+   <!-- Characteristics Section - IMPROVED IMAGE FITTING -->
+@if($characteristics->count() > 0)
+<div class="mb-5 py-4 fade-in-up">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="section-title text-center">Business Characteristics</h2>
+                <p class="section-description">What makes us unique in the industry</p>
             </div>
         </div>
+        <div class="row justify-content-center">
+            @foreach($characteristics as $characteristic)
+            @php
+                $description = $characteristic->description;
+                $shortDesc = Str::limit($description, 100);
+                $needsReadMore = strlen($description) > 100;
+                $uniqueId = 'char-desc-' . $characteristic->id;
+            @endphp
+            <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
+                <div class="characteristic-card h-100 d-flex flex-column">
+                    <!-- IMPROVED IMAGE CONTAINER -->
+                    <div class="characteristic-image-wrapper mb-3 d-flex justify-content-center align-items-center" style="min-height: 100px;">
+                        @if($characteristic->image)
+                            <img src="{{ $characteristic->image_url }}" 
+                                 alt="{{ $characteristic->title }}" 
+                                 class="characteristic-img"
+                                 style="width: auto; max-width: 100%; height: 80px; object-fit: contain;">
+                        @else
+                            <div class="characteristic-icon">
+                                <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
+                            </div>
+                        @endif
+                    </div>
+                    <h4 class="mt-2">{{ $characteristic->title }}</h4>
+                    @if($characteristic->subtitle)
+                        <h6 class="text-muted mb-3" style="font-size: 0.9rem;">{{ $characteristic->subtitle }}</h6>
+                    @endif
+                    <div class="description-wrapper flex-grow-1" id="{{ $uniqueId }}">
+                        <div class="short-description">
+                            <p class="text-muted characteristic-description">{{ $shortDesc }}</p>
+                            @if($needsReadMore)
+                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                Read More <i class="fas fa-chevron-down"></i>
+                            </button>
+                            @endif
+                        </div>
+                        @if($needsReadMore)
+                        <div class="full-description">
+                            <p class="text-muted characteristic-description">{{ $description }}</p>
+                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                Read Less <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
     </div>
-    @endif
+</div>
+@endif
 
     <!-- Partnership Section -->
     @if($partnerships->count() > 0)

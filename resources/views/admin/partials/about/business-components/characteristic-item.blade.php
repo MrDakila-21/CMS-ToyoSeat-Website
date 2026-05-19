@@ -1,13 +1,12 @@
+{{-- resources/views/admin/partials/about/business-components/characteristic-item.blade.php --}}
 <div class="card mb-3" data-id="{{ $char->id }}">
     <div class="card-body">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
                 @if($char->image)
-                    <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 150px;">
+                    <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}" style="object-fit: contain; max-height: 120px; width: auto;">
                 @else
-                    <div class="bg-light text-center p-4 rounded w-100 d-flex align-items-center justify-content-center" style="height: 150px;">
-                        <i class="fas fa-image fa-3x text-muted"></i>
-                    </div>
+                    <div class="bg-light text-center p-4 rounded w-100">No Image</div>
                 @endif
             </div>
             <div class="col-md-9">
