@@ -38,31 +38,31 @@
                     </button>
                 </div>
                 <div id="automotive-list">
-                    @foreach($automotive as $item)
-                        <div class="card mb-3" data-id="{{ $item->id }}">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        @if($item->image)
-                                            <img src="{{ Storage::url($item->image) }}" class="img-fluid rounded" alt="{{ $item->title }}">
-                                        @else
-                                            <div class="bg-light text-center p-4 rounded">No Image</div>
-                                        @endif
-                                    </div>
-                                    <div class="col-md-9">
-                                        <h5>{{ $item->title }}</h5>
-                                        <p>{{ Str::limit($item->description, 200) }}</p>
-                                        <button class="btn btn-sm btn-warning" onclick="editAutomotive({{ $item->id }})">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $item->id }})">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                   @foreach($automotive as $item)
+    <div class="card mb-3" data-id="{{ $item->id }}">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    @if($item->image)
+                        <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
+                    @else
+                        <div class="bg-light text-center p-4 rounded">No Image</div>
+                    @endif
+                </div>
+                <div class="col-md-9">
+                    <h5>{{ $item->title }}</h5>
+                    <p>{{ Str::limit($item->description, 100) }}</p>
+                    <button class="btn btn-sm btn-warning" onclick="editAutomotive({{ $item->id }})">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $item->id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
 
@@ -75,25 +75,26 @@
                     </button>
                 </div>
                 <div class="row" id="organization-list">
-                    @foreach($organizations as $member)
-                        <div class="col-md-4 mb-4" data-id="{{ $member->id }}">
-                            <div class="card h-100">
-                                @if($member->image)
-                                    <img src="{{ Storage::url($member->image) }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
-                                @endif
-                                <div class="card-body text-center">
-                                    <h5>{{ $member->name }}</h5>
-                                    <p class="text-muted">{{ $member->position }}</p>
-                                    <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                    <!-- Organization Section -->
+@foreach($organizations as $member)
+    <div class="col-md-4 mb-4" data-id="{{ $member->id }}">
+        <div class="card h-100">
+            @if($member->image)
+                <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
+            @endif
+            <div class="card-body text-center">
+                <h5>{{ $member->name }}</h5>
+                <p class="text-muted">{{ Str::limit($member->position, 100) }}</p>
+                <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
 
@@ -106,29 +107,30 @@
                     </button>
                 </div>
                 <div id="characteristics-list">
-                    @foreach($characteristics as $char)
-                        <div class="card mb-3" data-id="{{ $char->id }}">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        @if($char->image)
-                                            <img src="{{ Storage::url($char->image) }}" class="img-fluid rounded" alt="{{ $char->title }}">
-                                        @endif
-                                    </div>
-                                    <div class="col-md-9">
-                                        <h5>{{ $char->title }}</h5>
-                                        <p>{{ $char->description }}</p>
-                                        <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                   <!-- Characteristics Section -->
+@foreach($characteristics as $char)
+    <div class="card mb-3" data-id="{{ $char->id }}">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    @if($char->image)
+                        <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}">
+                    @endif
+                </div>
+                <div class="col-md-9">
+                    <h5>{{ $char->title }}</h5>
+                    <p>{{ Str::limit($char->description, 100) }}</p>
+                    <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
 
@@ -141,24 +143,24 @@
                     </button>
                 </div>
                 <div class="row" id="partnership-list">
-                    @foreach($partnerships as $partner)
-                        <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
-                            <div class="card h-100 text-center">
-                                @if($partner->image)
-                                    <img src="{{ Storage::url($partner->image) }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
-                                @endif
-                                <div class="card-body">
-                                    <h6>{{ $partner->title }}</h6>
-                                    <button class="btn btn-sm btn-warning mt-2" onclick="editPartnership({{ $partner->id }})">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger mt-2" onclick="deleteItem({{ $partner->id }})">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                   @foreach($partnerships as $partner)
+    <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
+        <div class="card h-100 text-center">
+            @if($partner->image)
+                <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
+            @endif
+            <div class="card-body">
+                <h6>{{ Str::limit($partner->title, 100) }}</h6>
+                <button class="btn btn-sm btn-warning mt-2" onclick="editPartnership({{ $partner->id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger mt-2" onclick="deleteItem({{ $partner->id }})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
         </div>

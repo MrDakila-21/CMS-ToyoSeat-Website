@@ -6,7 +6,7 @@
         @endif
         <div class="card-body text-center">
             <h5>{{ $member->name }}</h5>
-            <p class="text-muted">{{ $member->position }}</p>
+            <p class="text-muted">{{ Str::limit($member->position, 100) }}</p>
             <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
                 <i class="fas fa-edit"></i> Edit
             </button>

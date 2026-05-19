@@ -11,7 +11,7 @@
             </div>
             <div class="col-md-9">
                 <h5>{{ $item->title }}</h5>
-                <p>{{ Str::limit($item->description, 200) }}</p>
+                <p>{{ Str::limit($item->description, 100) }}</p>
                 <button class="btn btn-sm btn-warning" onclick="editAutomotive({{ $item->id }})">
                     <i class="fas fa-edit"></i> Edit
                 </button>

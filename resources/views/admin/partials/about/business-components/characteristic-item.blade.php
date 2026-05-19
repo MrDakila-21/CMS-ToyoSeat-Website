@@ -9,7 +9,7 @@
             </div>
             <div class="col-md-9">
                 <h5>{{ $char->title }}</h5>
-                <p>{{ $char->description }}</p>
+                <p>{{ Str::limit($char->description, 100) }}</p>
                 <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
                     <i class="fas fa-edit"></i> Edit
                 </button>

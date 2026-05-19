@@ -28,7 +28,7 @@ public function storeAutomotive(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'description' => 'required|string',
+        'description' => 'required|string|max:100',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);
     
@@ -66,7 +66,7 @@ public function updateAutomotive(Request $request, $id)
     
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'description' => 'required|string',
+        'description' => 'required|string|max:100',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);
     
@@ -178,7 +178,7 @@ public function storeCharacteristic(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'description' => 'required|string',
+        'description' => 'required|string|max:100',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);
     
@@ -215,7 +215,7 @@ public function updateCharacteristic(Request $request, $id)
     
     $validator = Validator::make($request->all(), [
         'title' => 'required|string|max:255',
-        'description' => 'required|string',
+        'description' => 'required|string|max:100',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
     ]);
     

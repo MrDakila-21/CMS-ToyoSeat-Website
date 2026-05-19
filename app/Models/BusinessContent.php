@@ -55,7 +55,6 @@ class BusinessContent extends Model
     
     /**
      * Get the image URL using storage.php (same pattern as Overview module)
-     * This ensures consistent image serving across the application
      */
     public function getImageUrlAttribute()
     {
@@ -64,18 +63,6 @@ class BusinessContent extends Model
             $path = storage_path('app/public/' . $this->image);
             $mtime = file_exists($path) ? filemtime($path) : time();
             return '/storage.php?file=' . $this->image . '&t=' . $mtime;
-        }
-        return null;
-    }
-    
-    /**
-     * Alternative accessor without cache busting (simpler version)
-     * Use this if you prefer the simpler pattern like Overview's president_image_url
-     */
-    public function getSimpleImageUrlAttribute()
-    {
-        if ($this->image) {
-            return '/storage.php?file=' . $this->image;
         }
         return null;
     }
