@@ -319,7 +319,7 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute
 
 function showAddAutomotiveModal() {
     currentSection = 'automotive';
-    document.getElementById('automotiveModalLabel').textContent = 'Add Automotive Seat Cover';
+    document.getElementById('automotiveModalLabel').textContent = 'Add New Product/Service';
     document.getElementById('automotiveForm').reset();
     document.getElementById('automotiveId').value = '';
     currentEditId = null;
@@ -347,7 +347,7 @@ async function editAutomotive(id) {
         });
         const data = await response.json();
         
-        document.getElementById('automotiveModalLabel').textContent = 'Edit Automotive Seat Cover';
+        document.getElementById('automotiveModalLabel').textContent = 'Edit Product/Service';
         document.getElementById('automotiveId').value = data.id;
         document.getElementById('automotive_title').value = data.title;
         document.getElementById('automotive_description').value = data.description;
