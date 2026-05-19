@@ -79,7 +79,13 @@ class HistoryController extends Controller
     try {
         $history = History::findOrFail($id);
         
-        // Return with explicit image_url to ensure it's included
+        // Determine the correct image URL for display
+        $imageDisplayUrl = null;
+        if ($history->image) {
+            // Use storage.php URL for display in admin (consistent with guest view)
+            $imageDisplayUrl = '/storage.php?file=' . urlencode($history->image);
+        }
+        
         return response()->json([
             'id' => $history->id,
             'title' => $history->title,
@@ -87,11 +93,13 @@ class HistoryController extends Controller
             'date' => $history->date,
             'status' => $history->status,
             'image' => $history->image,
-            'image_url' => $history->image_url, // Explicitly call the accessor
+            'image_url' => $imageDisplayUrl, // Use storage.php URL
+            'image_display_url' => $imageDisplayUrl,
             'created_at' => $history->created_at,
             'updated_at' => $history->updated_at,
         ]);
     } catch (\Exception $e) {
+        \Log::error('Error in edit: ' . $e->getMessage());
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }

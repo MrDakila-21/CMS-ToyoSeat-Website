@@ -500,7 +500,13 @@
             tableHtml += '<tr><td colspan="9" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
-                const imageSrc = item.image_url ? item.image_url : '/images/default-image.png';
+                // Use storage.php URL for image display
+            let imageSrc = '/images/default-image.png';
+            if (item.image) {
+                imageSrc = `/storage.php?file=${encodeURIComponent(item.image)}`;
+            } else if (item.image_url && item.image_url !== '/images/default-image.png') {
+                imageSrc = item.image_url;
+            }
                 const imageHtml = `<img src="${imageSrc}" class="history-image-preview" alt="${escapeHtml(item.title)}" data-view-image="${imageSrc}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;">`;
                 
                 const statusSelect = `
@@ -662,12 +668,18 @@
     }
     
     function handleImageView(e) {
-        e.stopPropagation();
-        const imageUrl = e.target.dataset.viewImage || e.target.src;
-        if (imageUrl) {
-            showImageModal(imageUrl);
-        }
+    e.stopPropagation();
+    let imageUrl = e.target.dataset.viewImage || e.target.src;
+    
+    // Ensure the image URL uses storage.php format if it's a stored image
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
+        imageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
     }
+    
+    if (imageUrl) {
+        showImageModal(imageUrl);
+    }
+}
     
     function handleTableClick(e) {
         const viewBtn = e.target.closest('.view-btn');
@@ -799,24 +811,25 @@ async function handleEditClick(id) {
         
         const data = await response.json();
         
-        console.log('Edit data received:', data); // Debug log
+        console.log('Edit data received:', data);
         
         const formattedDate = data.date ? formatDate(data.date) : '';
         
-        // Try multiple possible image sources
+        // FIX: Use storage.php URL for image display
         let imageSrc = '/images/default-image.png';
+        let hasCustomImage = false;
         
-        // Check if image_url exists and is not null
-        if (data.image_url && data.image_url !== null && data.image_url !== '') {
+        if (data.image) {
+            // Use storage.php URL
+            imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}`;
+            hasCustomImage = true;
+        } else if (data.image_url && data.image_url !== '/images/default-image.png') {
             imageSrc = data.image_url;
-        } 
-        // Check if image path exists
-        else if (data.image && data.image !== null && data.image !== '') {
-            // Construct the full URL from the stored path
-            imageSrc = `/storage/${data.image}`;
+            hasCustomImage = true;
         }
         
-        console.log('Image source used:', imageSrc); // Debug log
+        console.log('Image source used in edit modal:', imageSrc);
+        console.log('Has custom image:', hasCustomImage);
         
         modalBody.innerHTML = `
             <div class="mb-3">
@@ -834,9 +847,11 @@ async function handleEditClick(id) {
             <div class="mb-3">
                 <label class="form-label">Current Image</label>
                 <div class="mt-2">
-                    <img src="${imageSrc}" alt="Current image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" 
+                    <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
                          onerror="this.onerror=null; this.src='/images/default-image.png';">
-                    ${data.image ? '<div class="text-success small mt-1"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : '<div class="text-muted small mt-1"><i class="fas fa-image"></i> Using default image</div>'}
+                    ${hasCustomImage ? 
+                        '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                        '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
                 </div>
             </div>
             <div class="mb-3">
@@ -910,37 +925,44 @@ async function handleEditClick(id) {
         }
     }
     
-    function showImageModal(imageUrl) {
-        const modalHtml = `
-            <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Image Preview</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                            <img src="${imageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
+   function showImageModal(imageUrl) {
+    // Ensure proper URL format
+    let finalImageUrl = imageUrl;
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
+        finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
+    }
+    
+    const modalHtml = `
+        <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Image Preview</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="${finalImageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;" 
+                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-        `;
-        
-        const existingModal = document.getElementById('imageViewModal');
-        if (existingModal) existingModal.remove();
-        
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        const modal = new bootstrap.Modal(document.getElementById('imageViewModal'));
-        modal.show();
-        
-        document.getElementById('imageViewModal').addEventListener('hidden.bs.modal', function() {
-            this.remove();
-        });
-    }
+        </div>
+    `;
+    
+    const existingModal = document.getElementById('imageViewModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('imageViewModal'));
+    modal.show();
+    
+    document.getElementById('imageViewModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
     
     function attachEventHandlers() {
         const searchInput = document.getElementById('historySearchInput');
