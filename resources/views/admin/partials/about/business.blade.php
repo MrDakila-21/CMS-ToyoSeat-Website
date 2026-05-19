@@ -183,6 +183,9 @@
 @include('admin.partials.about.business-modals')
 
 <script>
+// Replace your entire script section (from document.addEventListener to the end)
+// with this corrected code:
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check if this is first visit or if we should use saved preference
     const lastTab = localStorage.getItem('lastBusinessTab');
@@ -327,24 +330,32 @@ async function makeRequest(url, method, formData) {
 }
 
 // Get CSRF token from meta tag
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+// ============================================
+// AUTOMOTIVE FUNCTIONS
+// ============================================
 function showAddAutomotiveModal() {
     currentSection = 'automotive';
-    document.getElementById('automotiveModalLabel').textContent = 'Add New Product/Service';
-    document.getElementById('automotiveForm').reset();
-    document.getElementById('automotiveId').value = '';
+    const modalLabel = document.getElementById('automotiveModalLabel');
+    const form = document.getElementById('automotiveForm');
+    const idField = document.getElementById('automotiveId');
+    const container = document.getElementById('automotiveCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add New Product/Service';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('automotiveCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('automotiveModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editAutomotive(id) {
@@ -359,10 +370,15 @@ async function editAutomotive(id) {
         });
         const data = await response.json();
         
-        document.getElementById('automotiveModalLabel').textContent = 'Edit Product/Service';
-        document.getElementById('automotiveId').value = data.id;
-        document.getElementById('automotive_title').value = data.title;
-        document.getElementById('automotive_description').value = data.description;
+        const modalLabel = document.getElementById('automotiveModalLabel');
+        const idField = document.getElementById('automotiveId');
+        const titleField = document.getElementById('automotive_title');
+        const descField = document.getElementById('automotive_description');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Product/Service';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
+        if (descField) descField.value = data.description;
         currentEditId = data.id;
         
         // Show and update current image if exists
@@ -381,103 +397,139 @@ async function editAutomotive(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('automotiveModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
     }
 }
 
-// Automotive Form Handler
-document.getElementById('automotiveForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/automotive/${currentEditId}` : '/admin/business-content/automotive';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+// Automotive Form Handler - FIXED with null checks
+const automotiveForm = document.getElementById('automotiveForm');
+if (automotiveForm) {
+    automotiveForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        // Check if form elements exist
+        const idField = document.getElementById('automotiveId');
+        const titleField = document.getElementById('automotive_title');
+        const descField = document.getElementById('automotive_description');
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
+        if (!titleField || !descField) {
+            showToast('Form elements not found', 'error');
             return;
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                // Update existing item
-                const itemElement = document.querySelector(`#automotive-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/automotive/${currentEditId}` : '/admin/business-content/automotive';
+        
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                // Add new item
-                document.getElementById('automotive-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('automotiveModal'));
-            if (modal) modal.hide();
-            
-            // Reset form
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const automotiveList = document.getElementById('automotive-list');
+                if (automotiveList) {
+                    if (currentEditId) {
+                        // Update existing item
+                        const itemElement = automotiveList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        // Add new item
+                        if (data.html) {
+                            automotiveList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                // Close modal
+                const modalElement = document.getElementById('automotiveModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                // Reset form
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Organization Modal Functions - UPDATED
+// ============================================
+// ORGANIZATION FUNCTIONS - FIXED
+// ============================================
 function showAddOrganizationModal() {
     currentSection = 'organization';
-    document.getElementById('organizationModalLabel').textContent = 'Add Organization Chart';
-    document.getElementById('organizationForm').reset();
-    document.getElementById('organizationId').value = '';
+    const modalLabel = document.getElementById('organizationModalLabel');
+    const form = document.getElementById('organizationForm');
+    const idField = document.getElementById('organizationId');
+    const container = document.getElementById('organizationCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Organization Chart';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('organizationCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('organizationModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editOrganization(id) {
@@ -492,9 +544,13 @@ async function editOrganization(id) {
         });
         const data = await response.json();
         
-        document.getElementById('organizationModalLabel').textContent = 'Edit Organization Chart';
-        document.getElementById('organizationId').value = data.id;
-        document.getElementById('organization_title').value = data.title;
+        const modalLabel = document.getElementById('organizationModalLabel');
+        const idField = document.getElementById('organizationId');
+        const titleField = document.getElementById('organization_title');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Organization Chart';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title || '';
         currentEditId = data.id;
         
         // Show and update current image if exists
@@ -512,96 +568,124 @@ async function editOrganization(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('organizationModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
     }
 }
 
-// Organization Form Handler - UPDATED (removed position field)
-document.getElementById('organizationForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/organization/${currentEditId}` : '/admin/business-content/organization';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+// Organization Form Handler - FIXED
+const organizationForm = document.getElementById('organizationForm');
+if (organizationForm) {
+    organizationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/organization/${currentEditId}` : '/admin/business-content/organization';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#organization-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('organization-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('organizationModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const organizationList = document.getElementById('organization-list');
+                if (organizationList) {
+                    if (currentEditId) {
+                        const itemElement = organizationList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            organizationList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('organizationModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Characteristic Modal Functions
+// ============================================
+// CHARACTERISTIC FUNCTIONS
+// ============================================
 function showAddCharacteristicModal() {
     currentSection = 'characteristic';
-    document.getElementById('characteristicModalLabel').textContent = 'Add Characteristic';
-    document.getElementById('characteristicForm').reset();
-    document.getElementById('characteristicId').value = '';
+    const modalLabel = document.getElementById('characteristicModalLabel');
+    const form = document.getElementById('characteristicForm');
+    const idField = document.getElementById('characteristicId');
+    const container = document.getElementById('characteristicCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Characteristic';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('characteristicCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('characteristicModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editCharacteristic(id) {
@@ -616,13 +700,17 @@ async function editCharacteristic(id) {
         });
         const data = await response.json();
         
-        document.getElementById('characteristicModalLabel').textContent = 'Edit Characteristic';
-        document.getElementById('characteristicId').value = data.id;
-        document.getElementById('characteristic_title').value = data.title;
-        document.getElementById('characteristic_description').value = data.description;
+        const modalLabel = document.getElementById('characteristicModalLabel');
+        const idField = document.getElementById('characteristicId');
+        const titleField = document.getElementById('characteristic_title');
+        const descField = document.getElementById('characteristic_description');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Characteristic';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
+        if (descField) descField.value = data.description;
         currentEditId = data.id;
         
-        // Show and update current image if exists
         const currentImageContainer = document.getElementById('characteristicCurrentImageContainer');
         const currentImage = document.getElementById('characteristicCurrentImage');
         const currentImageName = document.getElementById('characteristicCurrentImageName');
@@ -630,7 +718,6 @@ async function editCharacteristic(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
                 currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
                 currentImageContainer.style.display = 'block';
             } else {
@@ -638,11 +725,14 @@ async function editCharacteristic(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('characteristicModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
@@ -650,84 +740,109 @@ async function editCharacteristic(id) {
 }
 
 // Characteristic Form Handler
-document.getElementById('characteristicForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/characteristic/${currentEditId}` : '/admin/business-content/characteristic';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+const characteristicForm = document.getElementById('characteristicForm');
+if (characteristicForm) {
+    characteristicForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/characteristic/${currentEditId}` : '/admin/business-content/characteristic';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#characteristics-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('characteristics-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('characteristicModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const characteristicsList = document.getElementById('characteristics-list');
+                if (characteristicsList) {
+                    if (currentEditId) {
+                        const itemElement = characteristicsList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            characteristicsList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('characteristicModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Partnership Modal Functions
+// ============================================
+// PARTNERSHIP FUNCTIONS
+// ============================================
 function showAddPartnershipModal() {
     currentSection = 'partnership';
-    document.getElementById('partnershipModalLabel').textContent = 'Add Partnership';
-    document.getElementById('partnershipForm').reset();
-    document.getElementById('partnershipId').value = '';
+    const modalLabel = document.getElementById('partnershipModalLabel');
+    const form = document.getElementById('partnershipForm');
+    const idField = document.getElementById('partnershipId');
+    const container = document.getElementById('partnershipCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Partnership';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('partnershipCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('partnershipModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editPartnership(id) {
@@ -742,12 +857,15 @@ async function editPartnership(id) {
         });
         const data = await response.json();
         
-        document.getElementById('partnershipModalLabel').textContent = 'Edit Partnership';
-        document.getElementById('partnershipId').value = data.id;
-        document.getElementById('partnership_title').value = data.title;
+        const modalLabel = document.getElementById('partnershipModalLabel');
+        const idField = document.getElementById('partnershipId');
+        const titleField = document.getElementById('partnership_title');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Partnership';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
         currentEditId = data.id;
         
-        // Show and update current image if exists
         const currentImageContainer = document.getElementById('partnershipCurrentImageContainer');
         const currentImage = document.getElementById('partnershipCurrentImage');
         const currentImageName = document.getElementById('partnershipCurrentImageName');
@@ -755,7 +873,6 @@ async function editPartnership(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
                 currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
                 currentImageContainer.style.display = 'block';
             } else {
@@ -763,11 +880,14 @@ async function editPartnership(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('partnershipModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
@@ -775,69 +895,87 @@ async function editPartnership(id) {
 }
 
 // Partnership Form Handler
-document.getElementById('partnershipForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/partnership/${currentEditId}` : '/admin/business-content/partnership';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+const partnershipForm = document.getElementById('partnershipForm');
+if (partnershipForm) {
+    partnershipForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/partnership/${currentEditId}` : '/admin/business-content/partnership';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#partnership-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('partnership-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('partnershipModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const partnershipList = document.getElementById('partnership-list');
+                if (partnershipList) {
+                    if (currentEditId) {
+                        const itemElement = partnershipList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            partnershipList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('partnershipModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
 // ============================================
-// DELETE FUNCTION
+// DELETE FUNCTION - FIXED
 // ============================================
 async function deleteItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
@@ -861,9 +999,9 @@ async function deleteItem(id) {
             }
             
             if (data.success) {
-                // Remove the item from DOM
+                // Remove the item from DOM - search in all containers
                 const itemElement = document.querySelector(`[data-id="${id}"]`);
-                if (itemElement) {
+                if (itemElement && itemElement.parentNode) {
                     itemElement.remove();
                 }
                 showToast(data.message, 'success');
