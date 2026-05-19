@@ -1125,47 +1125,64 @@
         });
     }
     
-    function createHistoryCard(record, index) {
-        const formattedDate = formatDate(record.date);
-        const defaultImageUrl = '/images/default-image.png';
-        const imageSrc = record.image_url ? record.image_url : defaultImageUrl;
-        
-        // Split description for read more functionality (40 words)
-        const words = record.description.split(' ');
-        const isLong = words.length > 40;
-        const shortDescription = isLong ? words.slice(0, 40).join(' ') : record.description;
-        const fullDescription = record.description;
-        
-        const card = document.createElement('div');
-        card.className = 'history-card';
-        card.style.animationDelay = `${index * 0.05}s`;
-        
-        card.innerHTML = `
-            <div class="card-image" onclick="openImageModal('${imageSrc}')" style="cursor: pointer;">
-                <img src="${imageSrc}" alt="${escapeHtml(record.title)}" loading="lazy">
-                <div class="image-overlay">
-                    <i class="fas fa-search-plus"></i>
-                </div>
-            </div>
-            <div class="card-content">
-                <span class="card-date">
-                    <i class="far fa-calendar-alt me-2"></i>${formattedDate}
-                </span>
-                <h3 class="card-title">${escapeHtml(record.title)}</h3>
-                <div class="card-description">
-                    <div class="description-wrapper">
-                        <span class="short-description" id="short-${record.id}">${escapeHtml(shortDescription)}</span>
-                        <span class="full-description" id="full-${record.id}" style="display: none;">${escapeHtml(fullDescription)}</span>
-                    </div>
-                    ${isLong ? `<button class="read-more-btn" onclick="toggleReadMore(${record.id})">
-                        <i class="fas fa-chevron-down me-1"></i>Read More
-                    </button>` : ''}
-                </div>
-            </div>
-        `;
-        
-        return card;
+   function createHistoryCard(record, index) {
+    const formattedDate = formatDate(record.date);
+    const defaultImageUrl = '/images/default-image.png';
+    
+    // FIX: Use the same image serving logic as overview module
+    let imageSrc = defaultImageUrl;
+    if (record.image_url) {
+        // If image_url already has the full URL from the accessor, use it
+        imageSrc = record.image_url;
+    } else if (record.image) {
+        // If only image path exists, construct URL through storage.php
+        imageSrc = `/storage.php?file=${encodeURIComponent(record.image)}`;
     }
+    
+    // Also try to handle if image_url returns null but image exists
+    if ((!imageSrc || imageSrc === defaultImageUrl) && record.image) {
+        imageSrc = `/storage.php?file=${encodeURIComponent(record.image)}`;
+    }
+    
+    console.log('Image source for', record.title, ':', imageSrc); // Debug log
+    
+    // Split description for read more functionality (40 words)
+    const words = record.description.split(' ');
+    const isLong = words.length > 40;
+    const shortDescription = isLong ? words.slice(0, 40).join(' ') : record.description;
+    const fullDescription = record.description;
+    
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    card.style.animationDelay = `${index * 0.05}s`;
+    
+    card.innerHTML = `
+        <div class="card-image" onclick="openImageModal('${imageSrc}')" style="cursor: pointer;">
+            <img src="${imageSrc}" alt="${escapeHtml(record.title)}" loading="lazy" 
+                 onerror="this.onerror=null; this.src='/images/default-image.png';">
+            <div class="image-overlay">
+                <i class="fas fa-search-plus"></i>
+            </div>
+        </div>
+        <div class="card-content">
+            <span class="card-date">
+                <i class="far fa-calendar-alt me-2"></i>${formattedDate}
+            </span>
+            <h3 class="card-title">${escapeHtml(record.title)}</h3>
+            <div class="card-description">
+                <div class="description-wrapper">
+                    <span class="short-description" id="short-${record.id}">${escapeHtml(shortDescription)}</span>
+                    <span class="full-description" id="full-${record.id}" style="display: none;">${escapeHtml(fullDescription)}</span>
+                </div>
+                ${isLong ? `<button class="read-more-btn" onclick="toggleReadMore(${record.id})">
+                    <i class="fas fa-chevron-down me-1"></i>Read More
+                </button>` : ''}
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
     
     function renderPagination(currentPage, totalPages, totalYears) {
         const paginationContainer = document.getElementById('paginationContainer');
@@ -1273,12 +1290,19 @@
     }
     
     function openImageModal(imageUrl) {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        modal.style.display = 'block';
-        modalImg.src = imageUrl;
-        document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    
+    // Ensure the image URL is properly encoded for storage.php if needed
+    let finalImageUrl = imageUrl;
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
+        finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
     }
+    
+    modal.style.display = 'block';
+    modalImg.src = finalImageUrl;
+    document.body.style.overflow = 'hidden';
+}
     
     function closeImageModal() {
         const modal = document.getElementById('imageModal');
