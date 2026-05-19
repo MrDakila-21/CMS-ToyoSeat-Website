@@ -531,45 +531,37 @@
     </div>
     @endif
 
-    <!-- Organization Section with Landscape Org Chart -->
+{{-- In guest business-introduction.blade.php --}}
+<!-- Organization Section -->
 @if($organizationMembers->count() > 0)
 <div class="mb-5 fade-in-up">
     <div class="row mb-4">
         <div class="col-12 text-center">
             <h2 class="section-title text-center">Organizational Structure</h2>
-            <p class="section-description">Our organizational framework and leadership hierarchy</p>
+            <p class="section-description">Our company's organizational framework</p>
         </div>
     </div>
-    
-    @foreach($organizationMembers as $member)
-    <div class="row justify-content-center mb-5">
-        <div class="col-12">
-            <div class="card organization-chart-card">
-                <div class="card-body p-4">
+    <div class="row justify-content-center">
+        @foreach($organizationMembers as $member)
+        <div class="col-12 mb-4">
+            <div class="card organization-card">
+                <div class="card-body text-center">
+                    @if($member->title)
+                        <h4 class="card-title mb-3">{{ $member->title }}</h4>
+                    @endif
                     @if($member->image)
-                    <div class="org-chart-container text-center">
-                        <img src="{{ $member->image_url }}" class="img-fluid org-chart-image" alt="{{ $member->name }}" style="width: 100%; max-width: 1200px; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        @if($member->name || $member->position)
-                        <div class="org-chart-caption mt-3">
-                            <h4>{{ $member->name }}</h4>
-                            @if($member->position)
-                            <p class="text-muted">{{ $member->position }}</p>
-                            @endif
-                        </div>
-                        @endif
-                    </div>
+                        <img src="{{ $member->image_url }}" class="img-fluid rounded" alt="{{ $member->title ?? 'Organization Chart' }}" style="max-width: 100%; height: auto;">
                     @else
-                    <div class="alert alert-info text-center">
-                        <i class="fas fa-chart-simple fa-3x mb-3"></i>
-                        <h4>Organizational Structure</h4>
-                        <p class="mb-0">Organization chart will be displayed here</p>
-                    </div>
+                        <div class="bg-light p-5 text-center">
+                            <i class="fas fa-building fa-5x text-muted"></i>
+                            <p class="mt-3 text-muted">Organization chart coming soon</p>
+                        </div>
                     @endif
                 </div>
             </div>
         </div>
+        @endforeach
     </div>
-    @endforeach
 </div>
 @endif
 
