@@ -66,73 +66,92 @@
                 </div>
             </div>
 
-            <!-- Organization Section -->
-            <div class="tab-pane fade" id="organization" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Organization Structure</h4>
-                    <button class="btn btn-primary" onclick="showAddOrganizationModal()">
-                        <i class="fas fa-plus"></i> Add Member
-                    </button>
+           <!-- Organization Section -->
+<div class="tab-pane fade" id="organization" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Organization Structure</h4>
+        <button class="btn btn-primary" onclick="showAddOrganizationModal()">
+            <i class="fas fa-plus"></i> Add Organizational Chart
+        </button>
+    </div>
+    <div id="organization-list">
+        @foreach($organizations as $member)
+        <div class="card mb-3" data-id="{{ $member->id }}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5>{{ $member->name }}</h5>
+                                @if($member->position)
+                                    <p class="text-muted mb-2">{{ $member->position }}</p>
+                                @endif
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        @if($member->image)
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-image me-2"></i> Org Chart Image uploaded: 
+                                <strong>{{ $member->original_filename ?? basename($member->image) }}</strong>
+                                <a href="{{ $member->image_url }}" target="_blank" class="btn btn-sm btn-link">View</a>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                <div class="row" id="organization-list">
-                    <!-- Organization Section -->
-@foreach($organizations as $member)
-    <div class="col-md-4 mb-4" data-id="{{ $member->id }}">
-        <div class="card h-100">
-            @if($member->image)
-                <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
-            @endif
-            <div class="card-body text-center">
-                <h5>{{ $member->name }}</h5>
-                <p class="text-muted">{{ Str::limit($member->position, 100) }}</p>
-                <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
             </div>
         </div>
+        @endforeach
     </div>
-@endforeach
-                </div>
-            </div>
+</div>
 
             <!-- Characteristics Section -->
-            <div class="tab-pane fade" id="characteristics" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Business Characteristics</h4>
-                    <button class="btn btn-primary" onclick="showAddCharacteristicModal()">
-                        <i class="fas fa-plus"></i> Add Characteristic
-                    </button>
-                </div>
-                <div id="characteristics-list">
-                   <!-- Characteristics Section -->
-@foreach($characteristics as $char)
-    <div class="card mb-3" data-id="{{ $char->id }}">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    @if($char->image)
-                        <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}">
-                    @endif
-                </div>
-                <div class="col-md-9">
-                    <h5>{{ $char->title }}</h5>
-                    <p>{{ Str::limit($char->description, 100) }}</p>
-                    <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+<div class="tab-pane fade" id="characteristics" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Business Characteristics</h4>
+        <button class="btn btn-primary" onclick="showAddCharacteristicModal()">
+            <i class="fas fa-plus"></i> Add Characteristic
+        </button>
+    </div>
+    <div id="characteristics-list">
+        @foreach($characteristics as $char)
+        <div class="card mb-3" data-id="{{ $char->id }}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 d-flex align-items-center">
+                        @if($char->image)
+                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
+                        @else
+                            <div class="bg-light text-center p-4 rounded w-100">No Image</div>
+                        @endif
+                    </div>
+                    <div class="col-md-9">
+                        <h5>{{ $char->title }}</h5>
+                        @if($char->subtitle)
+                            <h6 class="text-muted">{{ $char->subtitle }}</h6>
+                        @endif
+                        <p>{{ Str::limit($char->description, 100) }}</p>
+                        <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+        @endforeach
     </div>
-@endforeach
-                </div>
-            </div>
+</div>
 
             <!-- Partnership Section -->
             <div class="tab-pane fade" id="partnership" role="tabpanel">
@@ -452,10 +471,14 @@ document.getElementById('automotiveForm')?.addEventListener('submit', async func
 // Organization Modal Functions
 function showAddOrganizationModal() {
     currentSection = 'organization';
-    document.getElementById('organizationModalLabel').textContent = 'Add Organization Member';
+    document.getElementById('organizationModalLabel').textContent = 'Add Organizational Chart';
     document.getElementById('organizationForm').reset();
     document.getElementById('organizationId').value = '';
     currentEditId = null;
+    
+    // Make image field required for new uploads
+    const imageField = document.querySelector('#organizationForm input[name="image"]');
+    if (imageField) imageField.required = true;
     
     // Hide current image container for add mode
     const container = document.getElementById('organizationCurrentImageContainer');
@@ -480,11 +503,15 @@ async function editOrganization(id) {
         });
         const data = await response.json();
         
-        document.getElementById('organizationModalLabel').textContent = 'Edit Organization Member';
+        document.getElementById('organizationModalLabel').textContent = 'Edit Organizational Chart';
         document.getElementById('organizationId').value = data.id;
         document.getElementById('organization_name').value = data.name;
-        document.getElementById('organization_position').value = data.position;
+        document.getElementById('organization_position').value = data.position || '';
         currentEditId = data.id;
+        
+        // Make image field optional for edits
+        const imageField = document.querySelector('#organizationForm input[name="image"]');
+        if (imageField) imageField.required = false;
         
         // Show and update current image if exists
         const currentImageContainer = document.getElementById('organizationCurrentImageContainer');
@@ -494,8 +521,8 @@ async function editOrganization(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
-                currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
+                const filename = data.display_filename || (data.image ? data.image.split('/').pop() : 'No image');
+                currentImageName.textContent = `Current: ${filename}`;
                 currentImageContainer.style.display = 'block';
             } else {
                 currentImageContainer.style.display = 'none';

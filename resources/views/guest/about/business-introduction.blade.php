@@ -405,6 +405,53 @@
             font-size: 0.75rem;
         }
     }
+
+
+    /* Organization Chart Styles */
+.organization-chart-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: white;
+}
+
+.organization-chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.org-chart-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.org-chart-image {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.org-chart-image:hover {
+    transform: scale(1.01);
+}
+
+.org-chart-caption {
+    border-top: 2px solid #e9ecef;
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+.org-chart-caption h4 {
+    color: #0E334C;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.org-chart-caption p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
 </style>
 
 <!-- Hero Section - Modern Gradient with Subtle Animation -->
@@ -484,38 +531,47 @@
     </div>
     @endif
 
-    <!-- Organization Section -->
-    @if($organizationMembers->count() > 0)
-    <div class="mb-5 fade-in-up">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2 class="section-title text-center">Organizational Structure</h2>
-                <p class="section-description">Meet our dedicated leadership team</p>
-            </div>
-        </div>
-        <div class="row justify-content-center">
-            @foreach($organizationMembers as $member)
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card organization-card h-100 text-center">
-                    @if($member->image)
-                    <div class="overflow-hidden">
-                        <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
-                    </div>
-                    @else
-                    <div class="bg-light p-5 text-center">
-                        <i class="fas fa-user-circle fa-4x text-muted"></i>
-                    </div>
-                    @endif
-                    <div class="card-body">
-                        <h5 class="card-title mb-1">{{ $member->name }}</h5>
-                        <p class="text-primary mb-0">{{ Str::limit($member->position, 100) }}</p>
-                    </div>
-                </div>
-            </div>
-            @endforeach
+    <!-- Organization Section with Landscape Org Chart -->
+@if($organizationMembers->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Organizational Structure</h2>
+            <p class="section-description">Our organizational framework and leadership hierarchy</p>
         </div>
     </div>
-    @endif
+    
+    @foreach($organizationMembers as $member)
+    <div class="row justify-content-center mb-5">
+        <div class="col-12">
+            <div class="card organization-chart-card">
+                <div class="card-body p-4">
+                    @if($member->image)
+                    <div class="org-chart-container text-center">
+                        <img src="{{ $member->image_url }}" class="img-fluid org-chart-image" alt="{{ $member->name }}" style="width: 100%; max-width: 1200px; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        @if($member->name || $member->position)
+                        <div class="org-chart-caption mt-3">
+                            <h4>{{ $member->name }}</h4>
+                            @if($member->position)
+                            <p class="text-muted">{{ $member->position }}</p>
+                            @endif
+                        </div>
+                        @endif
+                    </div>
+                    @else
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-chart-simple fa-3x mb-3"></i>
+                        <h4>Organizational Structure</h4>
+                        <p class="mb-0">Organization chart will be displayed here</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+@endif
 
     <!-- Characteristics Section -->
     @if($characteristics->count() > 0)
