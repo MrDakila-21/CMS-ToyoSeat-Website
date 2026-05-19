@@ -237,7 +237,7 @@ $recentRecruitments = Recruitment::where('status', 'published')
                 
                 <p class="section3-welcome-text">
                     We're always looking for talented individuals to join our growing family. 
-                    At Mazda Seating Systems, we believe in fostering innovation, encouraging growth, 
+                    At Toyo Seat Philippines, we believe in fostering innovation, encouraging growth, 
                     and building a workplace where every voice matters.
                 </p>
                 
