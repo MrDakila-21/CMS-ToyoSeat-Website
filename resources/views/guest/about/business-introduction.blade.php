@@ -278,18 +278,17 @@
 }
 
 .characteristic-image-wrapper {
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 10px;
 }
 
 .characteristic-img {
-    max-width: 100%;
-    max-height: 80px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .characteristic-icon {
@@ -631,12 +630,11 @@
             <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
                 <div class="characteristic-card h-100 d-flex flex-column">
                     <!-- IMPROVED IMAGE CONTAINER -->
-                    <div class="characteristic-image-wrapper mb-3 d-flex justify-content-center align-items-center" style="min-height: 100px;">
+                    <div class="characteristic-image-wrapper mb-3">
                         @if($characteristic->image)
                             <img src="{{ $characteristic->image_url }}" 
-                                 alt="{{ $characteristic->title }}" 
-                                 class="characteristic-img"
-                                 style="width: auto; max-width: 100%; height: 80px; object-fit: contain;">
+                                alt="{{ $characteristic->title }}" 
+                                class="characteristic-img">
                         @else
                             <div class="characteristic-icon">
                                 <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
