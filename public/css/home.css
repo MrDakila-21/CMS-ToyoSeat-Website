@@ -1836,3 +1836,48 @@
         margin-bottom: 12px;
     }
 }
+
+/* Recruitment Header with Icon and Title side by side */
+.recruitment-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.recruitment-icon-header {
+    width: 40px;
+    height: 40px;
+    filter: brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(1234%) hue-rotate(171deg) brightness(92%) contrast(89%);
+}
+
+.section3-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a2a3a;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+/* Responsive adjustment for smaller screens */
+@media (max-width: 768px) {
+    .recruitment-icon-header {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .section3-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .recruitment-icon-header {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .section3-title {
+        font-size: 20px;
+    }
+}
