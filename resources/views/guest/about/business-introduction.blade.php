@@ -433,8 +433,8 @@
     <div class="mb-5 fade-in-up">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title text-center">Automotive Seat Cover</h2>
-                <p class="section-description">Premium quality seat covers designed for comfort and durability</p>
+                <h2 class="section-title text-center">Products & Services</h2>
+                <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
             </div>
         </div>
         <div class="row">
