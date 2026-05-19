@@ -53,7 +53,7 @@ public function storeAutomotive(Request $request)
     
     return response()->json([
         'success' => true,
-        'message' => 'Automotive seat cover added successfully',
+        'message' => 'Product/Service added successfully',
         'data' => $content,
         'html' => $html
     ]);
@@ -92,7 +92,7 @@ public function updateAutomotive(Request $request, $id)
     
     return response()->json([
         'success' => true,
-        'message' => 'Automotive seat cover updated successfully',
+        'message' => 'Product/Service updated successfully',
         'data' => $content,
         'html' => $html
     ]);
