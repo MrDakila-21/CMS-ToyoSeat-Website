@@ -10,6 +10,7 @@ use App\Http\Controllers\Guest\AnnouncementController as GuestAnnouncementContro
 use App\Http\Controllers\Guest\EventActivityController as GuestEventActivityController;
 use App\Http\Controllers\Guest\IsoObtainedController;
 use App\Http\Controllers\Guest\LocationController as GuestLocationController;
+use App\Http\Controllers\Guest\HistoryController as GuestHistoryController; 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\InquiryController;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BusinessContentController;
 use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
 use App\Http\Controllers\Admin\RecruitmentController; 
+use App\Http\Controllers\Admin\HistoryController; 
 
 // Image serving route
 Route::get('/image/{path}', [ImageController::class, 'serve'])
@@ -40,7 +42,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
         // FIXED: Corrected route definition for business introduction
         Route::get('/business-introduction', [BusinessIntroductionController::class, 'index'])->name('business-introduction');
         Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
-        Route::view('/history', 'guest.about.history')->name('history');
+        Route::get('/history', [GuestHistoryController::class, 'index'])->name('history');
+        Route::get('/history-data', [GuestHistoryController::class, 'getPublished'])->name('history-data');
         Route::get('/iso-obtained', [IsoObtainedController::class, 'index'])->name('iso-obtained');
         Route::view('/privacy-policy', 'guest.about.privacy-policy')->name('privacy-policy');
     });
@@ -108,6 +111,11 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
 
+    // History management routes - MAKE SURE THESE ARE EXACTLY HERE
+Route::get('histories/all', [App\Http\Controllers\Admin\HistoryController::class, 'getAll'])->name('admin.histories.all');
+Route::resource('histories', App\Http\Controllers\Admin\HistoryController::class)->names('admin.histories');
+Route::patch('histories/{id}/status/{status}', [App\Http\Controllers\Admin\HistoryController::class, 'updateStatus'])->name('admin.histories.updateStatus');
+Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryController::class, 'uploadDirectImage'])->name('admin.histories.uploadDirect');
                 // Recruitment management routes
         Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
         Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
