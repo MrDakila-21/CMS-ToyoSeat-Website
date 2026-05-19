@@ -46,107 +46,101 @@ class HomepageController extends Controller
 
     /**
      * Upload multiple images for slideshow
-     */
-    public function uploadMultipleImages(Request $request)
-    {
-        try {
-            Log::info('Upload multiple images request received');
-            
-            if (!$request->ajax() && !$request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid request type. AJAX request required.'
-                ], 400);
-            }
-            
-            if (!$request->hasFile('images')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No files were uploaded. Please select at least one image.'
-                ], 400);
-            }
-            
-            $files = $request->file('images');
-            
-            if (count($files) > 10) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only upload up to 10 images at once.'
-                ], 400);
-            }
-            
-            $uploadedCount = 0;
-            $currentMaxOrder = HomepageSlide::max('order') ?? 0;
-            $errors = [];
-            
-            foreach ($files as $index => $image) {
-                if (!$image->isValid()) {
-                    $errors[] = 'Invalid file at position ' . ($index + 1);
-                    continue;
-                }
-                
-                $extension = strtolower($image->getClientOriginalExtension());
-                $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
-                
-                if (!in_array($extension, $allowedExtensions)) {
-                    $errors[] = $image->getClientOriginalName() . ' has invalid file type. Allowed: JPG, PNG, GIF, WEBP';
-                    continue;
-                }
-                
-                if ($image->getSize() > 10 * 1024 * 1024) {
-                    $errors[] = $image->getClientOriginalName() . ' exceeds 10MB limit.';
-                    continue;
-                }
-                
-                $filename = Str::random(40) . '.' . $extension;
-                $path = $image->storeAs('homepage_slides', $filename, 'public');
-                
-                if (!$path) {
-                    $errors[] = 'Failed to store ' . $image->getClientOriginalName();
-                    continue;
-                }
-                
-                HomepageSlide::create([
-                    'image_path' => $path,
-                    'order' => $currentMaxOrder + $uploadedCount + 1,
-                    'is_active' => false
-                ]);
-                
-                $uploadedCount++;
-            }
-            
-            if ($uploadedCount === 0) {
-                $errorMessage = 'No valid images were uploaded. ' . implode(' ', $errors);
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 400);
-            }
-            
-            $successMessage = $uploadedCount . ' image(s) uploaded successfully!';
-            if (!empty($errors)) {
-                $successMessage .= ' However, some files failed: ' . implode(' ', $errors);
-                return response()->json([
-                    'success' => true,
-                    'message' => $successMessage,
-                    'warnings' => $errors
-                ]);
-            }
-            
-            Log::info('Successfully uploaded ' . $uploadedCount . ' images');
-            return response()->json([
-                'success' => true,
-                'message' => $successMessage
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error uploading multiple images: ' . $e->getMessage());
+     */public function uploadMultipleImages(Request $request)
+{
+    try {
+        Log::info('Upload multiple images request received');
+        
+        if (!$request->ajax() && !$request->wantsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to upload images: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Invalid request type. AJAX request required.'
+            ], 400);
         }
+        
+        if (!$request->hasFile('images')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No files were uploaded. Please select at least one image.'
+            ], 400);
+        }
+        
+        $files = $request->file('images');
+        
+        if (count($files) > 10) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only upload up to 10 images at once.'
+            ], 400);
+        }
+        
+        $uploadedCount = 0;
+        $currentMaxOrder = HomepageSlide::max('order') ?? 0;
+        $errors = [];
+        
+        foreach ($files as $index => $image) {
+            if (!$image->isValid()) {
+                $errors[] = 'Invalid file at position ' . ($index + 1);
+                continue;
+            }
+            
+            $extension = strtolower($image->getClientOriginalExtension());
+            $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+            
+            if (!in_array($extension, $allowedExtensions)) {
+                $errors[] = $image->getClientOriginalName() . ' has invalid file type. Allowed: JPG, PNG, GIF, WEBP';
+                continue;
+            }
+            
+            if ($image->getSize() > 10 * 1024 * 1024) {
+                $errors[] = $image->getClientOriginalName() . ' exceeds 10MB limit.';
+                continue;
+            }
+            
+            $filename = Str::random(40) . '.' . $extension;
+            $path = $image->storeAs('homepage_slides', $filename, 'public');
+            
+            if (!$path) {
+                $errors[] = 'Failed to store ' . $image->getClientOriginalName();
+                continue;
+            }
+            
+            HomepageSlide::create([
+                'image_path' => $path,
+                'order' => $currentMaxOrder + $uploadedCount + 1,
+                'is_active' => false
+            ]);
+            
+            $uploadedCount++;
+        }
+        
+        if ($uploadedCount === 0) {
+            $errorMessage = 'No valid images were uploaded. ' . implode(' ', $errors);
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 400);  // Use 400 status code for validation errors
+        }
+        
+        $successMessage = $uploadedCount . ' image(s) uploaded successfully!';
+        if (!empty($errors)) {
+            $successMessage .= ' However, some files failed: ' . implode(' ', $errors);
+        }
+        
+        Log::info('Successfully uploaded ' . $uploadedCount . ' images');
+        return response()->json([
+            'success' => true,
+            'message' => $successMessage
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error uploading multiple images: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to upload images: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Update slides order (for reordering)

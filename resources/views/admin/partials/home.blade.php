@@ -290,100 +290,121 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle form submission with AJAX
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+if (form) {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // ====== ADD THIS VALIDATION FIRST ======
+        // Check if files exist
+        if (!fileInput || fileInput.files.length === 0) {
+            showFloatingToast('Please select at least one image to upload.', 'error');
+            return;
+        }
+        
+        // Validate file count
+        if (fileInput.files.length > 10) {
+            showFloatingToast('You can only upload up to 10 images at once.', 'error');
+            return;
+        }
+        
+        // ====== ADD FILE TYPE VALIDATION ======
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        const invalidFiles = [];
+        
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const fileExt = file.name.split('.').pop().toLowerCase();
             
-            if (!fileInput || fileInput.files.length === 0) {
-                showFloatingToast('Please select at least one image to upload.', 'error');
-                return;
+            // Check by MIME type and extension
+            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
+                invalidFiles.push(file.name);
             }
             
-            if (fileInput.files.length > 10) {
-                showFloatingToast('You can only upload up to 10 images at once.', 'error');
-                return;
+            // Check file size
+            if (file.size > 10 * 1024 * 1024) {
+                invalidFiles.push(`${file.name} (exceeds 10MB)`);
             }
-            
-            // Validate all files before upload
-            for (let i = 0; i < fileInput.files.length; i++) {
-                const file = fileInput.files[i];
-                if (file.size > 10 * 1024 * 1024) {
-                    showFloatingToast(`${file.name}: File exceeds 10MB limit.`, 'error');
-                    return;
+        }
+        
+        if (invalidFiles.length > 0) {
+            showFloatingToast(`Invalid files: ${invalidFiles.join(', ')}`, 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('images[]', fileInput.files[i]);
+        }
+        
+        if (csrfToken) {
+            formData.append('_token', csrfToken);
+        }
+        
+        const uploadBtn = document.getElementById('uploadMultipleBtn');
+        const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+        }
+        
+        // Show modal
+        const modalElement = document.getElementById('uploadingModal');
+        let modal = null;
+        if (modalElement) {
+            modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+        
+        try {
+            const response = await fetch('/admin/homepage/upload-multiple', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
+            });
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text.substring(0, 500));
+                throw new Error('Server returned HTML instead of JSON. Please check if you are logged in.');
             }
             
-            const formData = new FormData();
-            for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append('images[]', fileInput.files[i]);
-            }
+            const data = await response.json();
             
-            if (csrfToken) {
-                formData.append('_token', csrfToken);
-            }
+            // ALWAYS hide modal first
+            if (modal) modal.hide();
             
-            const uploadBtn = document.getElementById('uploadMultipleBtn');
-            const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+            if (data.success) {
+                showFloatingToast(data.message, 'success');
+                fileInput.value = '';
+                selectedFiles = [];
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                    previewContainer.innerHTML = '';
+                }
+                // Reload page to show new slides
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showFloatingToast(data.message || 'Upload failed', 'error');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            // ALWAYS hide modal on error
+            if (modal) modal.hide();
+            showFloatingToast(error.message || 'Upload failed. Please try again.', 'error');
+        } finally {
             if (uploadBtn) {
-                uploadBtn.disabled = true;
-                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = originalText;
             }
-            
-            // Show modal
-            const modalElement = document.getElementById('uploadingModal');
-            let modal = null;
-            if (modalElement) {
-                modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            }
-            
-            try {
-                const response = await fetch('/admin/homepage/upload-multiple', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned HTML instead of JSON. Please check if you are logged in.');
-                }
-                
-                const data = await response.json();
-                
-                if (modal) modal.hide();
-                
-                if (data.success) {
-                    showFloatingToast(data.message, 'success');
-                    fileInput.value = '';
-                    selectedFiles = [];
-                    if (previewContainer) {
-                        previewContainer.style.display = 'none';
-                        previewContainer.innerHTML = '';
-                    }
-                    // Reload page to show new slides
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showFloatingToast(data.message || 'Upload failed', 'error');
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                if (modal) modal.hide();
-                showFloatingToast(error.message || 'Upload failed. Please try again.', 'error');
-            } finally {
-                if (uploadBtn) {
-                    uploadBtn.disabled = false;
-                    uploadBtn.innerHTML = originalText;
-                }
-            }
-        });
-    }
+        }
+    });
+}
     
     // ============================================
     // Delete Slide Functionality
