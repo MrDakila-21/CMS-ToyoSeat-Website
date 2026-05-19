@@ -2,7 +2,7 @@
 <div class="col-md-4 mb-4" data-id="{{ $member->id }}">
     <div class="card h-100">
         @if($member->image)
-            <img src="{{ Storage::url($member->image) }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
+            <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
         @endif
         <div class="card-body text-center">
             <h5>{{ $member->name }}</h5>

@@ -4,7 +4,7 @@
         <div class="row">
             <div class="col-md-3">
                 @if($item->image)
-                    <img src="{{ Storage::url($item->image) }}" class="img-fluid rounded" alt="{{ $item->title }}">
+                    <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
                 @else
                     <div class="bg-light text-center p-4 rounded">No Image</div>
                 @endif

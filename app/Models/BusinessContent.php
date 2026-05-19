@@ -53,10 +53,29 @@ class BusinessContent extends Model
             ->get();
     }
     
+    /**
+     * Get the image URL using storage.php (same pattern as Overview module)
+     * This ensures consistent image serving across the application
+     */
     public function getImageUrlAttribute()
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+        if ($this->image) {
+            // Check if file exists to add cache busting
+            $path = storage_path('app/public/' . $this->image);
+            $mtime = file_exists($path) ? filemtime($path) : time();
+            return '/storage.php?file=' . $this->image . '&t=' . $mtime;
+        }
+        return null;
+    }
+    
+    /**
+     * Alternative accessor without cache busting (simpler version)
+     * Use this if you prefer the simpler pattern like Overview's president_image_url
+     */
+    public function getSimpleImageUrlAttribute()
+    {
+        if ($this->image) {
+            return '/storage.php?file=' . $this->image;
         }
         return null;
     }

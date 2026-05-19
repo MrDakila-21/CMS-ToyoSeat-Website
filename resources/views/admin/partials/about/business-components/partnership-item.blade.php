@@ -2,7 +2,7 @@
 <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
     <div class="card h-100 text-center">
         @if($partner->image)
-            <img src="{{ Storage::url($partner->image) }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
+            <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
         @endif
         <div class="card-body">
             <h6>{{ $partner->title }}</h6>
