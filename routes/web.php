@@ -100,6 +100,7 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+        Route::get('/images/EventActivity/{filename}', [EventActivityController::class, 'serveImage'])->where('filename', '.*');
 
         // Announcements management routes
         Route::get('announcements/all', [AnnouncementController::class, 'getAll'])->name('admin.announcements.all');
