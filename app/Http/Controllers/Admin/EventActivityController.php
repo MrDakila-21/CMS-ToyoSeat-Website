@@ -353,24 +353,4 @@ class EventActivityController extends Controller
             'images' => $images
         ]);
     }
-
-    // Add this method to your controller to serve images with cache headers
-    public function serveImage($filename)
-    {
-        $path = public_path('images/EventActivity/' . $filename);
-        
-        if (file_exists($path)) {
-            // Set cache control headers - no cache for dynamic images
-            header('Cache-Control: no-cache, no-store, must-revalidate');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-            
-            $mime = mime_content_type($path);
-            header('Content-Type: ' . $mime);
-            readfile($path);
-            exit;
-        }
-        
-        abort(404);
-    }
 }

@@ -141,117 +141,115 @@
         return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
     
-function renderTable() {
-    let filteredData = [...allData];
-    
-    if (currentFilters.search) {
-        filteredData = filteredData.filter(item => 
-            item.title.toLowerCase().includes(currentFilters.search) || 
-            (item.description && item.description.toLowerCase().includes(currentFilters.search))
-        );
-    }
-    
-    if (currentFilters.type) {
-        filteredData = filteredData.filter(item => item.type === currentFilters.type);
-    }
-    
-    if (currentFilters.status) {
-        filteredData = filteredData.filter(item => item.status === currentFilters.status);
-    }
-    
-    const totalRecords = filteredData.length;
-    const totalPages = Math.ceil(totalRecords / rowsPerPage);
-    
-    if (currentPage > totalPages) currentPage = totalPages || 1;
-    if (currentPage < 1) currentPage = 1;
-    
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = filteredData.slice(start, end);
-    
-    let tableHtml = `
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped align-middle" id="mediaTable">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">ID</th>
-                        <th style="width: 80px;">Image</th>
-                        <th>Title</th>
-                        <th style="width: 100px;">Type</th>
-                        <th style="width: 110px;">Date</th>
-                        <th style="width: 110px;">Status</th>
-                        <th style="width: 140px;">Created At</th>
-                        <th style="width: 140px;">Actions</th>
+    function renderTable() {
+        let filteredData = [...allData];
+        
+        if (currentFilters.search) {
+            filteredData = filteredData.filter(item => 
+                item.title.toLowerCase().includes(currentFilters.search) || 
+                (item.description && item.description.toLowerCase().includes(currentFilters.search))
+            );
+        }
+        
+        if (currentFilters.type) {
+            filteredData = filteredData.filter(item => item.type === currentFilters.type);
+        }
+        
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(item => item.status === currentFilters.status);
+        }
+        
+        const totalRecords = filteredData.length;
+        const totalPages = Math.ceil(totalRecords / rowsPerPage);
+        
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        if (currentPage < 1) currentPage = 1;
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = filteredData.slice(start, end);
+        
+        let tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="mediaTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th style="width: 80px;">Image</th>
+                            <th>Title</th>
+                            <th style="width: 100px;">Type</th>
+                            <th style="width: 110px;">Date</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created At</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (pageData.length === 0) {
+            tableHtml += '<tr><td colspan="8" class="text-center text-muted py-4">No matching records found</td></tr>';
+        } else {
+            pageData.forEach(item => {
+                const imageHtml = item.image_url 
+                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" onerror="this.src='/images/default-image.png'">`
+                    : '<span class="badge bg-secondary">No Image</span>';
+                
+                const typeBadge = item.type === 'event' 
+                    ? '<span class="badge bg-primary">Event</span>'
+                    : '<span class="badge bg-success">Activity</span>';
+                
+                const statusSelect = `
+                    <select class="form-select form-select-sm status-select" data-id="${item.id}">
+                        <option value="published" ${item.status === 'published' ? 'selected' : ''}>Published</option>
+                        <option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option>
+                    </select>
+                `;
+                
+                const actions = `
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-warning edit-btn" data-id="${item.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger delete-btn" data-id="${item.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                const formattedEventDate = formatDate(item.event_date);
+                const formattedCreatedAt = formatDateTime(item.created_at);
+                
+                tableHtml += `
+                    <tr data-id="${item.id}" data-type="${item.type}" data-status="${item.status}">
+                        <td class="text-center">${item.id}</td>
+                        <td>${imageHtml}</td>
+                        <td>${escapeHtml(item.title)}</td>
+                        <td>${typeBadge}</td>
+                        <td>${formattedEventDate}</td>
+                        <td>${statusSelect}</td>
+                        <td>${formattedCreatedAt}</td>
+                        <td>${actions}</td>
                     </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    if (pageData.length === 0) {
-        tableHtml += '<tr><td colspan="8" class="text-center text-muted py-4">No matching records found</td></tr>';
-    } else {
-        pageData.forEach(item => {
-            // ADD CACHE-BUSTING TO IMAGE URL
-            const imageUrl = item.image_url ? `${item.image_url}?t=${Date.now()}` : null;
-            const imageHtml = imageUrl 
-                ? `<img src="${imageUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" onerror="this.src='/images/default-image.png'">`
-                : '<span class="badge bg-secondary">No Image</span>';
-            
-            const typeBadge = item.type === 'event' 
-                ? '<span class="badge bg-primary">Event</span>'
-                : '<span class="badge bg-success">Activity</span>';
-            
-            const statusSelect = `
-                <select class="form-select form-select-sm status-select" data-id="${item.id}">
-                    <option value="published" ${item.status === 'published' ? 'selected' : ''}>Published</option>
-                    <option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option>
-                </select>
-            `;
-            
-            const actions = `
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-warning edit-btn" data-id="${item.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger delete-btn" data-id="${item.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            
-            const formattedEventDate = formatDate(item.event_date);
-            const formattedCreatedAt = formatDateTime(item.created_at);
-            
-            tableHtml += `
-                <tr data-id="${item.id}" data-type="${item.type}" data-status="${item.status}">
-                    <td class="text-center">${item.id}</td>
-                    <td>${imageHtml}</td>
-                    <td>${escapeHtml(item.title)}</td>
-                    <td>${typeBadge}</td>
-                    <td>${formattedEventDate}</td>
-                    <td>${statusSelect}</td>
-                    <td>${formattedCreatedAt}</td>
-                    <td>${actions}</td>
-                </tr>
-            `;
-        });
+                `;
+            });
+        }
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('tableContainer').innerHTML = tableHtml;
+        
+        document.getElementById('showingStart').textContent = totalRecords === 0 ? 0 : start + 1;
+        document.getElementById('showingEnd').textContent = Math.min(end, totalRecords);
+        document.getElementById('totalRecords').textContent = totalRecords;
+        
+        renderPagination(currentPage, totalPages);
+        attachDynamicHandlers();
     }
-    
-    tableHtml += `
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    document.getElementById('tableContainer').innerHTML = tableHtml;
-    
-    document.getElementById('showingStart').textContent = totalRecords === 0 ? 0 : start + 1;
-    document.getElementById('showingEnd').textContent = Math.min(end, totalRecords);
-    document.getElementById('totalRecords').textContent = totalRecords;
-    
-    renderPagination(currentPage, totalPages);
-    attachDynamicHandlers();
-}
     
     function renderPagination(currentPage, totalPages) {
         const paginationUl = document.getElementById('tablePagination');
@@ -440,55 +438,52 @@ function renderTable() {
         }
     }
     
-  function populateEditModal(data) {
-    const modalBody = document.getElementById('mediaEditModalBody');
-    
-    let formattedDate = '';
-    if (data.event_date) {
-        const date = new Date(data.event_date);
-        if (!isNaN(date.getTime())) {
-            formattedDate = date.toISOString().split('T')[0];
+    function populateEditModal(data) {
+        const modalBody = document.getElementById('mediaEditModalBody');
+        
+        let formattedDate = '';
+        if (data.event_date) {
+            const date = new Date(data.event_date);
+            if (!isNaN(date.getTime())) {
+                formattedDate = date.toISOString().split('T')[0];
+            }
         }
+        
+        modalBody.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Type <span class="text-danger">*</span></label>
+                <select name="type" class="form-select" required>
+                    <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
+                    <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" name="event_date" class="form-control" value="${formattedDate}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Current Image</label>
+                ${data.image_url ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;" onerror="this.src='/images/default-image.png'">` : '<p class="text-muted">No image uploaded</p>'}
+                <label class="form-label mt-2">Change Image</label>
+                <input type="file" name="image" class="form-control" accept="image/*">
+                <small class="form-text text-muted">Max size: 5MB. Leave empty to keep current image.</small>
+            </div>
+        `;
+        
+        const form = document.getElementById('mediaEditForm');
+        form.action = `/admin/media/${data.id}`;
+        form.enctype = 'multipart/form-data';
+        
+        preventEnterKeyOnForm(form);
     }
-    
-    // Add cache-busting parameter to image URL
-    const imageUrl = data.image_url ? `${data.image_url}?t=${Date.now()}` : null;
-    
-    modalBody.innerHTML = `
-        <div class="mb-3">
-            <label class="form-label">Title <span class="text-danger">*</span></label>
-            <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Type <span class="text-danger">*</span></label>
-            <select name="type" class="form-select" required>
-                <option value="event" ${data.type === 'event' ? 'selected' : ''}>Event</option>
-                <option value="activity" ${data.type === 'activity' ? 'selected' : ''}>Activity</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Description <span class="text-danger">*</span></label>
-            <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Date <span class="text-danger">*</span></label>
-            <input type="date" name="event_date" class="form-control" value="${formattedDate}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Current Image</label>
-            ${imageUrl ? `<img src="${imageUrl}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;" onerror="this.src='/images/default-image.png'">` : '<p class="text-muted">No image uploaded</p>'}
-            <label class="form-label mt-2">Change Image</label>
-            <input type="file" name="image" class="form-control" accept="image/*">
-            <small class="form-text text-muted">Max size: 5MB. Leave empty to keep current image.</small>
-        </div>
-    `;
-    
-    const form = document.getElementById('mediaEditForm');
-    form.action = `/admin/media/${data.id}`;
-    form.enctype = 'multipart/form-data';
-    
-    preventEnterKeyOnForm(form);
-}
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this item?\n\nThis action cannot be undone!')) {
@@ -622,62 +617,57 @@ function renderTable() {
         }
     }
     
-async function handleEditFormSubmit(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-    
-    try {
-        const formData = new FormData(form);
-        formData.append('_method', 'PUT');
+    async function handleEditFormSubmit(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
         
-        const data = await response.json();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
         
-        if (data.success) {
-            showCustomToast(data.message, 'success');
+        try {
+            const formData = new FormData(form);
+            formData.append('_method', 'PUT');
             
-            if (editModal) {
-                editModal.hide();
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                
+                if (editModal) {
+                    editModal.hide();
+                }
+                
+                form.reset();
+                await loadDataFromServer();
+            } else {
+                let errorMessage = data.message || 'Failed to save';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).flat().join('\n');
+                }
+                showCustomToast(errorMessage, 'error');
             }
-            
-            form.reset();
-            
-            // FORCE A COMPLETE DATA REFRESH
-            await loadDataFromServer();
-            
-            // Clear any image cache by refreshing the table immediately
-            renderTable();
-        } else {
-            let errorMessage = data.message || 'Failed to save';
-            if (data.errors) {
-                errorMessage = Object.values(data.errors).flat().join('\n');
-            }
-            showCustomToast(errorMessage, 'error');
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showCustomToast('Network error saving data', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
     }
-}
     
     function preventEnterKeyOnForm(form) {
         if (!form) return;
