@@ -241,24 +241,35 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     and building a workplace where every voice matters.
                 </p>
                 
-                <!-- Recent Job Posts Preview -->
+                <!-- Recent Job Posts Preview or Null Animation -->
                 @if($recentRecruitments->count() > 0)
-                <div class="recent-jobs">
-                    <h4 class="recent-jobs-title">Recent Opportunities</h4>
-                    <div class="recent-jobs-list">
-                        @foreach($recentRecruitments as $job)
-                        <div class="recent-job-item">
-                            <div class="recent-job-icon">
-                                <i class="fas fa-briefcase"></i>
-                            </div>
-                            <div class="recent-job-info">
-                                <div class="recent-job-title">{{ Str::limit($job->title, 50) }}</div>
-                                <div class="recent-job-date">Posted: {{ $job->created_at->format('M d, Y') }}</div>
-                            </div>
+                    <div class="recent-jobs">
+                        <h4 class="recent-jobs-title">Recent Opportunities</h4>
+                        <div class="recent-jobs-list">
+                            @foreach($recentRecruitments as $job)
+                                <div class="recent-job-item">
+                                    <div class="recent-job-icon">
+                                        <i class="fas fa-briefcase"></i>
+                                    </div>
+                                    <div class="recent-job-info">
+                                        <div class="recent-job-title">{{ Str::limit($job->title, 50) }}</div>
+                                        <div class="recent-job-date">Posted: {{ $job->created_at->format('M d, Y') }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        @endforeach
                     </div>
-                </div>
+                @else
+                    <!-- Null Animation - Matching Recruitment Information Blade Empty State Style -->
+                    <div class="empty-state-null">
+                        <div class="empty-state-icon-null">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h4 class="empty-state-title-null">No Recent Opportunities Available</h4>
+                        <p class="empty-state-message-null">
+                            Please check back later for new job openings that match your skills and aspirations.
+                        </p>
+                    </div>
                 @endif
             </div>
             

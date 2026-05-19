@@ -1881,3 +1881,91 @@
         font-size: 20px;
     }
 }
+
+/* Null Animation / Empty State for Recent Opportunities - Matching Recruitment Information Blade */
+.empty-state-null {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 20px;
+    margin-top: 1.5rem;
+    animation: fadeInUp 0.6s ease-out forwards;
+    border: 1px solid rgba(57, 136, 189, 0.15);
+    transition: var(--transition);
+}
+
+.empty-state-null:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(57, 136, 189, 0.25);
+}
+
+.empty-state-icon-null {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, rgba(57, 136, 189, 0.1), rgba(57, 136, 189, 0.05));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    color: var(--primary, #86888a);
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+}
+
+.empty-state-null:hover .empty-state-icon-null {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, rgba(57, 136, 189, 0.15), rgba(57, 136, 189, 0.08));
+}
+
+.empty-state-title-null {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark, #1a2a3a);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-message-null {
+    font-size: 0.85rem;
+    color: var(--text-muted, #6c757d);
+    line-height: 1.5;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+/* Animation for null state */
+.empty-state-null {
+    animation: fadeInUp 0.6s ease-out forwards, gentlePulse 3s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.92;
+    }
+}
+
+/* Responsive adjustments for null state */
+@media (max-width: 768px) {
+    .empty-state-null {
+        padding: 1.5rem 1rem;
+    }
+    
+    .empty-state-icon-null {
+        width: 55px;
+        height: 55px;
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .empty-state-title-null {
+        font-size: 1rem;
+    }
+    
+    .empty-state-message-null {
+        font-size: 0.8rem;
+    }
+}
