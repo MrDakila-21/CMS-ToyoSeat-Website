@@ -532,8 +532,8 @@
             @foreach($automotiveSeats as $seat)
             @php
                 $description = $seat->description;
-                $shortDesc = Str::limit($description, 100);
-                $needsReadMore = strlen($description) > 100;
+                $shortDesc = Str::limit($description, 350);
+                $needsReadMore = strlen($description) > 350;
                 $uniqueId = 'auto-desc-' . $seat->id;
             @endphp
             <div class="col-md-6 mb-4">
@@ -623,8 +623,8 @@
             @foreach($characteristics as $characteristic)
             @php
                 $description = $characteristic->description;
-                $shortDesc = Str::limit($description, 100);
-                $needsReadMore = strlen($description) > 100;
+                $shortDesc = Str::limit($description, 350);
+                $needsReadMore = strlen($description) > 350;
                 $uniqueId = 'char-desc-' . $characteristic->id;
             @endphp
             <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
