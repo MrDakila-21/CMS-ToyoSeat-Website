@@ -1,5 +1,4 @@
 <?php
-// app/Models/History.php
 
 namespace App\Models;
 
@@ -30,32 +29,28 @@ class History extends Model
     protected $appends = ['image_url'];
 
     // Helper to get full image URL with cache-busting timestamp
-   // Replace just this method in your History model
-
-public function getImageUrlAttribute()
-{
-    // PRIORITY 1: Check for image in public/images/histories folder with ID as filename
-    $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-    
-    foreach ($imageExtensions as $ext) {
-        $historyImagePath = public_path("images/histories/{$this->id}.{$ext}");
-        if (file_exists($historyImagePath)) {
-            $timestamp = filemtime($historyImagePath);
-            // Force fresh timestamp with microtime to ensure no caching
-            return "/storage.php?file=images/histories/{$this->id}.{$ext}&t=" . time() . "_" . $timestamp;
+    public function getImageUrlAttribute()
+    {
+        // PRIORITY 1: Check for image in public/images/histories folder with ID as filename
+        $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        
+        foreach ($imageExtensions as $ext) {
+            $historyImagePath = public_path("images/histories/{$this->id}.{$ext}");
+            if (file_exists($historyImagePath)) {
+                $timestamp = filemtime($historyImagePath);
+                return "/storage.php?file=images/histories/{$this->id}.{$ext}&t=" . time() . "_" . $timestamp;
+            }
         }
+        
+        // PRIORITY 2: Check if there's a stored image path in database (from upload)
+        if ($this->image && Storage::disk('public')->exists($this->image)) {
+            $timestamp = Storage::disk('public')->lastModified($this->image);
+            return '/storage.php?file=' . urlencode($this->image) . '&t=' . time() . '_' . $timestamp;
+        }
+        
+        // PRIORITY 3: Return default image if no image found
+        return '/storage.php?file=images/default-image.png&t=' . time();
     }
-    
-    // PRIORITY 2: Check if there's a stored image path in database (from upload)
-    if ($this->image && Storage::disk('public')->exists($this->image)) {
-        $timestamp = Storage::disk('public')->lastModified($this->image);
-        // Add random parameter to force fresh load
-        return '/storage.php?file=' . urlencode($this->image) . '&t=' . time() . '_' . $timestamp;
-    }
-    
-    // PRIORITY 3: Return default image with unique timestamp
-    return '/storage.php?file=images/default-image.png&t=' . time();
-}
     
     // Method to check if folder image exists
     public function hasFolderImage()

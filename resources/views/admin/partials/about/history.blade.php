@@ -204,7 +204,6 @@
         opacity: 0.8;
     }
     
-    /* Custom Toast Styles */
     .custom-toast {
         background: white;
         border-radius: 8px;
@@ -328,7 +327,6 @@
         loadDataFromServer();
         attachEventHandlers();
         
-        // Image preview for add form
         const imageInput = document.querySelector('#historyAddForm input[name="image"]');
         if (imageInput) {
             imageInput.addEventListener('change', function(e) {
@@ -349,57 +347,54 @@
         }
     }
     
-async function loadDataFromServer() {
-    const loadingIndicator = document.getElementById('historyLoadingIndicator');
-    const tableContainer = document.getElementById('historyTableContainer');
-    
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
-    if (tableContainer) tableContainer.style.display = 'none';
-    
-    try {
-        // Add random parameter to prevent caching
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/admin/histories/all?_=${timestamp}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        allData = await response.json();
-        console.log(`Loaded ${allData.length} history records`);
-        
-        populateYearFilter();
-        renderTable();
-        
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        if (tableContainer) tableContainer.style.display = 'block';
-    } catch (error) {
-        console.error('Error loading data:', error);
-        if (loadingIndicator) {
-            loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
-        }
-    }
-}
-    
-    function forceRefreshTableImages() {
-        const table = document.getElementById('historyTable');
-        if (!table) return;
-        
-        const images = table.querySelectorAll('.history-image-preview');
+    function forceRefreshAllImages() {
+        const images = document.querySelectorAll('#historyTable img.history-image-preview');
         images.forEach(img => {
-            const originalSrc = img.src.split('?')[0];
-            img.src = originalSrc + '?t=' + new Date().getTime();
+            const currentSrc = img.src;
+            const newSrc = currentSrc.split('?')[0] + '?t=' + new Date().getTime();
+            img.src = newSrc;
         });
+    }
+    
+    async function loadDataFromServer() {
+        const loadingIndicator = document.getElementById('historyLoadingIndicator');
+        const tableContainer = document.getElementById('historyTableContainer');
+        
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
+        
+        try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/histories/all?_=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            allData = await response.json();
+            console.log(`Loaded ${allData.length} history records`);
+            
+            populateYearFilter();
+            renderTable();
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (tableContainer) tableContainer.style.display = 'block';
+        } catch (error) {
+            console.error('Error loading data:', error);
+            if (loadingIndicator) {
+                loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+            }
+        }
     }
     
     function populateYearFilter() {
@@ -423,8 +418,6 @@ async function loadDataFromServer() {
             option.textContent = year;
             yearFilter.appendChild(option);
         });
-        
-        console.log(`Populated ${years.length} years in filter`);
     }
     
     function formatDate(dateString) {
@@ -516,7 +509,7 @@ async function loadDataFromServer() {
             tableHtml += '<tr><td colspan="9" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
-                const imageSrc = item.image_url || '/images/default-image.png';
+                const imageSrc = item.image_url || '/storage.php?file=images/default-image.png&t=' + new Date().getTime();
                 const imageHtml = `<img src="${imageSrc}" class="history-image-preview" alt="${escapeHtml(item.title)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;">`;
                 
                 const statusSelect = `
@@ -753,7 +746,7 @@ async function loadDataFromServer() {
         
         const modalBody = document.getElementById('historyViewModalBody');
         if (modalBody) {
-            const imageSrc = item.image_url || '/images/default-image.png';
+            const imageSrc = item.image_url || '/storage.php?file=images/default-image.png&t=' + new Date().getTime();
             
             const imageHtml = `
                 <div class="text-center mb-3">
@@ -821,13 +814,12 @@ async function loadDataFromServer() {
             
             const data = await response.json();
             
-            console.log('Edit data received:', data);
-            
             const formattedDate = data.date ? formatDate(data.date) : '';
-            const imageSrc = data.image_url || '/images/default-image.png';
-            const hasCustomImage = imageSrc !== '/images/default-image.png';
+            const imageSrc = data.image_url || '/storage.php?file=images/default-image.png&t=' + new Date().getTime();
+            const hasCustomImage = imageSrc.indexOf('default-image.png') === -1;
             
             modalBody.innerHTML = `
+                <input type="hidden" name="_method" value="PUT">
                 <div class="mb-3">
                     <label class="form-label">Title <span class="text-danger">*</span></label>
                     <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
@@ -844,7 +836,7 @@ async function loadDataFromServer() {
                     <label class="form-label">Current Image</label>
                     <div class="mt-2" id="currentImageContainer">
                         <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
-                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                             onerror="this.onerror=null; this.src='/storage.php?file=images/default-image.png&t=' + new Date().getTime();">
                         ${hasCustomImage ? 
                             '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
                             '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
@@ -875,7 +867,6 @@ async function loadDataFromServer() {
                         reader.onload = function(e) {
                             previewImg.src = e.target.result;
                             preview.style.display = 'block';
-                            // Optionally hide current image to show new preview
                             if (currentContainer) {
                                 currentContainer.style.opacity = '0.5';
                             }
@@ -933,6 +924,136 @@ async function loadDataFromServer() {
         }
     }
     
+    async function handleAddFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                if (addModal) addModal.hide();
+                form.reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                await loadDataFromServer();
+            } else {
+                showCustomToast(data.message || 'Failed to save', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    async function handleEditFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        const id = form.dataset.id;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            formData.append('_method', 'PUT');
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                
+                if (editModal) editModal.hide();
+                
+                // Reload data from server
+                await loadDataFromServer();
+                
+                // Force refresh all images after table is re-rendered
+                setTimeout(() => {
+                    forceRefreshAllImages();
+                }, 100);
+                
+            } else {
+                showCustomToast(data.message || 'Failed to save', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    function handleSearch(e) {
+        currentFilters.search = e.target.value.toLowerCase();
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleYearFilter(e) {
+        currentFilters.year = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleStatusFilter(e) {
+        currentFilters.status = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleReset(e) {
+        const searchInput = document.getElementById('historySearchInput');
+        const yearFilter = document.getElementById('historyYearFilter');
+        const statusFilter = document.getElementById('historyStatusFilter');
+        if (searchInput) searchInput.value = '';
+        if (yearFilter) yearFilter.value = '';
+        if (statusFilter) statusFilter.value = '';
+        currentFilters = { search: '', year: '', status: '' };
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleRowsPerPageChange(e) {
+        rowsPerPage = parseInt(e.target.value);
+        currentPage = 1;
+        renderTable();
+    }
+    
     function showImageModal(imageUrl) {
         const modalHtml = `
             <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
@@ -944,7 +1065,7 @@ async function loadDataFromServer() {
                         </div>
                         <div class="modal-body text-center">
                             <img src="${imageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;" 
-                                 onerror="this.onerror=null; this.src='/images/default-image.png';">
+                                 onerror="this.onerror=null; this.src='/storage.php?file=images/default-image.png&t=' + new Date().getTime();">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1009,145 +1130,6 @@ async function loadDataFromServer() {
             editForm.addEventListener('submit', handleEditFormSubmit);
         }
     }
-    
-    function handleSearch(e) {
-        currentFilters.search = e.target.value.toLowerCase();
-        currentPage = 1;
-        renderTable();
-    }
-    
-    function handleYearFilter(e) {
-        currentFilters.year = e.target.value;
-        currentPage = 1;
-        renderTable();
-    }
-    
-    function handleStatusFilter(e) {
-        currentFilters.status = e.target.value;
-        currentPage = 1;
-        renderTable();
-    }
-    
-    function handleReset(e) {
-        const searchInput = document.getElementById('historySearchInput');
-        const yearFilter = document.getElementById('historyYearFilter');
-        const statusFilter = document.getElementById('historyStatusFilter');
-        if (searchInput) searchInput.value = '';
-        if (yearFilter) yearFilter.value = '';
-        if (statusFilter) statusFilter.value = '';
-        currentFilters = { search: '', year: '', status: '' };
-        currentPage = 1;
-        renderTable();
-    }
-    
-    function handleRowsPerPageChange(e) {
-        rowsPerPage = parseInt(e.target.value);
-        currentPage = 1;
-        renderTable();
-    }
-    
-    async function handleAddFormSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-        
-        try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                },
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showCustomToast(data.message, 'success');
-                if (addModal) addModal.hide();
-                form.reset();
-                document.getElementById('imagePreview').style.display = 'none';
-                await loadDataFromServer();
-            } else {
-                showCustomToast(data.message || 'Failed to save', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showCustomToast('Network error saving data', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    }
-   
-    function forceRefreshAllImages() {
-    const images = document.querySelectorAll('#historyTable img.history-image-preview');
-    images.forEach(img => {
-        const currentSrc = img.src;
-        // Add a unique timestamp to force reload
-        const newSrc = currentSrc.split('?')[0] + '?t=' + new Date().getTime();
-        img.src = newSrc;
-    });
-}
-async function handleEditFormSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    const id = form.dataset.id;
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-    
-    try {
-        const formData = new FormData(form);
-        formData.append('_method', 'PUT');
-        
-        const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate'
-            },
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showCustomToast(data.message, 'success');
-            
-            if (editModal) editModal.hide();
-            
-            // IMPORTANT: Reload data from server
-            await loadDataFromServer();
-            
-            // CRITICAL: Force refresh all images after table is re-rendered
-            setTimeout(() => {
-                forceRefreshAllImages();
-            }, 100);
-            
-        } else {
-            showCustomToast(data.message || 'Failed to save', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showCustomToast('Network error saving data', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-}
     
     function getCsrfToken() {
         const token = document.querySelector('meta[name="csrf-token"]');
