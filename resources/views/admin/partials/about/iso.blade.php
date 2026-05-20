@@ -320,9 +320,9 @@ $(document).ready(function() {
                 $('#title').val(data.title);
                 $('#description').val(data.description);
 
-                // Show current image if exists
+                // Show current image if exists - using the same image_url format
                 if (data.image_url && !data.image_url.includes('default-image.png')) {
-                    $('#currentImage').attr('src', data.image_url);
+                    $('#currentImage').attr('src', data.image_url + '?t=' + Date.now());
                     $('#currentImagePreview').removeClass('d-none');
                 } else {
                     $('#currentImagePreview').addClass('d-none');

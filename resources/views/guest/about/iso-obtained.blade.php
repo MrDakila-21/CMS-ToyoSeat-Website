@@ -418,11 +418,12 @@
                         <div class="row g-0">
                             <div class="col-md-6">
                                 <div class="iso-entry-image-wrapper">
-                                    @if($entry->image_url && !str_contains($entry->image_url, 'default-image.png'))
-                                        <img src="{{ $entry->image_url }}" alt="{{ $entry->title }}" class="iso-entry-image">
-                                    @else
-                                        <i class="fas fa-certificate" style="font-size: 3rem; color: rgba(255,255,255,0.3);"></i>
-                                    @endif
+                                <!-- In the guest ISO blade, update the image src line -->
+@if($entry->image && !str_contains($entry->image_url, 'default-image.png'))
+    <img src="{{ $entry->image_url }}" alt="{{ $entry->title }}" class="iso-entry-image">
+@else
+    <i class="fas fa-certificate" style="font-size: 3rem; color: rgba(255,255,255,0.3);"></i>
+@endif
                                 </div>
                             </div>
                             <div class="col-md-6">

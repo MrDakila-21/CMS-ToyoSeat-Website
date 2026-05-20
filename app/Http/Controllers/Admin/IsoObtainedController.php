@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\IsoObtained;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class IsoObtainedController extends Controller
 {
@@ -44,7 +45,6 @@ class IsoObtainedController extends Controller
                     $iso->is_intro = true;
                 }
             } else {
-                // Regular entries are never intros
                 $iso->is_intro = false;
             }
 
@@ -63,7 +63,7 @@ class IsoObtainedController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -110,7 +110,6 @@ class IsoObtainedController extends Controller
                     $iso->is_intro = true;
                 }
             } else {
-                // Regular entries are never intros
                 $iso->is_intro = false;
             }
 
@@ -129,7 +128,7 @@ class IsoObtainedController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -150,7 +149,7 @@ class IsoObtainedController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -167,12 +166,13 @@ class IsoObtainedController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Image removed successfully!',
+                'image_url' => $iso->image_url, // Return new image URL for UI update
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -180,7 +180,7 @@ class IsoObtainedController extends Controller
     // Update status (published/archived)
     public function updateStatus($id, $status)
     {
-        if (! in_array($status, ['published', 'archived'], true)) {
+        if (!in_array($status, ['published', 'archived'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid status value.',
