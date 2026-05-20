@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Admin/HistoryController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -19,8 +20,8 @@ class HistoryController extends Controller
         try {
             $histories = History::orderBy('date', 'desc')->get();
             
+            // Transform the data
             $data = $histories->map(function($history) {
-                $history->refresh();
                 return [
                     'id' => $history->id,
                     'title' => $history->title,
@@ -34,10 +35,7 @@ class HistoryController extends Controller
                 ];
             });
             
-            return response()->json($data)
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            return response()->json($data);
         } catch (\Exception $e) {
             \Log::error('Error in getAll: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
@@ -69,42 +67,42 @@ class HistoryController extends Controller
                 $history->save();
             }
 
-            $history->refresh();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'History record created successfully!',
-                'data' => $history,
-                'image_url' => $history->image_url
-            ]);
+            return response()->json(['success' => true, 'message' => 'History record created successfully!', 'data' => $history]);
         } catch (\Exception $e) {
             \Log::error('Error in store: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function edit($id)
-    {
-        try {
-            $history = History::findOrFail($id);
-            $history->refresh();
-            
-            return response()->json([
-                'id' => $history->id,
-                'title' => $history->title,
-                'description' => $history->description,
-                'date' => $history->date,
-                'status' => $history->status,
-                'image' => $history->image,
-                'image_url' => $history->image_url,
-                'created_at' => $history->created_at,
-                'updated_at' => $history->updated_at,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error in edit: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+   public function edit($id)
+{
+    try {
+        $history = History::findOrFail($id);
+        
+        // Determine the correct image URL for display
+        $imageDisplayUrl = null;
+        if ($history->image) {
+            // Use storage.php URL for display in admin (consistent with guest view)
+            $imageDisplayUrl = '/storage.php?file=' . urlencode($history->image);
         }
+        
+        return response()->json([
+            'id' => $history->id,
+            'title' => $history->title,
+            'description' => $history->description,
+            'date' => $history->date,
+            'status' => $history->status,
+            'image' => $history->image,
+            'image_url' => $imageDisplayUrl, // Use storage.php URL
+            'image_display_url' => $imageDisplayUrl,
+            'created_at' => $history->created_at,
+            'updated_at' => $history->updated_at,
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error in edit: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     public function update(Request $request, $id)
     {
@@ -123,7 +121,6 @@ class HistoryController extends Controller
             $history->date = $request->date;
 
             if ($request->hasFile('image')) {
-                // Delete old image if exists
                 if ($history->image && Storage::disk('public')->exists($history->image)) {
                     Storage::disk('public')->delete($history->image);
                 }
@@ -135,14 +132,8 @@ class HistoryController extends Controller
             }
 
             $history->save();
-            $history->refresh();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'History record updated successfully!',
-                'image_url' => $history->image_url,
-                'id' => $history->id
-            ]);
+            return response()->json(['success' => true, 'message' => 'History record updated successfully!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -152,13 +143,7 @@ class HistoryController extends Controller
     {
         try {
             $history = History::findOrFail($id);
-            
-            if ($history->image && Storage::disk('public')->exists($history->image)) {
-                Storage::disk('public')->delete($history->image);
-            }
-            
             $history->delete();
-            
             return response()->json(['success' => true, 'message' => 'History record deleted successfully!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -171,15 +156,36 @@ class HistoryController extends Controller
             $history = History::findOrFail($id);
             $history->status = $status;
             $history->save();
-            $history->refresh();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Status updated successfully',
-                'image_url' => $history->image_url
-            ]);
+            return response()->json(['success' => true, 'message' => 'Status updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function uploadDirectImage(Request $request)
+{
+    try {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $timestamp = time();
+            $extension = $file->getClientOriginalExtension();
+            $filename = "temp_{$timestamp}.{$extension}";
+            $imagePath = $file->storeAs('histories', $filename, 'public');
+            
+            return response()->json([
+                'success' => true,
+                'path' => $imagePath,
+                'url' => Storage::url($imagePath)
+            ]);
+        }
+        
+        return response()->json(['success' => false, 'message' => 'No image file provided'], 400);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 }
