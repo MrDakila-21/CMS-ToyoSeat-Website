@@ -97,12 +97,17 @@
         if (tableContainer) tableContainer.style.display = 'none';
         
         try {
-            const response = await fetch('/admin/announcements/all', {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/all?_=${timestamp}`, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
                 }
             });
             
@@ -142,6 +147,17 @@
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+    
+    function forceRefreshTableImages() {
+        const table = document.getElementById('announcementTable');
+        if (!table) return;
+        
+        const images = table.querySelectorAll('img');
+        images.forEach(img => {
+            const originalSrc = img.src.split('?')[0];
+            img.src = originalSrc + '?t=' + new Date().getTime();
+        });
     }
     
     function renderTable() {
@@ -186,11 +202,11 @@
         `;
         
         if (pageData.length === 0) {
-            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td></tr>';
+            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td>\n                </tr>';
         } else {
             pageData.forEach(item => {
                 const imageHtml = item.image_url 
-                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">`
+                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" loading="lazy">`
                     : '<span class="badge bg-secondary">No Image</span>';
                 
                 const statusSelect = `
@@ -367,13 +383,15 @@
         select.disabled = true;
         
         try {
-            const response = await fetch(`/admin/announcements/${id}/status/${status}`, {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/${id}/status/${status}?_=${timestamp}`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -381,11 +399,7 @@
             
             if (data.success) {
                 showCustomToast(data.message, 'success');
-                const itemIndex = allData.findIndex(item => item.id == id);
-                if (itemIndex !== -1) {
-                    allData[itemIndex].status = status;
-                }
-                renderTable();
+                await loadDataFromServer();
             } else {
                 showCustomToast(data.message || 'Failed to update status', 'error');
                 await loadDataFromServer();
@@ -408,12 +422,14 @@
         editModal.show();
         
         try {
-            const response = await fetch(`/admin/announcements/${id}/edit`, {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/${id}/edit?_=${timestamp}`, {
                 method: 'GET',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -452,9 +468,11 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Current Image</label>
-                ${data.image_url ? `<img src="${data.image_url}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
+                <div id="currentImageContainer">
+                    ${data.image_url ? `<img src="${data.image_url}" id="currentImagePreview" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
+                </div>
                 <label class="form-label mt-2">Change Image</label>
-                <input type="file" name="image" class="form-control" accept="image/*">
+                <input type="file" name="image" id="editImageInput" class="form-control" accept="image/*">
                 <small class="form-text text-muted">Max size: 5MB. Leave empty to keep current image.</small>
             </div>
         `;
@@ -462,6 +480,31 @@
         const form = document.getElementById('announcementEditForm');
         form.action = `/admin/announcements/${data.id}`;
         form.enctype = 'multipart/form-data';
+        form.dataset.id = data.id;
+        
+        // Add image preview for edit modal
+        const imageInput = document.getElementById('editImageInput');
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        let previewContainer = document.getElementById('currentImageContainer');
+                        if (!previewContainer) {
+                            previewContainer = document.createElement('div');
+                            previewContainer.id = 'currentImageContainer';
+                            const imageSection = document.querySelector('#announcementEditModalBody .mb-3:last-child');
+                            if (imageSection) {
+                                imageSection.insertBefore(previewContainer, imageSection.querySelector('label.mt-2'));
+                            }
+                        }
+                        previewContainer.innerHTML = `<img src="${event.target.result}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
         
         preventEnterKeyOnForm(form);
     }
@@ -472,12 +515,14 @@
         }
         
         try {
-            const response = await fetch(`/admin/announcements/${id}`, {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/${id}?_=${timestamp}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -566,7 +611,8 @@
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 },
                 body: formData
             });
@@ -605,19 +651,22 @@
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
+        const id = form.dataset.id || form.action.split('/').pop();
         
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
         
         try {
             const formData = new FormData(form);
+            formData.append('_method', 'PUT');
             
             const response = await fetch(form.action, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 },
                 body: formData
             });
@@ -633,6 +682,11 @@
                 
                 form.reset();
                 await loadDataFromServer();
+                
+                // Force refresh images
+                setTimeout(() => {
+                    forceRefreshTableImages();
+                }, 100);
             } else {
                 let errorMessage = data.message || 'Failed to save';
                 if (data.errors) {
@@ -679,7 +733,8 @@
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 },
                 body: formData
             });
@@ -687,7 +742,7 @@
             const data = await response.json();
             
             if (data.success) {
-                showCustomToast('Image uploaded successfully to announcements folder!', 'success');
+                showCustomToast('Image uploaded successfully!', 'success');
                 
                 if (directUploadModal) {
                     directUploadModal.hide();
@@ -698,6 +753,11 @@
                 document.getElementById('currentImageDisplay').innerHTML = '';
                 
                 await loadDataFromServer();
+                
+                // Force refresh images
+                setTimeout(() => {
+                    forceRefreshTableImages();
+                }, 100);
             } else {
                 showCustomToast(data.message || 'Upload failed', 'error');
             }
@@ -718,11 +778,13 @@
         select.disabled = true;
         
         try {
-            const response = await fetch('/admin/announcements/all', {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/all?_=${timestamp}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Cache-Control': 'no-cache'
                 }
             });
             
