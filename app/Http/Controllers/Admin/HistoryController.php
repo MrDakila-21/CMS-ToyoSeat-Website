@@ -107,52 +107,49 @@ class HistoryController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $history = History::findOrFail($id);
+ // In your HistoryController@update method, make sure you're returning the fresh image URL
+public function update(Request $request, $id)
+{
+    try {
+        $history = History::findOrFail($id);
 
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'date' => 'required|date',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            ]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
 
-            $history->title = $request->title;
-            $history->description = $request->description;
-            $history->date = $request->date;
+        $history->title = $request->title;
+        $history->description = $request->description;
+        $history->date = $request->date;
 
-            if ($request->hasFile('image')) {
-                // Delete any existing folder image first
-                $history->deleteFolderImage();
-                
-                // Delete old database image if exists
-                if ($history->image && Storage::disk('public')->exists($history->image)) {
-                    Storage::disk('public')->delete($history->image);
-                }
-                
-                $extension = $request->file('image')->getClientOriginalExtension();
-                $filename = "{$history->id}.{$extension}";
-                $imagePath = $request->file('image')->storeAs('histories', $filename, 'public');
-                $history->image = $imagePath;
-            } else {
-                $history->syncImageFromFolder();
+        if ($request->hasFile('image')) {
+            if ($history->image && Storage::disk('public')->exists($history->image)) {
+                Storage::disk('public')->delete($history->image);
             }
-
-            $history->save();
-            $history->refresh();
-
-            return response()->json([
-                'success' => true, 
-                'message' => 'History record updated successfully!',
-                'image_url' => $history->image_url,
-                'timestamp' => time()
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            
+            $extension = $request->file('image')->getClientOriginalExtension();
+            $filename = "{$history->id}.{$extension}";
+            $imagePath = $request->file('image')->storeAs('histories', $filename, 'public');
+            $history->image = $imagePath;
         }
+
+        $history->save();
+        
+        // Force refresh the model to get new timestamps
+        $history->refresh();
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'History record updated successfully!',
+            'image_url' => $history->image_url, // This will have the new timestamp
+            'id' => $history->id
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
 
     public function destroy($id)
     {

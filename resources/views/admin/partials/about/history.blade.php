@@ -349,46 +349,47 @@
         }
     }
     
-    async function loadDataFromServer() {
-        const loadingIndicator = document.getElementById('historyLoadingIndicator');
-        const tableContainer = document.getElementById('historyTableContainer');
-        
-        if (loadingIndicator) loadingIndicator.style.display = 'block';
-        if (tableContainer) tableContainer.style.display = 'none';
-        
-        try {
-            const timestamp = new Date().getTime();
-            const response = await fetch(`/admin/histories/all?_=${timestamp}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+async function loadDataFromServer() {
+    const loadingIndicator = document.getElementById('historyLoadingIndicator');
+    const tableContainer = document.getElementById('historyTableContainer');
+    
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (tableContainer) tableContainer.style.display = 'none';
+    
+    try {
+        // Add random parameter to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/admin/histories/all?_=${timestamp}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
-            
-            allData = await response.json();
-            console.log(`Loaded ${allData.length} history records`);
-            
-            populateYearFilter();
-            renderTable();
-            
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            if (tableContainer) tableContainer.style.display = 'block';
-        } catch (error) {
-            console.error('Error loading data:', error);
-            if (loadingIndicator) {
-                loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
-            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        allData = await response.json();
+        console.log(`Loaded ${allData.length} history records`);
+        
+        populateYearFilter();
+        renderTable();
+        
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
+    } catch (error) {
+        console.error('Error loading data:', error);
+        if (loadingIndicator) {
+            loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
         }
     }
+}
     
     function forceRefreshTableImages() {
         const table = document.getElementById('historyTable');
@@ -1086,52 +1087,67 @@
             submitBtn.innerHTML = originalText;
         }
     }
+   
+    function forceRefreshAllImages() {
+    const images = document.querySelectorAll('#historyTable img.history-image-preview');
+    images.forEach(img => {
+        const currentSrc = img.src;
+        // Add a unique timestamp to force reload
+        const newSrc = currentSrc.split('?')[0] + '?t=' + new Date().getTime();
+        img.src = newSrc;
+    });
+}
+async function handleEditFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    const id = form.dataset.id;
     
-    async function handleEditFormSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    
+    try {
+        const formData = new FormData(form);
+        formData.append('_method', 'PUT');
         
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            },
+            body: formData
+        });
         
-        try {
-            const formData = new FormData(form);
-            formData.append('_method', 'PUT');
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
             
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                },
-                body: formData
-            });
+            if (editModal) editModal.hide();
             
-            const data = await response.json();
+            // IMPORTANT: Reload data from server
+            await loadDataFromServer();
             
-            if (data.success) {
-                showCustomToast(data.message, 'success');
-                if (editModal) editModal.hide();
-                await loadDataFromServer();
-                
-                setTimeout(() => {
-                    forceRefreshTableImages();
-                }, 100);
-            } else {
-                showCustomToast(data.message || 'Failed to save', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showCustomToast('Network error saving data', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
+            // CRITICAL: Force refresh all images after table is re-rendered
+            setTimeout(() => {
+                forceRefreshAllImages();
+            }, 100);
+            
+        } else {
+            showCustomToast(data.message || 'Failed to save', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error saving data', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
+}
     
     function getCsrfToken() {
         const token = document.querySelector('meta[name="csrf-token"]');
