@@ -14,6 +14,7 @@ use App\Models\HomepageSlide;
 use App\Models\Announcement;
 use App\Models\EventActivity;
 use App\Models\Recruitment;
+use App\Models\BusinessContent;
 
 $image = Homepage::where('key', 'hero_background')->first();
 $slides = HomepageSlide::where('is_active', true)->orderBy('order', 'asc')->get();
@@ -39,21 +40,29 @@ $recentRecruitments = Recruitment::where('status', 'published')
     ->orderBy('created_at', 'desc')
     ->limit(2)
     ->get();
+
+// Fetch LATEST 4 automotive seat covers for Products & Services section (ordered by latest created)
+$automotiveSeats = BusinessContent::where('section', 'automotive')
+    ->where('is_active', true)
+    ->orderBy('created_at', 'desc') // Latest first
+    ->orderBy('order', 'asc')
+    ->limit(4)
+    ->get();
 @endphp
 
 <!-- SECTION 1: Hero Section -->
 <div class="hero-wrapper">
-    <!-- Slideshow Background - ADDED -->
+    <!-- Slideshow Background -->
     @if($hasSlides)
         <div class="hero-slideshow">
             @foreach($slides as $index => $slide)
                 <div class="hero-slide {{ $index === 0 ? 'active' : '' }}" 
-                     style="background-image:  url('{{ '/storage.php?file=' . $slide->image_path }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                     style="background-image: url('{{ '/storage.php?file=' . $slide->image_path }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
                 </div>
             @endforeach
         </div>
     @else
-        <!-- Original Background Image - KEPT -->
+        <!-- Original Background Image -->
         @if($image && $image->image_data && !empty($image->image_data))
             <div class="hero-background" style="background-image: url('data:image/png;base64,{{ $image->image_data }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
         @else
@@ -61,8 +70,8 @@ $recentRecruitments = Recruitment::where('status', 'published')
         @endif
     @endif
     
-<div class="gradient-overlay-1" style="pointer-events: none;"></div>
-<div class="gradient-overlay-2" style="pointer-events: none;"></div>
+    <div class="gradient-overlay-1" style="pointer-events: none;"></div>
+    <div class="gradient-overlay-2" style="pointer-events: none;"></div>
     
     <div class="text-container">
         <div class="shaping-title">SHAPING THE FUTURE</div>
@@ -107,12 +116,60 @@ $recentRecruitments = Recruitment::where('status', 'published')
     </div>
 </div>
 
-<!-- SECTION 2 -->
+<!-- SECTION 2: PRODUCTS & SERVICES (Automotive Seats Showcase) -->
+<div class="products-showcase">
+    <div class="products-container">
+        <div class="products-header fade-in-up">
+            <h2 class="products-title">Products & Services</h2>
+            <div class="products-divider"></div>
+        </div>
+
+        @if($automotiveSeats->count() > 0)
+        <div class="products-grid">
+            @foreach($automotiveSeats as $seat)
+            <div class="product-card fade-in-up" style="animation-delay: {{ $loop->iteration * 0.1 }}s">
+                <div class="product-image-wrapper">
+                    @if($seat->image)
+                        <img src="{{ $seat->image_url }}" alt="{{ $seat->title }}" class="product-image">
+                    @else
+                        <div class="product-image-placeholder">
+                            <i class="fas fa-car"></i>
+                        </div>
+                    @endif
+                    <div class="product-overlay">
+                        <a href="{{ route('guest.about.business-introduction') }}#products-services" class="product-view-btn">
+                            Learn More <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-title">{{ Str::limit($seat->title, 50) }}</h3>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        
+        <div class="products-footer fade-in-up delay-2">
+            <a href="{{ route('guest.about.business-introduction') }}" class="products-view-all-btn">
+                <span>View All Products & Services</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        @else
+        <div class="products-empty-state fade-in-up">
+            <div class="empty-icon">
+                <i class="fas fa-industry"></i>
+            </div>
+            <h3>Coming Soon</h3>
+            <p>Our products and services section is being updated. Please check back later.</p>
+        </div>
+        @endif
+    </div>
+</div>
+
+<!-- SECTION 3: Announcements & Events (Original Section 2) -->
 <div class="section2"
-     style="background-image: url('{{ '/storage.php?file=images/Home1.png' }}');"
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;">
+     style="background-image: url('{{ '/storage.php?file=images/Home1.png' }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <!-- diagonal transition layers -->
     <div class="diag-layer layer1"></div>
@@ -122,23 +179,18 @@ $recentRecruitments = Recruitment::where('status', 'published')
     <div class="section2-white-panel"></div>
 
     <div class="section2-content">
-
         <!-- LEFT IMAGE SIDE -->
         <div class="section2-left"></div>
 
         <!-- RIGHT CONTENT -->
         <div class="section2-right">
-
-             <!-- ANNOUNCEMENTS -->
+            <!-- ANNOUNCEMENTS -->
             <div class="announcements-col fade-in-up">
-
                 <div class="section-header">
                     <img src="{{ asset('images/announcement.svg') }}" class="section-icon" alt="icon">
                     <h2 class="announcements-title">Announcements</h2>
                 </div>
-
                 <div class="underline announcements-underline"></div>
-
                 <div class="news-cards">
                     @forelse($announcements as $announcement)
                     <div class="news-card">
@@ -160,7 +212,6 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     </div>
                     @endforelse
                 </div>
-
                 @if($announcements->count() > 0)
                 <div class="view-all-link">
                     <a href="{{ route('guest.news.announcements') }}" class="view-all-btn">
@@ -168,19 +219,15 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     </a>
                 </div>
                 @endif
-
             </div>
 
             <!-- MEDIA INFO -->
             <div class="mediainfo-col fade-in-up delay-1">
-
                 <div class="section-header">
                     <img src="{{ asset('images/media.svg') }}" class="section-icon" alt="icon">
                     <h2 class="mediainfo-title">Events & Activities</h2>
                 </div>
-
                 <div class="underline mediainfo-underline"></div>
-
                 <div class="news-cards">
                     @forelse($eventActivities as $event)
                     <div class="news-card">
@@ -202,7 +249,6 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     </div>
                     @endforelse
                 </div>
-
                 @if($eventActivities->count() > 0)
                 <div class="view-all-link">
                     <a href="{{ route('guest.news.media-information') }}" class="view-all-btn">
@@ -210,23 +256,18 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     </a>
                 </div>
                 @endif
-
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- SECTION 3: RECRUITMENT -->
+<!-- SECTION 4: RECRUITMENT -->
 <div class="section3">
     <div class="section3-container">
-        <!-- Background decorative element -->
         <div class="section3-bg-pattern"></div>
         
         <div class="section3-content">
-            <!-- Left Side - Welcome Message & Info -->
             <div class="section3-left fade-in-up">
-                <!-- Section Header with Icon and Title side by side -->
                 <div class="recruitment-header">
                     <img src="{{ asset('images/recruitment-icon.svg') }}" alt="Recruitment" class="recruitment-icon-header" 
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%233988BD\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z\'/%3E%3C/svg%3E'">
@@ -241,7 +282,6 @@ $recentRecruitments = Recruitment::where('status', 'published')
                     and building a workplace where every voice matters.
                 </p>
                 
-                <!-- Recent Job Posts Preview or Null Animation -->
                 @if($recentRecruitments->count() > 0)
                     <div class="recent-jobs">
                         <h4 class="recent-jobs-title">Recent Opportunities</h4>
@@ -260,7 +300,6 @@ $recentRecruitments = Recruitment::where('status', 'published')
                         </div>
                     </div>
                 @else
-                    <!-- Null Animation - Matching Recruitment Information Blade Empty State Style -->
                     <div class="empty-state-null">
                         <div class="empty-state-icon-null">
                             <i class="fas fa-clock"></i>
@@ -273,7 +312,6 @@ $recentRecruitments = Recruitment::where('status', 'published')
                 @endif
             </div>
             
-            <!-- Right Side - CTA Button -->
             <div class="section3-right fade-in-up delay-1">
                 <div class="recruitment-cta-card">
                     <div class="cta-icon-wrapper">
@@ -296,7 +334,7 @@ $recentRecruitments = Recruitment::where('status', 'published')
     </div>
 </div>
 
-<!-- SECTION 4: HISTORY -->
+<!-- SECTION 5: HISTORY -->
 <div class="section4">
     <div class="section4-container">
         <div class="section4-content fade-in-up">
@@ -320,7 +358,7 @@ $recentRecruitments = Recruitment::where('status', 'published')
 @push('scripts')
     <script src="{{ asset('js/home.js') }}"></script>
     <script>
-        // Slideshow functionality - ADDED without removing existing scripts
+        // Slideshow functionality
         document.addEventListener('DOMContentLoaded', function() {
             const slides = document.querySelectorAll('.hero-slide');
             if (slides.length <= 1) return;
@@ -329,17 +367,11 @@ $recentRecruitments = Recruitment::where('status', 'published')
             const slideCount = slides.length;
             
             function showNextSlide() {
-                // Remove active class from current slide
                 slides[currentSlide].classList.remove('active');
-                
-                // Move to next slide
                 currentSlide = (currentSlide + 1) % slideCount;
-                
-                // Add active class to next slide
                 slides[currentSlide].classList.add('active');
             }
             
-            // Change slide every 5 seconds
             setInterval(showNextSlide, 5000);
         });
     </script>
