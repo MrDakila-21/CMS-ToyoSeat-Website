@@ -5,6 +5,9 @@
 // Get the requested file path
 $file = $_GET['file'] ?? '';
 
+// Remove cache-busting parameter from consideration
+$file = preg_replace('/\?.*$/', '', $file); // Remove query parameters
+
 // Security: Prevent directory traversal attacks
 $file = str_replace(['..', './', '\\', "\0"], '', $file);
 
@@ -38,10 +41,10 @@ if (file_exists($storagePath) && is_file($storagePath)) {
     // Get file modification time for cache-busting
     $lastModified = filemtime($storagePath);
     
-    // Set headers - NO CACHING for images to ensure updates show immediately
+    // Set headers with aggressive no-cache for images
     header('Content-Type: ' . $contentType);
     header('Content-Length: ' . filesize($storagePath));
-    header('Cache-Control: no-cache, no-store, must-revalidate');
+    header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
     header('Pragma: no-cache');
     header('Expires: 0');
     header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');

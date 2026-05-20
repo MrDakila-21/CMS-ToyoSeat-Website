@@ -28,21 +28,35 @@ class History extends Model
 
     protected $appends = ['image_url', 'image_url_legacy'];
 
-    // For guest view - uses storage.php
+    // For guest view - uses storage.php with cache-busting
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            return '/storage.php?file=' . urlencode($this->image);
+            // Add cache-busting parameter using updated_at timestamp
+            $timestamp = $this->updated_at ? $this->updated_at->timestamp : time();
+            return '/storage.php?file=' . urlencode($this->image) . '&v=' . $timestamp;
         }
         return null;
     }
     
-    // For admin view - you can use either method
+    // For admin view - with cache-busting
     public function getImageUrlLegacyAttribute()
     {
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+            $timestamp = $this->updated_at ? $this->updated_at->timestamp : time();
+            return Storage::url($this->image) . '?v=' . $timestamp;
         }
         return null;
+    }
+    
+    // Force cache bust when model is updated
+    public static function boot()
+    {
+        parent::boot();
+        
+        static::updated(function ($model) {
+            // Touch the updated_at timestamp to force cache bust
+            $model->updateTimestamps();
+        });
     }
 }
