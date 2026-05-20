@@ -534,52 +534,6 @@
         opacity: 0.5;
     }
     
-    /* Image Modal */
-    .image-modal {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.95);
-        cursor: pointer;
-    }
-    
-    .image-modal-content {
-        margin: auto;
-        display: block;
-        max-width: 90%;
-        max-height: 90%;
-        object-fit: contain;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: zoom 0.3s ease;
-    }
-    
-    @keyframes zoom {
-        from { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
-        to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    
-    .close-modal {
-        position: absolute;
-        top: 20px;
-        right: 40px;
-        color: white;
-        font-size: 40px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    
-    .close-modal:hover {
-        color: #bbb;
-    }
-    
     /* Scroll to top button */
     .scroll-top {
         position: fixed;
@@ -825,10 +779,45 @@
     </div>
 </div>
 
-<!-- Image Modal -->
-<div id="imageModal" class="image-modal" onclick="closeImageModal()">
-    <span class="close-modal">&times;</span>
-    <img class="image-modal-content" id="modalImage" alt="Full size image">
+<!-- Fullscreen Image Preview Modal -->
+<div id="imagePreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; overflow: hidden;">
+    <!-- Top Blur Overlay -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Bottom Blur Overlay -->
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Top Controls -->
+    <div style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10001; display: flex; justify-content: space-between; align-items: center;">
+        <div class="zoom-controls">
+            <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <span class="text-white mx-2" id="zoomLevel" style="font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px;">100%</span>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom" style="width: 40px; height: 40px;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        <button id="closePreviewBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px; backdrop-filter: blur(8px);">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Image Container -->
+    <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
+        <img id="fullscreenPreviewImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
+    </div>
+
+    <!-- Bottom Controls -->
+    <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10001;">
+        <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.9); padding: 10px 20px;">
+            <i class="fas fa-download me-2"></i>
+            Download
+        </button>
+    </div>
 </div>
 
 <!-- Scroll to Top Button -->
@@ -850,6 +839,15 @@
         search: '',
         year: ''
     };
+    
+    // Zoom and pan variables for fullscreen modal
+    let currentZoom = 1;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = 0;
+    let translateY = 0;
+    let currentImageUrl = '';
     
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded, fetching history data...');
@@ -875,7 +873,186 @@
                 });
             });
         }
+        
+        // Initialize fullscreen modal functionality
+        initFullscreenModal();
     });
+    
+    function initFullscreenModal() {
+        const modal = document.getElementById('imagePreviewModal');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const closeBtn = document.getElementById('closePreviewBtn');
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        const previewImage = document.getElementById('fullscreenPreviewImage');
+        const imageContainer = document.getElementById('fullscreenImageContainer');
+        const zoomLevel = document.getElementById('zoomLevel');
+        
+        // Zoom functions
+        function zoomIn() {
+            if (currentZoom < 3) {
+                currentZoom += 0.25;
+                updateZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.25;
+                updateZoom();
+            }
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateZoom();
+            updateTransform();
+        }
+        
+        function updateZoom() {
+            if (zoomLevel) {
+                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+            }
+            updateTransform();
+        }
+        
+        function updateTransform() {
+            if (previewImage) {
+                previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+        
+        // Pan functionality
+        function startPan(e) {
+            if (currentZoom > 1) {
+                isPanning = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        }
+        
+        function pan(e) {
+            if (isPanning && currentZoom > 1) {
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+                
+                // Limit panning
+                if (previewImage) {
+                    const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+                    const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
+                    
+                    translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                    translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+                }
+                
+                updateTransform();
+                e.preventDefault();
+            }
+        }
+        
+        function stopPan() {
+            isPanning = false;
+            if (imageContainer) imageContainer.style.cursor = 'grab';
+        }
+        
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const newZoom = currentZoom + delta;
+            
+            if (newZoom >= 0.5 && newZoom <= 3) {
+                currentZoom = newZoom;
+                updateZoom();
+            }
+        }
+        
+        // Add event listeners
+        if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+        if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+        if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                resetZoom();
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (previewImage && previewImage.src) {
+                    const link = document.createElement('a');
+                    link.href = previewImage.src;
+                    link.download = 'history-image.jpg';
+                    link.click();
+                }
+            });
+        }
+        
+        // Pan events
+        if (imageContainer) {
+            imageContainer.addEventListener('mousedown', startPan);
+            window.addEventListener('mousemove', pan);
+            window.addEventListener('mouseup', stopPan);
+            imageContainer.addEventListener('wheel', handleWheelZoom);
+            
+            // Touch events
+            imageContainer.addEventListener('touchstart', startPan);
+            window.addEventListener('touchmove', pan);
+            window.addEventListener('touchend', stopPan);
+        }
+        
+        // Close on background click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+    }
+    
+    function showFullscreenImage(imageUrl, title = 'History Image') {
+        const modal = document.getElementById('imagePreviewModal');
+        const previewImg = document.getElementById('fullscreenPreviewImage');
+        
+        if (previewImg) {
+            previewImg.src = imageUrl;
+            previewImg.alt = title;
+            
+            // Reset zoom when loading new image
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            if (document.getElementById('zoomLevel')) {
+                document.getElementById('zoomLevel').textContent = '100%';
+            }
+            if (previewImg) {
+                previewImg.style.transform = 'translate(0px, 0px) scale(1)';
+            }
+        }
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.flexDirection = 'column';
+        }
+    }
     
     async function loadHistoryData() {
         const loadingState = document.getElementById('loadingState');
@@ -1128,7 +1305,23 @@
     function createHistoryCard(record, index) {
         const formattedDate = formatDate(record.date);
         const defaultImageUrl = '/images/default-image.png';
-        const imageSrc = record.image_url ? record.image_url : defaultImageUrl;
+        
+        // FIX: Use the same image serving logic as overview module
+        let imageSrc = defaultImageUrl;
+        if (record.image_url) {
+            // If image_url already has the full URL from the accessor, use it
+            imageSrc = record.image_url;
+        } else if (record.image) {
+            // If only image path exists, construct URL through storage.php
+            imageSrc = `/storage.php?file=${encodeURIComponent(record.image)}`;
+        }
+        
+        // Also try to handle if image_url returns null but image exists
+        if ((!imageSrc || imageSrc === defaultImageUrl) && record.image) {
+            imageSrc = `/storage.php?file=${encodeURIComponent(record.image)}`;
+        }
+        
+        console.log('Image source for', record.title, ':', imageSrc); // Debug log
         
         // Split description for read more functionality (40 words)
         const words = record.description.split(' ');
@@ -1141,8 +1334,9 @@
         card.style.animationDelay = `${index * 0.05}s`;
         
         card.innerHTML = `
-            <div class="card-image" onclick="openImageModal('${imageSrc}')" style="cursor: pointer;">
-                <img src="${imageSrc}" alt="${escapeHtml(record.title)}" loading="lazy">
+            <div class="card-image" onclick="showFullscreenImage('${imageSrc}', '${escapeHtml(record.title)}')" style="cursor: pointer;">
+                <img src="${imageSrc}" alt="${escapeHtml(record.title)}" loading="lazy" 
+                     onerror="this.onerror=null; this.src='/images/default-image.png';">
                 <div class="image-overlay">
                     <i class="fas fa-search-plus"></i>
                 </div>
@@ -1272,37 +1466,11 @@
         });
     }
     
-    function openImageModal(imageUrl) {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        modal.style.display = 'block';
-        modalImg.src = imageUrl;
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closeImageModal() {
-        const modal = document.getElementById('imageModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-    
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-    
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageModal();
-        }
-    });
-    
-    // Prevent modal close when clicking on image
-    document.getElementById('modalImage')?.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
 </script>
 @endsection

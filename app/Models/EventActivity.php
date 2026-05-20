@@ -28,27 +28,38 @@ class EventActivity extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - FIXED for storage.php
+    // Helper to get full image URL with cache-busting timestamp
     public function getImageUrlAttribute()
     {
+        $timestamp = time(); // Fallback timestamp
+        
         // PRIORITY 1: Check for image in public/images/EventActivity folder with ID as filename
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
         foreach ($imageExtensions as $ext) {
-            // Check in public/images/EventActivity directory
+            // Check in public/events-activities directory
             $eventActivityImagePath = public_path("events-activities/{$this->id}.{$ext}");
             if (file_exists($eventActivityImagePath)) {
-                return "/storage.php?file=events-activities/{$this->id}.{$ext}";
+                // Get file modification time for cache-busting
+                $timestamp = filemtime($eventActivityImagePath);
+                return "/storage.php?file=events-activities/{$this->id}.{$ext}&t={$timestamp}";
             }
         }
         
         // PRIORITY 2: Check if there's a stored image path in database (from upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return '/storage.php?file=' . $this->image;
+            // Get file modification time
+            $timestamp = Storage::disk('public')->lastModified($this->image);
+            return '/storage.php?file=' . $this->image . '&t=' . $timestamp;
         }
         
-        // PRIORITY 3: Return default image if no image found
-        return '/storage.php?file=images/default-image.png';
+        // PRIORITY 3: Return default image with timestamp
+        $defaultImagePath = public_path('storage/app/public/images/default-image.png');
+        if (file_exists($defaultImagePath)) {
+            $timestamp = filemtime($defaultImagePath);
+        }
+        
+        return '/storage.php?file=images/default-image.png&t=' . $timestamp;
     }
     
     // Method to check if folder image exists

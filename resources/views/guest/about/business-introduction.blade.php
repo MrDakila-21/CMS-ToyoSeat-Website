@@ -267,12 +267,56 @@
         transition: all 0.3s ease;
         height: 100%;
         border: solid 3px #e0e0e0;
+        background: white;
+        display: flex;
+        flex-direction: column;
     }
-    
-    .characteristic-card:hover {
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        transform: translateY(-5px);
-    }
+
+.characteristic-card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transform: translateY(-5px);
+}
+
+.characteristic-image-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.characteristic-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.characteristic-icon {
+    font-size: 3rem;
+    color: #3988BD;
+}
+
+/* Ensure consistent card content spacing */
+.characteristic-card h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #0E334C;
+}
+
+.characteristic-card h6 {
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.description-wrapper {
+    margin-top: auto;
+}
+
+.characteristic-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
     
     .partnership-logo {
         padding: 20px;
@@ -312,6 +356,49 @@
         font-size: 2.5rem;
         font-weight: 700;
         color: #3988BD;
+    }
+    
+    /* Read More Styles */
+    .description-wrapper {
+        position: relative;
+    }
+    
+    .short-description {
+        display: block;
+    }
+    
+    .full-description {
+        display: none;
+    }
+    
+    .description-wrapper.expanded .short-description {
+        display: none;
+    }
+    
+    .description-wrapper.expanded .full-description {
+        display: block;
+    }
+    
+    .read-more-btn {
+        background: none;
+        border: none;
+        color: #3988BD;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0;
+        margin-top: 5px;
+        display: inline-block;
+        transition: color 0.2s ease;
+    }
+    
+    .read-more-btn:hover {
+        color: #0E334C;
+        text-decoration: underline;
+    }
+    
+    .characteristic-description {
+        margin-bottom: 0;
     }
     
     @media (max-width: 768px) {
@@ -362,9 +449,56 @@
             font-size: 0.75rem;
         }
     }
+
+
+    /* Organization Chart Styles */
+.organization-chart-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: white;
+}
+
+.organization-chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.org-chart-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.org-chart-image {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.org-chart-image:hover {
+    transform: scale(1.01);
+}
+
+.org-chart-caption {
+    border-top: 2px solid #e9ecef;
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+.org-chart-caption h4 {
+    color: #0E334C;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.org-chart-caption p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
 </style>
 
-<!-- Hero Section - Modern Gradient with Subtle Animation (Copied from overview blade) -->
+<!-- Hero Section - Modern Gradient with Subtle Animation -->
 <div class="hero-section-wrapper">
     <div class="hero-particles"></div>
     <div class="container">
@@ -390,12 +524,18 @@
     <div class="mb-5 fade-in-up">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title text-center">Automotive Seat Cover</h2>
-                <p class="section-description">Premium quality seat covers designed for comfort and durability</p>
+                <h2 class="section-title text-center">Products & Services</h2>
+                <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
             </div>
         </div>
         <div class="row">
             @foreach($automotiveSeats as $seat)
+            @php
+                $description = $seat->description;
+                $shortDesc = Str::limit($description, 350);
+                $needsReadMore = strlen($description) > 350;
+                $uniqueId = 'auto-desc-' . $seat->id;
+            @endphp
             <div class="col-md-6 mb-4">
                 <div class="card automotive-card h-100">
                     <div class="row g-0 h-100">
@@ -407,7 +547,24 @@
                         <div class="col-md-7">
                             <div class="card-body">
                                 <h5 class="card-title">{{ $seat->title }}</h5>
-                                <p class="card-text">{{ $seat->description }}</p>
+                                <div class="description-wrapper" id="{{ $uniqueId }}">
+                                    <div class="short-description">
+                                        <p class="card-text">{{ $shortDesc }}</p>
+                                        @if($needsReadMore)
+                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                            Read More <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                    @if($needsReadMore)
+                                    <div class="full-description">
+                                        <p class="card-text">{{ $description }}</p>
+                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                            Read Less <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -418,71 +575,103 @@
     </div>
     @endif
 
-    <!-- Organization Structure Section - CENTERED -->
-    @if($organizationMembers->count() > 0)
-    <div class="mb-5 fade-in-up">
+{{-- In guest business-introduction.blade.php --}}
+<!-- Organization Section -->
+@if($organizationMembers->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Organizational Structure</h2>
+            <p class="section-description">Our company's organizational framework</p>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        @foreach($organizationMembers as $member)
+        <div class="col-12 mb-4">
+            <div class="card organization-card">
+                <div class="card-body text-center">
+                    @if($member->title)
+                        <h4 class="card-title mb-3">{{ $member->title }}</h4>
+                    @endif
+                    @if($member->image)
+                        <img src="{{ $member->image_url }}" class="img-fluid rounded" alt="{{ $member->title ?? 'Organization Chart' }}" style="max-width: 100%; height: auto;">
+                    @else
+                        <div class="bg-light p-5 text-center">
+                            <i class="fas fa-building fa-5x text-muted"></i>
+                            <p class="mt-3 text-muted">Organization chart coming soon</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+   <!-- Characteristics Section - IMPROVED IMAGE FITTING -->
+@if($characteristics->count() > 0)
+<div class="mb-5 py-4 fade-in-up">
+    <div class="container">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title text-center">Organizational Structure</h2>
-                <p class="section-description">Meet our dedicated leadership team</p>
+                <h2 class="section-title text-center">Business Characteristics</h2>
+                <p class="section-description">What makes us unique in the industry</p>
             </div>
         </div>
         <div class="row justify-content-center">
-            @foreach($organizationMembers as $member)
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card organization-card h-100 text-center">
-                    @if($member->image)
-                    <div class="overflow-hidden">
-                        <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
+            @foreach($characteristics as $characteristic)
+            @php
+                $description = $characteristic->description;
+                $shortDesc = Str::limit($description, 250);
+                $needsReadMore = strlen($description) > 250;
+                $uniqueId = 'char-desc-' . $characteristic->id;
+            @endphp
+            <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
+                <div class="characteristic-card h-100 d-flex flex-column">
+                    <!-- IMPROVED IMAGE CONTAINER -->
+                    <div class="characteristic-image-wrapper mb-3">
+                        @if($characteristic->image)
+                            <img src="{{ $characteristic->image_url }}" 
+                                alt="{{ $characteristic->title }}" 
+                                class="characteristic-img">
+                        @else
+                            <div class="characteristic-icon">
+                                <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
+                            </div>
+                        @endif
                     </div>
-                    @else
-                    <div class="bg-light p-5 text-center">
-                        <i class="fas fa-user-circle fa-4x text-muted"></i>
-                    </div>
+                    <h4 class="mt-2">{{ $characteristic->title }}</h4>
+                    @if($characteristic->subtitle)
+                        <h6 class="text-muted mb-3" style="font-size: 0.9rem;">{{ $characteristic->subtitle }}</h6>
                     @endif
-                    <div class="card-body">
-                        <h5 class="card-title mb-1">{{ $member->name }}</h5>
-                        <p class="text-primary mb-0">{{ $member->position }}</p>
+                    <div class="description-wrapper flex-grow-1" id="{{ $uniqueId }}">
+                        <div class="short-description">
+                            <p class="text-muted characteristic-description">{{ $shortDesc }}</p>
+                            @if($needsReadMore)
+                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                Read More <i class="fas fa-chevron-down"></i>
+                            </button>
+                            @endif
+                        </div>
+                        @if($needsReadMore)
+                        <div class="full-description">
+                            <p class="text-muted characteristic-description">{{ $description }}</p>
+                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                Read Less <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
     </div>
-    @endif
+</div>
+@endif
 
-       <!-- Characteristics Section - CENTERED -->
-    @if($characteristics->count() > 0)
-    <div class="mb-5 py-4 fade-in-up">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <h2 class="section-title text-center">Business Characteristics</h2>
-                    <p class="section-description">What makes us unique in the industry</p>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                @foreach($characteristics as $characteristic)
-                <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
-                    <div class="characteristic-card">
-                        @if($characteristic->image)
-                        <img src="{{ $characteristic->image_url }}" alt="{{ $characteristic->title }}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 1rem;">
-                        @else
-                        <div class="characteristic-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        @endif
-                        <h4>{{ $characteristic->title }}</h4>
-                        <p class="text-muted">{{ $characteristic->description }}</p>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
-    <!-- Partnership Section - CENTERED -->
+    <!-- Partnership Section -->
     @if($partnerships->count() > 0)
     <div class="mb-5 fade-in-up">
         <div class="row mb-4">
@@ -500,7 +689,7 @@
                     @else
                     <div class="text-center">
                         <i class="fas fa-building fa-3x text-muted"></i>
-                        <p class="mt-2 mb-0 small">{{ $partner->title }}</p>
+                        <p class="mt-2 mb-0 small">{{ Str::limit($partner->title, 50) }}</p>
                     </div>
                     @endif
                 </div>
@@ -516,15 +705,24 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endpush
 
-<!-- Smooth Scroll Script -->
+<!-- Smooth Scroll & Read More Script -->
 @push('scripts')
 <script>
+    // Smooth scroll for hero indicator
     document.querySelector('.hero-scroll-indicator')?.addEventListener('click', function() {
         const nextSection = document.querySelector('.container.py-5');
         if (nextSection) {
             nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     });
+    
+    // Toggle description function for Read More / Read Less
+    function toggleDescription(elementId) {
+        const wrapper = document.getElementById(elementId);
+        if (wrapper) {
+            wrapper.classList.toggle('expanded');
+        }
+    }
 </script>
 @endpush
 

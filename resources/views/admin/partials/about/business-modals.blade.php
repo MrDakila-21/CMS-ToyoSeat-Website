@@ -46,53 +46,48 @@
     </div>
 </div>
 
-<!-- Organization Modal -->
-<div class="modal fade" id="organizationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+{{-- Organization Modal - Title made optional --}}
+<div class="modal fade" id="organizationModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="organizationModalLabel">Add Organization Member</h5>
+                <h5 class="modal-title" id="organizationModalLabel">Add Organization Chart</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="organizationForm" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" id="organizationId" name="id">
-                <div class="modal-body">
-                    <!-- Current Image Display Field -->
-                  
+            <div class="modal-body">
+                <form id="organizationForm" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="organizationId" name="id">
                     <div class="mb-3">
-                        <label>Name *</label>
-                        <input type="text" name="name" id="organization_name" class="form-control" required>
+                        <label class="form-label">Title <span class="text-muted">(Optional)</span></label>
+                        <input type="text" class="form-control" id="organization_title" name="title" placeholder="Enter chart title (e.g., Company Organization Chart 2024)">
+                        <small class="text-muted">Example: Organizational Structure, Management Team, etc. Leave blank if not needed.</small>
                     </div>
                     <div class="mb-3">
-                        <label>Position *</label>
-                        <input type="text" name="position" id="organization_position" class="form-control" required>
-                    </div>
-                      <div class="mb-3" id="organizationCurrentImageContainer" style="display: none;">
-                        <label>Current Photo</label>
-                        <div class="current-image-wrapper">
-                            <img id="organizationCurrentImage" src="" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #ddd; padding: 5px;">
-                            <div class="mt-1">
-                                <small class="text-muted" id="organizationCurrentImageName"></small>
+                        <label class="form-label">Organization Chart Image</label>
+                        <input type="file" class="form-control" name="image" accept="image/jpeg,image/png,image/gif" id="organization_image">
+                        <div class="form-text">Max 2MB. Allowed: JPG, PNG, GIF. Recommended: Upload organization chart image.</div>
+                        
+                        <!-- Current Image Display -->
+                        <div id="organizationCurrentImageContainer" class="mt-2" style="display: none;">
+                            <label class="form-label small text-muted">Current Image:</label>
+                            <div class="current-image-wrapper">
+                                <img id="organizationCurrentImage" src="" alt="Current" class="img-thumbnail" style="max-height: 150px;">
+                                <p class="small text-muted mt-1" id="organizationCurrentImageName"></p>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Photo</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        <small class="text-muted">Leave empty to keep current image. Recommended size: 400x400px</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="organizationForm" class="btn btn-primary">Save Organization Chart</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Characteristic Modal -->
+<!-- Characteristic Modal - Add subtitle field -->
 <div class="modal fade" id="characteristicModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -104,11 +99,15 @@
                 @csrf
                 <input type="hidden" id="characteristicId" name="id">
                 <div class="modal-body">
-                    <!-- Current Image Display Field -->
-                    
                     <div class="mb-3">
                         <label>Title *</label>
                         <input type="text" name="title" id="characteristic_title" class="form-control" required>
+                    </div>
+                    <!-- NEW SUBTITLE FIELD -->
+                    <div class="mb-3">
+                        <label>Subtitle <span class="text-muted">(Optional)</span></label>
+                        <input type="text" name="subtitle" id="characteristic_subtitle" class="form-control" placeholder="e.g., Industry Leader, Innovation Driven, Quality Focused">
+                        <small class="text-muted">A short supporting text that appears below the title</small>
                     </div>
                     <div class="mb-3">
                         <label>Description *</label>

@@ -10,8 +10,9 @@ class BusinessContent extends Model
 {
     protected $table = 'business_contents';
     
+// app/Models/BusinessContent.php
     protected $fillable = [
-        'section', 'title', 'description', 'image', 
+        'section', 'title', 'subtitle', 'description', 'image', 
         'original_filename', 'name', 'position', 'order', 'is_active'
     ];
     
@@ -53,10 +54,16 @@ class BusinessContent extends Model
             ->get();
     }
     
+    /**
+     * Get the image URL using storage.php (same pattern as Overview module)
+     */
     public function getImageUrlAttribute()
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
+        if ($this->image) {
+            // Check if file exists to add cache busting
+            $path = storage_path('app/public/' . $this->image);
+            $mtime = file_exists($path) ? filemtime($path) : time();
+            return '/storage.php?file=' . $this->image . '&t=' . $mtime;
         }
         return null;
     }

@@ -5,6 +5,9 @@
 // Get the requested file path
 $file = $_GET['file'] ?? '';
 
+// Remove cache-busting parameter from consideration
+$file = preg_replace('/\?.*$/', '', $file); // Remove query parameters
+
 // Security: Prevent directory traversal attacks
 $file = str_replace(['..', './', '\\', "\0"], '', $file);
 
@@ -35,10 +38,16 @@ if (file_exists($storagePath) && is_file($storagePath)) {
     
     $contentType = $mimeTypes[$ext] ?? mime_content_type($storagePath);
     
-    // Set headers
+    // Get file modification time for cache-busting
+    $lastModified = filemtime($storagePath);
+    
+    // Set headers with aggressive no-cache for images
     header('Content-Type: ' . $contentType);
     header('Content-Length: ' . filesize($storagePath));
-    header('Cache-Control: public, max-age=86400'); // Cache for 1 day
+    header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
     
     // Output the file
     readfile($storagePath);
@@ -48,6 +57,7 @@ if (file_exists($storagePath) && is_file($storagePath)) {
     $defaultImage = __DIR__ . '/storage/app/public/images/default-image.png';
     if (file_exists($defaultImage)) {
         header('Content-Type: image/png');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
         readfile($defaultImage);
         exit;
     }

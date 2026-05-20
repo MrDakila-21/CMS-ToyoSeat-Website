@@ -1005,3 +1005,190 @@
     window.loadMediaData = loadDataFromServer;
     console.log('Media.js initialized successfully');
 })();
+
+// Add these functions to your media.js file
+
+// Function to force refresh all images in the table
+function forceRefreshTableImages() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    
+    const images = table.querySelectorAll('img');
+    images.forEach(img => {
+        const originalSrc = img.src.split('?')[0];
+        // Add timestamp to force reload
+        img.src = originalSrc + '?t=' + new Date().getTime();
+    });
+}
+
+// Override the loadDataFromServer function to prevent caching
+async function loadDataFromServer() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const tableContainer = document.getElementById('tableContainer');
+    
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (tableContainer) tableContainer.style.display = 'none';
+    
+    try {
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/admin/media/all?_=${timestamp}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        });
+        
+        allData = await response.json();
+        console.log(`Loaded ${allData.length} records`);
+        
+        renderTable();
+        
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        if (loadingIndicator) {
+            loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+        }
+    }
+}
+
+// Update the handleEditFormSubmit function
+async function handleEditFormSubmit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    const id = form.dataset.id || form.action.split('/').pop();
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    
+    try {
+        const formData = new FormData(form);
+        formData.append('_method', 'PUT');
+        
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            
+            if (editModal) {
+                editModal.hide();
+            }
+            
+            // Force reload all data from server (bypass cache)
+            await loadDataFromServer();
+            
+            // Additional force refresh for images
+            setTimeout(() => {
+                forceRefreshTableImages();
+            }, 100);
+            
+            form.reset();
+        } else {
+            let errorMessage = data.message || 'Failed to save';
+            if (data.errors) {
+                errorMessage = Object.values(data.errors).flat().join('\n');
+            }
+            showCustomToast(errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error saving data', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
+
+// Update handleStatusChange function
+async function handleStatusChange(e) {
+    const select = e.target;
+    const id = select.dataset.id;
+    const status = select.value;
+    
+    select.disabled = true;
+    
+    try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/admin/media/${id}/status/${status}?_=${timestamp}`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            await loadDataFromServer(); // Reload fresh data
+        } else {
+            showCustomToast(data.message || 'Failed to update status', 'error');
+            await loadDataFromServer();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error updating status', 'error');
+        await loadDataFromServer();
+    } finally {
+        select.disabled = false;
+    }
+}
+
+// Update handleDeleteClick function
+async function handleDeleteClick(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this item?\n\nThis action cannot be undone!')) {
+        return;
+    }
+    
+    try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/admin/media/${id}?_=${timestamp}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'error');
+            await loadDataFromServer();
+        } else {
+            showCustomToast(data.message || 'Failed to delete item', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error deleting item', 'error');
+    }
+}

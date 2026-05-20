@@ -27,9 +27,11 @@ class Announcement extends Model
         'updated_at' => 'datetime'
     ];
 
-    // Helper to get full image URL - FIXED for storage.php
+    // Helper to get full image URL with cache-busting timestamp
     public function getImageUrlAttribute()
     {
+        $timestamp = time(); // Fallback timestamp
+        
         // PRIORITY 1: Check for image in public/images/announcements folder with ID as filename
         $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
         
@@ -37,17 +39,24 @@ class Announcement extends Model
             // Check in public/images/announcements directory
             $announcementImagePath = public_path("images/announcements/{$this->id}.{$ext}");
             if (file_exists($announcementImagePath)) {
-                return "/storage.php?file=images/announcements/{$this->id}.{$ext}";
+                $timestamp = filemtime($announcementImagePath);
+                return "/storage.php?file=images/announcements/{$this->id}.{$ext}&t={$timestamp}";
             }
         }
         
         // PRIORITY 2: Check if there's a stored image path in database (from upload)
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return '/storage.php?file=' . $this->image;
+            $timestamp = Storage::disk('public')->lastModified($this->image);
+            return '/storage.php?file=' . $this->image . '&t=' . $timestamp;
         }
         
         // PRIORITY 3: Return default image if no image found
-        return '/storage.php?file=images/default-image.png';
+        $defaultImagePath = public_path('storage/app/public/images/default-image.png');
+        if (file_exists($defaultImagePath)) {
+            $timestamp = filemtime($defaultImagePath);
+        }
+        
+        return '/storage.php?file=images/default-image.png&t=' . $timestamp;
     }
     
     // Method to check if folder image exists
@@ -151,5 +160,35 @@ class Announcement extends Model
         static::deleting(function ($announcement) {
             $announcement->deleteAllImages();
         });
+    }
+    
+    // Save image directly to public folder
+    public function saveImageToPublicFolder($imageFile)
+    {
+        // Delete any existing folder image first
+        $this->deleteFolderImage();
+        
+        // Delete old database image if exists
+        if ($this->image && Storage::disk('public')->exists($this->image)) {
+            Storage::disk('public')->delete($this->image);
+        }
+        
+        $extension = $imageFile->getClientOriginalExtension();
+        $filename = "{$this->id}.{$extension}";
+        
+        // Create announcements directory if it doesn't exist
+        $announcementPath = public_path('images/announcements');
+        if (!file_exists($announcementPath)) {
+            mkdir($announcementPath, 0755, true);
+        }
+        
+        // Move the uploaded file
+        $imageFile->move($announcementPath, $filename);
+        
+        // Clear the database image path (so it uses the folder image)
+        $this->image = null;
+        $this->save();
+        
+        return true;
     }
 }

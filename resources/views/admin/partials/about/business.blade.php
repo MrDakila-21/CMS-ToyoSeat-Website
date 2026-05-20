@@ -8,7 +8,7 @@
         <ul class="nav nav-tabs" id="businessTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="automotive-tab" data-bs-toggle="tab" data-bs-target="#automotive" type="button" role="tab">
-                    <i class="fas fa-car"></i> Automotive Seat Cover
+                    <i class="fas fa-car"></i> Products & Services
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -32,105 +32,119 @@
             <!-- Automotive Section -->
             <div class="tab-pane fade show active" id="automotive" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Automotive Seat Cover Items</h4>
+                    <h4>Products & Services</h4>
                     <button class="btn btn-primary" onclick="showAddAutomotiveModal()">
                         <i class="fas fa-plus"></i> Add New Item
                     </button>
                 </div>
                 <div id="automotive-list">
-                    @foreach($automotive as $item)
-                        <div class="card mb-3" data-id="{{ $item->id }}">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        @if($item->image)
-                                            <img src="{{ Storage::url($item->image) }}" class="img-fluid rounded" alt="{{ $item->title }}">
-                                        @else
-                                            <div class="bg-light text-center p-4 rounded">No Image</div>
-                                        @endif
-                                    </div>
-                                    <div class="col-md-9">
-                                        <h5>{{ $item->title }}</h5>
-                                        <p>{{ Str::limit($item->description, 200) }}</p>
-                                        <button class="btn btn-sm btn-warning" onclick="editAutomotive({{ $item->id }})">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $item->id }})">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                   @foreach($automotive as $item)
+    <div class="card mb-3" data-id="{{ $item->id }}">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    @if($item->image)
+                        <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
+                    @else
+                        <div class="bg-light text-center p-4 rounded">No Image</div>
+                    @endif
+                </div>
+                <div class="col-md-9">
+                    <h5>{{ $item->title }}</h5>
+                    <p>{{ Str::limit($item->description, 100) }}</p>
+                    <button class="btn btn-sm btn-warning" onclick="editAutomotive({{ $item->id }})">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $item->id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
 
-            <!-- Organization Section -->
-            <div class="tab-pane fade" id="organization" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Organization Members</h4>
-                    <button class="btn btn-primary" onclick="showAddOrganizationModal()">
-                        <i class="fas fa-plus"></i> Add Member
-                    </button>
-                </div>
-                <div class="row" id="organization-list">
-                    @foreach($organizations as $member)
-                        <div class="col-md-4 mb-4" data-id="{{ $member->id }}">
-                            <div class="card h-100">
-                                @if($member->image)
-                                    <img src="{{ Storage::url($member->image) }}" class="card-img-top" alt="{{ $member->name }}" style="height: 250px; object-fit: cover;">
-                                @endif
-                                <div class="card-body text-center">
-                                    <h5>{{ $member->name }}</h5>
-                                    <p class="text-muted">{{ $member->position }}</p>
-                                    <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
+ {{-- In admin business.blade.php - Organization Section --}}
+<!-- Organization Section -->
+<div class="tab-pane fade" id="organization" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Organization Charts</h4>
+        <button class="btn btn-primary" onclick="showAddOrganizationModal()">
+            <i class="fas fa-plus"></i> Add Organization Chart
+        </button>
+    </div>
+    <div class="row" id="organization-list">
+        @foreach($organizations as $member)
+            <div class="col-md-6 mb-4" data-id="{{ $member->id }}">
+                <div class="card h-100">
+                    @if($member->image)
+                        <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->title ?? 'Organization Chart' }}" style="width: 100%; object-fit: contain; padding: 20px;">
+                    @else
+                        <div class="bg-light text-center p-5">
+                            <i class="fas fa-building fa-4x text-muted"></i>
+                            <p class="mt-2 text-muted">No Image Uploaded</p>
                         </div>
-                    @endforeach
+                    @endif
+                    <div class="card-body text-center">
+                        @if($member->title)
+                            <h5>{{ $member->title }}</h5>
+                        @else
+                            <h5 class="text-muted">Organization Chart</h5>
+                        @endif
+                        <button class="btn btn-sm btn-warning" onclick="editOrganization({{ $member->id }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $member->id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
+        @endforeach
+    </div>
+</div>
 
             <!-- Characteristics Section -->
-            <div class="tab-pane fade" id="characteristics" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Business Characteristics</h4>
-                    <button class="btn btn-primary" onclick="showAddCharacteristicModal()">
-                        <i class="fas fa-plus"></i> Add Characteristic
-                    </button>
-                </div>
-                <div id="characteristics-list">
-                    @foreach($characteristics as $char)
-                        <div class="card mb-3" data-id="{{ $char->id }}">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        @if($char->image)
-                                            <img src="{{ Storage::url($char->image) }}" class="img-fluid rounded" alt="{{ $char->title }}">
-                                        @endif
-                                    </div>
-                                    <div class="col-md-9">
-                                        <h5>{{ $char->title }}</h5>
-                                        <p>{{ $char->description }}</p>
-                                        <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+<div class="tab-pane fade" id="characteristics" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Business Characteristics</h4>
+        <button class="btn btn-primary" onclick="showAddCharacteristicModal()">
+            <i class="fas fa-plus"></i> Add Characteristic
+        </button>
+    </div>
+    <div id="characteristics-list">
+        @foreach($characteristics as $char)
+        <div class="card mb-3" data-id="{{ $char->id }}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 d-flex align-items-center">
+                        @if($char->image)
+                            <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
+                        @else
+                            <div class="bg-light text-center p-4 rounded w-100">No Image</div>
+                        @endif
+                    </div>
+                    <div class="col-md-9">
+                        <h5>{{ $char->title }}</h5>
+                        @if($char->subtitle)
+                            <h6 class="text-muted">{{ $char->subtitle }}</h6>
+                        @endif
+                        <p>{{ Str::limit($char->description, 100) }}</p>
+                        <button class="btn btn-sm btn-warning" onclick="editCharacteristic({{ $char->id }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem({{ $char->id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
+        @endforeach
+    </div>
+</div>
 
             <!-- Partnership Section -->
             <div class="tab-pane fade" id="partnership" role="tabpanel">
@@ -141,24 +155,24 @@
                     </button>
                 </div>
                 <div class="row" id="partnership-list">
-                    @foreach($partnerships as $partner)
-                        <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
-                            <div class="card h-100 text-center">
-                                @if($partner->image)
-                                    <img src="{{ Storage::url($partner->image) }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
-                                @endif
-                                <div class="card-body">
-                                    <h6>{{ $partner->title }}</h6>
-                                    <button class="btn btn-sm btn-warning mt-2" onclick="editPartnership({{ $partner->id }})">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger mt-2" onclick="deleteItem({{ $partner->id }})">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                   @foreach($partnerships as $partner)
+    <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
+        <div class="card h-100 text-center">
+            @if($partner->image)
+                <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
+            @endif
+            <div class="card-body">
+                <h6>{{ Str::limit($partner->title, 100) }}</h6>
+                <button class="btn btn-sm btn-warning mt-2" onclick="editPartnership({{ $partner->id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger mt-2" onclick="deleteItem({{ $partner->id }})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+@endforeach
                 </div>
             </div>
         </div>
@@ -169,6 +183,9 @@
 @include('admin.partials.about.business-modals')
 
 <script>
+// Replace your entire script section (from document.addEventListener to the end)
+// with this corrected code:
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check if this is first visit or if we should use saved preference
     const lastTab = localStorage.getItem('lastBusinessTab');
@@ -313,24 +330,32 @@ async function makeRequest(url, method, formData) {
 }
 
 // Get CSRF token from meta tag
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+// ============================================
+// AUTOMOTIVE FUNCTIONS
+// ============================================
 function showAddAutomotiveModal() {
     currentSection = 'automotive';
-    document.getElementById('automotiveModalLabel').textContent = 'Add Automotive Seat Cover';
-    document.getElementById('automotiveForm').reset();
-    document.getElementById('automotiveId').value = '';
+    const modalLabel = document.getElementById('automotiveModalLabel');
+    const form = document.getElementById('automotiveForm');
+    const idField = document.getElementById('automotiveId');
+    const container = document.getElementById('automotiveCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add New Product/Service';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('automotiveCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('automotiveModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editAutomotive(id) {
@@ -345,10 +370,15 @@ async function editAutomotive(id) {
         });
         const data = await response.json();
         
-        document.getElementById('automotiveModalLabel').textContent = 'Edit Automotive Seat Cover';
-        document.getElementById('automotiveId').value = data.id;
-        document.getElementById('automotive_title').value = data.title;
-        document.getElementById('automotive_description').value = data.description;
+        const modalLabel = document.getElementById('automotiveModalLabel');
+        const idField = document.getElementById('automotiveId');
+        const titleField = document.getElementById('automotive_title');
+        const descField = document.getElementById('automotive_description');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Product/Service';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
+        if (descField) descField.value = data.description;
         currentEditId = data.id;
         
         // Show and update current image if exists
@@ -367,103 +397,139 @@ async function editAutomotive(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('automotiveModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('automotiveModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
     }
 }
 
-// Automotive Form Handler
-document.getElementById('automotiveForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/automotive/${currentEditId}` : '/admin/business-content/automotive';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+// Automotive Form Handler - FIXED with null checks
+const automotiveForm = document.getElementById('automotiveForm');
+if (automotiveForm) {
+    automotiveForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        // Check if form elements exist
+        const idField = document.getElementById('automotiveId');
+        const titleField = document.getElementById('automotive_title');
+        const descField = document.getElementById('automotive_description');
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
+        if (!titleField || !descField) {
+            showToast('Form elements not found', 'error');
             return;
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                // Update existing item
-                const itemElement = document.querySelector(`#automotive-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/automotive/${currentEditId}` : '/admin/business-content/automotive';
+        
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                // Add new item
-                document.getElementById('automotive-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('automotiveModal'));
-            if (modal) modal.hide();
-            
-            // Reset form
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const automotiveList = document.getElementById('automotive-list');
+                if (automotiveList) {
+                    if (currentEditId) {
+                        // Update existing item
+                        const itemElement = automotiveList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        // Add new item
+                        if (data.html) {
+                            automotiveList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                // Close modal
+                const modalElement = document.getElementById('automotiveModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                // Reset form
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Organization Modal Functions
+// ============================================
+// ORGANIZATION FUNCTIONS - FIXED
+// ============================================
 function showAddOrganizationModal() {
     currentSection = 'organization';
-    document.getElementById('organizationModalLabel').textContent = 'Add Organization Member';
-    document.getElementById('organizationForm').reset();
-    document.getElementById('organizationId').value = '';
+    const modalLabel = document.getElementById('organizationModalLabel');
+    const form = document.getElementById('organizationForm');
+    const idField = document.getElementById('organizationId');
+    const container = document.getElementById('organizationCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Organization Chart';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('organizationCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('organizationModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editOrganization(id) {
@@ -478,10 +544,13 @@ async function editOrganization(id) {
         });
         const data = await response.json();
         
-        document.getElementById('organizationModalLabel').textContent = 'Edit Organization Member';
-        document.getElementById('organizationId').value = data.id;
-        document.getElementById('organization_name').value = data.name;
-        document.getElementById('organization_position').value = data.position;
+        const modalLabel = document.getElementById('organizationModalLabel');
+        const idField = document.getElementById('organizationId');
+        const titleField = document.getElementById('organization_title');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Organization Chart';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title || '';
         currentEditId = data.id;
         
         // Show and update current image if exists
@@ -492,7 +561,6 @@ async function editOrganization(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
                 currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
                 currentImageContainer.style.display = 'block';
             } else {
@@ -500,96 +568,126 @@ async function editOrganization(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('organizationModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('organizationModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
     }
 }
 
-// Organization Form Handler
-document.getElementById('organizationForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/organization/${currentEditId}` : '/admin/business-content/organization';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+// Organization Form Handler - FIXED
+const organizationForm = document.getElementById('organizationForm');
+if (organizationForm) {
+    organizationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/organization/${currentEditId}` : '/admin/business-content/organization';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#organization-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('organization-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('organizationModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const organizationList = document.getElementById('organization-list');
+                if (organizationList) {
+                    if (currentEditId) {
+                        const itemElement = organizationList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            organizationList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('organizationModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Characteristic Modal Functions
+// ============================================
+// CHARACTERISTIC FUNCTIONS
+// ============================================
 function showAddCharacteristicModal() {
     currentSection = 'characteristic';
-    document.getElementById('characteristicModalLabel').textContent = 'Add Characteristic';
-    document.getElementById('characteristicForm').reset();
-    document.getElementById('characteristicId').value = '';
+    const modalLabel = document.getElementById('characteristicModalLabel');
+    const form = document.getElementById('characteristicForm');
+    const idField = document.getElementById('characteristicId');
+    const subtitleField = document.getElementById('characteristic_subtitle'); 
+    const container = document.getElementById('characteristicCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Characteristic';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (subtitleField) subtitleField.value = ''; // NEW - Clear subtitle
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('characteristicCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('characteristicModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editCharacteristic(id) {
@@ -604,13 +702,19 @@ async function editCharacteristic(id) {
         });
         const data = await response.json();
         
-        document.getElementById('characteristicModalLabel').textContent = 'Edit Characteristic';
-        document.getElementById('characteristicId').value = data.id;
-        document.getElementById('characteristic_title').value = data.title;
-        document.getElementById('characteristic_description').value = data.description;
+        const modalLabel = document.getElementById('characteristicModalLabel');
+        const idField = document.getElementById('characteristicId');
+        const titleField = document.getElementById('characteristic_title');
+        const subtitleField = document.getElementById('characteristic_subtitle'); // NEW
+        const descField = document.getElementById('characteristic_description');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Characteristic';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
+        if (subtitleField) subtitleField.value = data.subtitle || ''; // NEW
+        if (descField) descField.value = data.description;
         currentEditId = data.id;
         
-        // Show and update current image if exists
         const currentImageContainer = document.getElementById('characteristicCurrentImageContainer');
         const currentImage = document.getElementById('characteristicCurrentImage');
         const currentImageName = document.getElementById('characteristicCurrentImageName');
@@ -618,7 +722,6 @@ async function editCharacteristic(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
                 currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
                 currentImageContainer.style.display = 'block';
             } else {
@@ -626,11 +729,14 @@ async function editCharacteristic(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('characteristicModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('characteristicModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
@@ -638,84 +744,109 @@ async function editCharacteristic(id) {
 }
 
 // Characteristic Form Handler
-document.getElementById('characteristicForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/characteristic/${currentEditId}` : '/admin/business-content/characteristic';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+const characteristicForm = document.getElementById('characteristicForm');
+if (characteristicForm) {
+    characteristicForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/characteristic/${currentEditId}` : '/admin/business-content/characteristic';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#characteristics-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('characteristics-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('characteristicModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const characteristicsList = document.getElementById('characteristics-list');
+                if (characteristicsList) {
+                    if (currentEditId) {
+                        const itemElement = characteristicsList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            characteristicsList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('characteristicModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
-// Partnership Modal Functions
+// ============================================
+// PARTNERSHIP FUNCTIONS
+// ============================================
 function showAddPartnershipModal() {
     currentSection = 'partnership';
-    document.getElementById('partnershipModalLabel').textContent = 'Add Partnership';
-    document.getElementById('partnershipForm').reset();
-    document.getElementById('partnershipId').value = '';
+    const modalLabel = document.getElementById('partnershipModalLabel');
+    const form = document.getElementById('partnershipForm');
+    const idField = document.getElementById('partnershipId');
+    const container = document.getElementById('partnershipCurrentImageContainer');
+    
+    if (modalLabel) modalLabel.textContent = 'Add Partnership';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (container) container.style.display = 'none';
     currentEditId = null;
     
-    // Hide current image container for add mode
-    const container = document.getElementById('partnershipCurrentImageContainer');
-    if (container) container.style.display = 'none';
-    
-    const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    modal.show();
+    const modalElement = document.getElementById('partnershipModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+    }
 }
 
 async function editPartnership(id) {
@@ -730,12 +861,15 @@ async function editPartnership(id) {
         });
         const data = await response.json();
         
-        document.getElementById('partnershipModalLabel').textContent = 'Edit Partnership';
-        document.getElementById('partnershipId').value = data.id;
-        document.getElementById('partnership_title').value = data.title;
+        const modalLabel = document.getElementById('partnershipModalLabel');
+        const idField = document.getElementById('partnershipId');
+        const titleField = document.getElementById('partnership_title');
+        
+        if (modalLabel) modalLabel.textContent = 'Edit Partnership';
+        if (idField) idField.value = data.id;
+        if (titleField) titleField.value = data.title;
         currentEditId = data.id;
         
-        // Show and update current image if exists
         const currentImageContainer = document.getElementById('partnershipCurrentImageContainer');
         const currentImage = document.getElementById('partnershipCurrentImage');
         const currentImageName = document.getElementById('partnershipCurrentImageName');
@@ -743,7 +877,6 @@ async function editPartnership(id) {
         if (currentImageContainer && currentImage && currentImageName) {
             if (data.image_url) {
                 currentImage.src = data.image_url;
-                const filename = data.image ? data.image.split('/').pop() : 'image';
                 currentImageName.textContent = `Current: ${data.display_filename || (data.image ? data.image.split('/').pop() : 'No image')}`;
                 currentImageContainer.style.display = 'block';
             } else {
@@ -751,11 +884,14 @@ async function editPartnership(id) {
             }
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('partnershipModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
+        const modalElement = document.getElementById('partnershipModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast('Error loading data', 'error');
@@ -763,69 +899,87 @@ async function editPartnership(id) {
 }
 
 // Partnership Form Handler
-document.getElementById('partnershipForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = currentEditId ? `/admin/business-content/partnership/${currentEditId}` : '/admin/business-content/partnership';
-    
-    if (currentEditId) {
-        formData.append('_method', 'PUT');
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+const partnershipForm = document.getElementById('partnershipForm');
+if (partnershipForm) {
+    partnershipForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const data = await response.json();
+        let formData = new FormData(this);
+        let url = currentEditId ? `/admin/business-content/partnership/${currentEditId}` : '/admin/business-content/partnership';
         
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                showToast(errorMessages, 'error');
-            } else {
-                throw new Error(data.message || 'Error saving data');
-            }
-            return;
+        if (currentEditId) {
+            formData.append('_method', 'PUT');
         }
         
-        if (data.success) {
-            if (currentEditId) {
-                const itemElement = document.querySelector(`#partnership-list [data-id="${currentEditId}"]`);
-                if (itemElement) {
-                    itemElement.outerHTML = data.html;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : 'Save';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join('\n');
+                    showToast(errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Error saving data');
                 }
-            } else {
-                document.getElementById('partnership-list').insertAdjacentHTML('beforeend', data.html);
+                return;
             }
             
-            showToast(data.message, 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('partnershipModal'));
-            if (modal) modal.hide();
-            this.reset();
-            currentEditId = null;
+            if (data.success) {
+                const partnershipList = document.getElementById('partnership-list');
+                if (partnershipList) {
+                    if (currentEditId) {
+                        const itemElement = partnershipList.querySelector(`[data-id="${currentEditId}"]`);
+                        if (itemElement && data.html) {
+                            itemElement.outerHTML = data.html;
+                        }
+                    } else {
+                        if (data.html) {
+                            partnershipList.insertAdjacentHTML('beforeend', data.html);
+                        }
+                    }
+                }
+                
+                showToast(data.message, 'success');
+                
+                const modalElement = document.getElementById('partnershipModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                
+                this.reset();
+                currentEditId = null;
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-    } catch (error) {
-        showToast(error.message, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
+    });
+}
 
 // ============================================
-// DELETE FUNCTION
+// DELETE FUNCTION - FIXED
 // ============================================
 async function deleteItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
@@ -849,9 +1003,9 @@ async function deleteItem(id) {
             }
             
             if (data.success) {
-                // Remove the item from DOM
+                // Remove the item from DOM - search in all containers
                 const itemElement = document.querySelector(`[data-id="${id}"]`);
-                if (itemElement) {
+                if (itemElement && itemElement.parentNode) {
                     itemElement.remove();
                 }
                 showToast(data.message, 'success');

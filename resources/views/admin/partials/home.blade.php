@@ -13,7 +13,7 @@
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="multipleImages" class="form-label">Select Images (Max 10, up to 10MB each)</label>
-                                <input type="file" class="form-control" id="multipleImages" name="images[]" multiple accept="image/jpeg,image/png,image/gif,image/webp">
+                               <input type="file" class="form-control" id="multipleImages" name="images[]" multiple accept="image/jpeg,image/png,image/gif,image/webp,image/jfif">
                                 <div class="form-text">You can select multiple images at once. Hold Ctrl/Cmd to select multiple. Max 10MB per image.</div>
                             </div>
                             <!-- Preview Container -->
@@ -185,42 +185,50 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.setAttribute('multiple', 'multiple');
         
         fileInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            selectedFiles = files;
-            
-            // Validate each file (10MB limit)
-            const validFiles = [];
-            const errors = [];
-            
-            files.forEach((file) => {
-                // Check file size (10MB = 10 * 1024 * 1024)
-                if (file.size > 10 * 1024 * 1024) {
-                    errors.push(`${file.name}: File exceeds the 10MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-                } else {
-                    validFiles.push(file);
-                }
-            });
-            
-            if (errors.length > 0) {
-                showFloatingToast(errors.join('\n'), 'error');
-                
-                // Clear the file input and preview
-                fileInput.value = '';
-                selectedFiles = [];
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-                return;
-            }
-            
-            if (validFiles.length === 0) {
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    previewContainer.innerHTML = '';
-                }
-                return;
-            }
+    const files = Array.from(e.target.files);
+    selectedFiles = files;
+    
+    // Validate each file (10MB limit and allowed types)
+    const validFiles = [];
+    const errors = [];
+    
+    files.forEach((file) => {
+        // Get file extension
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'jfif'];
+        
+        // Check file type by extension
+        if (!allowedExtensions.includes(fileExtension)) {
+            errors.push(`${file.name}: Invalid file type. Allowed: JPG, PNG, GIF, WEBP, JFIF`);
+        }
+        // Check file size (10MB = 10 * 1024 * 1024)
+        else if (file.size > 10 * 1024 * 1024) {
+            errors.push(`${file.name}: File exceeds the 10MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        } else {
+            validFiles.push(file);
+        }
+    });
+    
+    if (errors.length > 0) {
+        showFloatingToast(errors.join('\n'), 'error');
+        
+        // Clear the file input and preview
+        fileInput.value = '';
+        selectedFiles = [];
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        return;
+    }
+    
+    if (validFiles.length === 0) {
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+        return;
+    }
             
             // Show preview for valid files
             if (previewContainer) {
@@ -305,13 +313,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Validate all files before upload
-            for (let i = 0; i < fileInput.files.length; i++) {
-                const file = fileInput.files[i];
-                if (file.size > 10 * 1024 * 1024) {
-                    showFloatingToast(`${file.name}: File exceeds 10MB limit.`, 'error');
-                    return;
-                }
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'jfif'];
+            
+            if (!allowedExtensions.includes(fileExtension)) {
+                showFloatingToast(`${file.name}: Invalid file type. Allowed: JPG, PNG, GIF, WEBP, JFIF`, 'error');
+                return;
             }
+            if (file.size > 10 * 1024 * 1024) {
+                showFloatingToast(`${file.name}: File exceeds 10MB limit.`, 'error');
+                return;
+            }
+        }
             
             const formData = new FormData();
             for (let i = 0; i < fileInput.files.length; i++) {

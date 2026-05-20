@@ -199,6 +199,8 @@
         object-fit: contain;
         background: linear-gradient(135deg, var(--primary-light), var(--primary-lighter));
         display: block;
+        transition: transform 0.5s ease;
+        cursor: pointer;
     }
 
     .iso-entry-image-wrapper {
@@ -208,10 +210,72 @@
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, var(--primary-light), var(--primary-lighter));
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+    }
+
+    /* Expand icon overlay */
+    .image-expand-overlay {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+        padding: 8px 12px;
+        border-radius: 25px;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .iso-entry-image-wrapper:hover .image-expand-overlay {
+        opacity: 1;
+    }
+
+    /* Subtle image overlay effect */
+    .iso-entry-image-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(26, 109, 143, 0.1), transparent);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .iso-entry-card:hover .iso-entry-image-wrapper::after {
+        opacity: 1;
     }
 
     .iso-entry-content {
         padding: 2rem;
+        position: relative;
+    }
+
+    /* Decorative accent line in content area */
+    .iso-entry-content::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 2rem;
+        right: 2rem;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), transparent);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+        transform-origin: left;
+    }
+
+    .iso-entry-card:hover .iso-entry-content::before {
+        transform: scaleX(1);
     }
 
     .iso-entry-title {
@@ -219,6 +283,24 @@
         font-weight: 700;
         color: var(--text-dark);
         margin-bottom: 1rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Subtle title underline on hover */
+    .iso-entry-title::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary);
+        transition: width 0.3s ease;
+    }
+
+    .iso-entry-card:hover .iso-entry-title::after {
+        width: 100%;
     }
 
     .iso-entry-description {
@@ -237,6 +319,7 @@
         border: 1px solid rgba(0,0,0,0.05);
         margin-bottom: 2rem;
         padding: 2rem;
+        position: relative;
     }
 
     .iso-intro-card:hover {
@@ -244,11 +327,27 @@
         box-shadow: var(--shadow-lg);
     }
 
+    /* Decorative corner accent for intro card */
+    .iso-intro-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-light) 0%, transparent 100%);
+        opacity: 0.1;
+        border-radius: 0 0 60px 0;
+        pointer-events: none;
+    }
+
     .iso-intro-title {
         font-size: 1.8rem;
         font-weight: 700;
         color: var(--text-dark);
         margin-bottom: 1rem;
+        position: relative;
+        display: inline-block;
     }
 
     .iso-intro-description {
@@ -329,8 +428,31 @@
         transform: rotate(180deg);
     }
 
+    /* Subtle fade-in animation for cards */
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .iso-entry-card {
+        animation: cardFadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .iso-entry-card:nth-child(1) { animation-delay: 0.05s; }
+    .iso-entry-card:nth-child(2) { animation-delay: 0.1s; }
+    .iso-entry-card:nth-child(3) { animation-delay: 0.15s; }
+    .iso-entry-card:nth-child(4) { animation-delay: 0.2s; }
+    .iso-entry-card:nth-child(5) { animation-delay: 0.25s; }
+
     @media (max-width: 768px) {
-        .heFro-title {
+        .hero-title {
             font-size: 2rem;
         }
 
@@ -353,6 +475,11 @@
         .iso-entry-content {
             padding: 1.5rem;
         }
+        
+        .image-expand-overlay {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
     }
 </style>
 
@@ -361,13 +488,13 @@
     <div class="hero-particles"></div>
     <div class="container">
         <div class="hero-section text-center fade-in-up">
-            <h1 class="hero-title">ISO Certificate</h1>
+            <h1 class="hero-title">Certifications</h1>
             <div class="hero-line">
                 <div class="hero-line-main"></div>
                 <div class="hero-line-dot"></div>
                 <div class="hero-line-main"></div>
             </div>
-            <p class="hero-subtitle">Certifications and quality standards we have achieved</p>
+            <p class="hero-subtitle">Industry-leading certifications that guarantee quality and compliance.</p>
             <div class="hero-scroll-indicator">
                 <span class="scroll-text">Learn More</span>
                 <i class="fas fa-chevron-down"></i>
@@ -406,23 +533,21 @@
 
     <!-- ISO Entries Section (regular entries with images) -->
     @if($isoEntries->isNotEmpty())
-        @if($isoIntro)
-            <div class="iso-entries-divider">
-                <span>Our Certifications</span>
-            </div>
-        @endif
         <div class="row">
             <div class="col-12">
                 @foreach($isoEntries as $entry)
                     <div class="iso-entry-card">
                         <div class="row g-0">
                             <div class="col-md-6">
-                                <div class="iso-entry-image-wrapper">
-                                    @if($entry->image_url && !str_contains($entry->image_url, 'default-image.png'))
-                                        <img src="{{ $entry->image_url }}" alt="{{ $entry->title }}" class="iso-entry-image">
-                                    @else
-                                        <i class="fas fa-certificate" style="font-size: 3rem; color: rgba(255,255,255,0.3);"></i>
-                                    @endif
+                                <div class="iso-entry-image-wrapper clickable-image" data-full-image="{{ $entry->image_url }}" data-image-title="{{ $entry->title }}">
+                                @if($entry->image && !str_contains($entry->image_url, 'default-image.png'))
+                                    <img src="{{ $entry->image_url }}" alt="{{ $entry->title }}" class="iso-entry-image">
+                                    <div class="image-expand-overlay">
+                                        <i class="fas fa-expand-alt me-1"></i> Expand
+                                    </div>
+                                @else
+                                    <i class="fas fa-certificate" style="font-size: 3rem; color: rgba(255,255,255,0.3);"></i>
+                                @endif
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -455,6 +580,51 @@
     @endif
 </div>
 
+<!-- Fullscreen Image Preview Modal -->
+<div id="imagePreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; overflow: hidden;">
+    <!-- Top Blur Overlay -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Bottom Blur Overlay -->
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Top Controls -->
+    <div style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10001; display: flex; justify-content: space-between; align-items: center;">
+        <div class="zoom-controls">
+            <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <span class="text-white mx-2" id="zoomLevel" style="font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px;">100%</span>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom" style="width: 40px; height: 40px;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        <button id="closePreviewBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px; backdrop-filter: blur(8px);">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Image Container -->
+    <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
+        <img id="fullscreenPreviewImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
+    </div>
+
+    <!-- Bottom Controls -->
+    <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10001;">
+        <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.9); padding: 10px 20px;">
+            <i class="fas fa-download me-2"></i>
+            Download
+        </button>
+    </div>
+</div>
+
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     // Smooth scroll indicator
     document.querySelector('.hero-scroll-indicator')?.addEventListener('click', function() {
@@ -564,5 +734,230 @@
             });
         }
     });
+
+    // Fullscreen Image Preview Functionality
+    $(document).ready(function() {
+        let currentZoom = 1;
+        let isPanning = false;
+        let startX = 0;
+        let startY = 0;
+        let translateX = 0;
+        let translateY = 0;
+        
+        // Get modal elements
+        const modal = document.getElementById('imagePreviewModal');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const closeBtn = document.getElementById('closePreviewBtn');
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        const previewImage = document.getElementById('fullscreenPreviewImage');
+        const imageContainer = document.getElementById('fullscreenImageContainer');
+        const zoomLevel = document.getElementById('zoomLevel');
+        
+        // Zoom functions
+        function zoomIn() {
+            if (currentZoom < 3) {
+                currentZoom += 0.25;
+                updateZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.25;
+                updateZoom();
+            }
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateZoom();
+            updateTransform();
+        }
+        
+        function updateZoom() {
+            if (zoomLevel) {
+                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+            }
+            updateTransform();
+        }
+        
+        function updateTransform() {
+            if (previewImage) {
+                previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+        
+        // Pan functionality
+        function startPan(e) {
+            if (currentZoom > 1) {
+                isPanning = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        }
+        
+        function pan(e) {
+            if (isPanning && currentZoom > 1) {
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+                
+                // Limit panning
+                if (previewImage) {
+                    const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+                    const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
+                    
+                    translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                    translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+                }
+                
+                updateTransform();
+                e.preventDefault();
+            }
+        }
+        
+        function stopPan() {
+            isPanning = false;
+            if (imageContainer) imageContainer.style.cursor = 'grab';
+        }
+        
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const newZoom = currentZoom + delta;
+            
+            if (newZoom >= 0.5 && newZoom <= 3) {
+                currentZoom = newZoom;
+                updateZoom();
+            }
+        }
+        
+        // Function to show fullscreen image preview
+        function showImagePreview(imageUrl, title = 'Image Preview') {
+            if (previewImage) {
+                previewImage.src = imageUrl;
+                previewImage.alt = title;
+                
+                // Reset zoom when loading new image
+                currentZoom = 1;
+                translateX = 0;
+                translateY = 0;
+                updateZoom();
+            }
+            
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.flexDirection = 'column';
+            }
+        }
+        
+        // Add event listeners for zoom controls
+        if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+        if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+        if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+        
+        // Close modal
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                if (modal) modal.style.display = 'none';
+                resetZoom();
+            });
+        }
+        
+        // Download image
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (previewImage && previewImage.src) {
+                    const link = document.createElement('a');
+                    link.href = previewImage.src;
+                    link.download = 'iso-certificate-image.jpg';
+                    link.click();
+                }
+            });
+        }
+        
+        // Pan events
+        if (imageContainer) {
+            imageContainer.addEventListener('mousedown', startPan);
+            window.addEventListener('mousemove', pan);
+            window.addEventListener('mouseup', stopPan);
+            imageContainer.addEventListener('wheel', handleWheelZoom);
+            
+            // Touch events for mobile
+            imageContainer.addEventListener('touchstart', startPan);
+            window.addEventListener('touchmove', pan);
+            window.addEventListener('touchend', stopPan);
+        }
+        
+        // Close on background click
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    resetZoom();
+                }
+            });
+        }
+        
+        // Close on escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+        
+        // Handle image click events for ISO entries
+        function attachImageClickHandlers() {
+            // Handle click on image wrapper
+            $('.clickable-image').off('click').on('click', function(e) {
+                e.stopPropagation();
+                const imageUrl = $(this).data('full-image');
+                const imageTitle = $(this).data('image-title') || 'ISO Certificate Image';
+                if (imageUrl && !imageUrl.includes('default-image.png')) {
+                    showImagePreview(imageUrl, imageTitle);
+                }
+            });
+            
+            // Handle click on expand overlay
+            $('.image-expand-overlay').off('click').on('click', function(e) {
+                e.stopPropagation();
+                const parent = $(this).closest('.clickable-image');
+                const imageUrl = parent.data('full-image');
+                const imageTitle = parent.data('image-title') || 'ISO Certificate Image';
+                if (imageUrl && !imageUrl.includes('default-image.png')) {
+                    showImagePreview(imageUrl, imageTitle);
+                }
+            });
+        }
+        
+        // Initial attachment of image click handlers
+        attachImageClickHandlers();
+        
+        // Re-attach handlers after any dynamic content changes (if needed)
+        // Since content is static here, this is mainly for completeness
+        if (typeof MutationObserver !== 'undefined') {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        attachImageClickHandlers();
+                    }
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    });
 </script>
+
+<!-- Bootstrap CSS (optional, for button styling) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 @endsection

@@ -357,12 +357,16 @@
         if (tableContainer) tableContainer.style.display = 'none';
         
         try {
-            const response = await fetch('/admin/histories/all', {
+            // Add timestamp to prevent AJAX caching
+            const timestamp = Date.now();
+            const response = await fetch(`/admin/histories/all?t=${timestamp}`, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
                 }
             });
             
@@ -500,7 +504,16 @@
             tableHtml += '<tr><td colspan="9" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
-                const imageSrc = item.image_url ? item.image_url : '/images/default-image.png';
+                // Use storage.php URL with cache-busting
+                let imageSrc = '/images/default-image.png';
+                if (item.image) {
+                    // Add cache-busting using updated_at timestamp
+                    const cacheBuster = item.updated_at ? new Date(item.updated_at).getTime() : Date.now();
+                    imageSrc = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
+                } else if (item.image_url && item.image_url !== '/images/default-image.png') {
+                    imageSrc = item.image_url;
+                }
+                
                 const imageHtml = `<img src="${imageSrc}" class="history-image-preview" alt="${escapeHtml(item.title)}" data-view-image="${imageSrc}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;">`;
                 
                 const statusSelect = `
@@ -663,7 +676,13 @@
     
     function handleImageView(e) {
         e.stopPropagation();
-        const imageUrl = e.target.dataset.viewImage || e.target.src;
+        let imageUrl = e.target.dataset.viewImage || e.target.src;
+        
+        // Ensure the image URL uses storage.php format if it's a stored image
+        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
+            imageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
+        }
+        
         if (imageUrl) {
             showImageModal(imageUrl);
         }
@@ -733,7 +752,13 @@
         
         const modalBody = document.getElementById('historyViewModalBody');
         if (modalBody) {
-            const imageSrc = item.image_url ? item.image_url : '/images/default-image.png';
+            let imageSrc = '/images/default-image.png';
+            if (item.image) {
+                const cacheBuster = item.updated_at ? new Date(item.updated_at).getTime() : Date.now();
+                imageSrc = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
+            } else if (item.image_url && item.image_url !== '/images/default-image.png') {
+                imageSrc = item.image_url;
+            }
             
             const imageHtml = `
                 <div class="text-center mb-3">
@@ -780,106 +805,110 @@
         if (viewModal) viewModal.show();
     }
     
-async function handleEditClick(id) {
-    const modalBody = document.getElementById('historyEditModalBody');
-    if (modalBody) {
-        modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
-    }
-    editModal.show();
-    
-    try {
-        const response = await fetch(`/admin/histories/${id}/edit`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        console.log('Edit data received:', data); // Debug log
-        
-        const formattedDate = data.date ? formatDate(data.date) : '';
-        
-        // Try multiple possible image sources
-        let imageSrc = '/images/default-image.png';
-        
-        // Check if image_url exists and is not null
-        if (data.image_url && data.image_url !== null && data.image_url !== '') {
-            imageSrc = data.image_url;
-        } 
-        // Check if image path exists
-        else if (data.image && data.image !== null && data.image !== '') {
-            // Construct the full URL from the stored path
-            imageSrc = `/storage/${data.image}`;
+    async function handleEditClick(id) {
+        const modalBody = document.getElementById('historyEditModalBody');
+        if (modalBody) {
+            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
         }
+        editModal.show();
         
-        console.log('Image source used:', imageSrc); // Debug log
-        
-        modalBody.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Title <span class="text-danger">*</span></label>
-                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description <span class="text-danger">*</span></label>
-                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Date <span class="text-danger">*</span></label>
-                <input type="date" name="date" class="form-control" value="${formattedDate}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Current Image</label>
-                <div class="mt-2">
-                    <img src="${imageSrc}" alt="Current image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" 
-                         onerror="this.onerror=null; this.src='/images/default-image.png';">
-                    ${data.image ? '<div class="text-success small mt-1"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : '<div class="text-muted small mt-1"><i class="fas fa-image"></i> Using default image</div>'}
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Change Image (Optional)</label>
-                <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
-                <small class="text-muted">Max size: 5MB. Leave empty to keep current image.</small>
-                <div id="editImagePreview" style="display: none;" class="mt-2">
-                    <label class="text-muted">New Image Preview:</label>
-                    <div>
-                        <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        const editImageInput = modalBody.querySelector('input[name="image"]');
-        if (editImageInput) {
-            editImageInput.addEventListener('change', function(e) {
-                const preview = document.getElementById('editImagePreview');
-                const previewImg = document.getElementById('editPreviewImg');
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                } else {
-                    preview.style.display = 'none';
-                    previewImg.src = '#';
+        try {
+            const response = await fetch(`/admin/histories/${id}/edit`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             });
+            
+            const data = await response.json();
+            
+            console.log('Edit data received:', data);
+            
+            const formattedDate = data.date ? formatDate(data.date) : '';
+            
+            // FIX: Use storage.php URL for image display with cache-busting
+            let imageSrc = '/images/default-image.png';
+            let hasCustomImage = false;
+            
+            if (data.image) {
+                // Use storage.php URL with cache-busting
+                const cacheBuster = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+                imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}&v=${cacheBuster}`;
+                hasCustomImage = true;
+            } else if (data.image_url && data.image_url !== '/images/default-image.png') {
+                imageSrc = data.image_url;
+                hasCustomImage = true;
+            }
+            
+            console.log('Image source used in edit modal:', imageSrc);
+            console.log('Has custom image:', hasCustomImage);
+            
+            modalBody.innerHTML = `
+                <div class="mb-3">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                    <input type="date" name="date" class="form-control" value="${formattedDate}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Image</label>
+                    <div class="mt-2">
+                        <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
+                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                        ${hasCustomImage ? 
+                            '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                            '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Change Image (Optional)</label>
+                    <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                    <small class="text-muted">Max size: 5MB. Leave empty to keep current image.</small>
+                    <div id="editImagePreview" style="display: none;" class="mt-2">
+                        <label class="text-muted">New Image Preview:</label>
+                        <div>
+                            <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const editImageInput = modalBody.querySelector('input[name="image"]');
+            if (editImageInput) {
+                editImageInput.addEventListener('change', function(e) {
+                    const preview = document.getElementById('editImagePreview');
+                    const previewImg = document.getElementById('editPreviewImg');
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            preview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.style.display = 'none';
+                        previewImg.src = '#';
+                    }
+                });
+            }
+            
+            const form = document.getElementById('historyEditForm');
+            form.action = `/admin/histories/${data.id}`;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Failed to load data', 'error');
+            editModal.hide();
         }
-        
-        const form = document.getElementById('historyEditForm');
-        form.action = `/admin/histories/${data.id}`;
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showCustomToast('Failed to load data', 'error');
-        editModal.hide();
     }
-}
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this history record?\n\nThis action cannot be undone!')) {
@@ -911,16 +940,23 @@ async function handleEditClick(id) {
     }
     
     function showImageModal(imageUrl) {
+        // Ensure proper URL format
+        let finalImageUrl = imageUrl;
+        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
+            finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
+        }
+        
         const modalHtml = `
             <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Image Preview</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body text-center">
-                            <img src="${imageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;">
+                            <img src="${finalImageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;" 
+                                 onerror="this.onerror=null; this.src='/images/default-image.png';">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1062,7 +1098,12 @@ async function handleEditClick(id) {
                     if (data.success) {
                         showCustomToast(data.message, 'success');
                         if (editModal) editModal.hide();
+                        // Force reload data from server
                         await loadDataFromServer();
+                        // Clear image cache for this specific record
+                        if (data.data && data.data.id) {
+                            clearImageCache(data.data.id);
+                        }
                     } else {
                         showCustomToast(data.message || 'Failed to save', 'error');
                     }
@@ -1116,6 +1157,21 @@ async function handleEditClick(id) {
                 if (toast.parentNode) toast.remove();
             }, 300);
         }, 5000);
+    }
+    
+    function clearImageCache(historyId) {
+        // Find the history item and update its data
+        const item = allData.find(i => i.id == historyId);
+        if (item && item.updated_at) {
+            // Force refresh of updated_at to bust cache
+            const cacheBuster = Date.now();
+            if (item.image) {
+                // Preload the new image with cache-busting
+                const newImageUrl = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
+                const img = new Image();
+                img.src = newImageUrl;
+            }
+        }
     }
     
     window.loadHistoryData = loadDataFromServer;

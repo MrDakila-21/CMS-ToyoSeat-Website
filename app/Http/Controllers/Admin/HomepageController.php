@@ -86,10 +86,10 @@ class HomepageController extends Controller
                 }
                 
                 $extension = strtolower($image->getClientOriginalExtension());
-                $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
-                
+                $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'jfif']; // Added 'jfif'
+
                 if (!in_array($extension, $allowedExtensions)) {
-                    $errors[] = $image->getClientOriginalName() . ' has invalid file type. Allowed: JPG, PNG, GIF, WEBP';
+                    $errors[] = $image->getClientOriginalName() . ' has invalid file type. Allowed: JPG, PNG, GIF, WEBP, JFIF';
                     continue;
                 }
                 

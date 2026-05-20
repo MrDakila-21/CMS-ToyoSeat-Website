@@ -67,8 +67,17 @@ class EventActivityController extends Controller
             $eventActivity->syncImageFromFolder();
         }
 
+        // Refresh to get latest data including image_url
+        $eventActivity->refresh();
+
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Event/Activity created successfully!', 'data' => $eventActivity]);
+            return response()->json([
+                'success' => true, 
+                'message' => 'Event/Activity created successfully!', 
+                'data' => $eventActivity,
+                'image_url' => $eventActivity->image_url,
+                'timestamp' => time()
+            ]);
         }
 
         return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media'])
@@ -129,9 +138,18 @@ class EventActivityController extends Controller
 
         // Save updates
         $eventActivity->save();
+        
+        // Refresh to get latest data
+        $eventActivity->refresh();
 
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Event/Activity updated successfully!']);
+            return response()->json([
+                'success' => true, 
+                'message' => 'Event/Activity updated successfully!',
+                'image_url' => $eventActivity->image_url,
+                'timestamp' => time(),
+                'updated_at' => $eventActivity->updated_at->timestamp
+            ]);
         }
 
         return redirect()->route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media'])
@@ -168,8 +186,15 @@ class EventActivityController extends Controller
         $eventActivity = EventActivity::findOrFail($id);
         $eventActivity->status = $status;
         $eventActivity->save();
+        
+        $eventActivity->refresh();
 
-        return response()->json(['success' => true, 'message' => 'Status updated successfully']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Status updated successfully',
+            'image_url' => $eventActivity->image_url,
+            'timestamp' => time()
+        ]);
     }
     
     // Upload image directly to EventActivity folder by ID
@@ -190,12 +215,12 @@ class EventActivityController extends Controller
             Storage::disk('public')->delete($eventActivity->image);
         }
         
-        // Store the image directly in public/images/EventActivity folder with ID as filename
+        // Store the image directly in public/events-activities folder with ID as filename
         $extension = $request->file('image')->getClientOriginalExtension();
         $filename = "{$eventActivity->id}.{$extension}";
         
-        // Create EventActivity directory if it doesn't exist
-        $eventActivityPath = public_path('images/EventActivity');
+        // Create events-activities directory if it doesn't exist in public
+        $eventActivityPath = public_path('events-activities');
         if (!file_exists($eventActivityPath)) {
             mkdir($eventActivityPath, 0755, true);
         }
@@ -207,10 +232,17 @@ class EventActivityController extends Controller
         $eventActivity->image = null;
         $eventActivity->save();
         
+        // Refresh to get latest data
+        $eventActivity->refresh();
+        
+        // Get file modification time for cache-busting
+        $timestamp = filemtime($eventActivityPath . '/' . $filename);
+        
         return response()->json([
             'success' => true,
-            'message' => 'Image uploaded successfully to images/EventActivity folder! The folder image will now take priority.',
-            'image_url' => $eventActivity->fresh()->image_url
+            'message' => 'Image uploaded successfully! The folder image will now take priority.',
+            'image_url' => $eventActivity->image_url,
+            'timestamp' => $timestamp
         ]);
     }
     
@@ -221,7 +253,8 @@ class EventActivityController extends Controller
         
         return response()->json([
             'success' => true,
-            'message' => "Synced {$updated} items successfully! Images from images/EventActivity folder will now take priority."
+            'message' => "Synced {$updated} items successfully! Images from events-activities folder will now take priority.",
+            'timestamp' => time()
         ]);
     }
     
@@ -236,8 +269,8 @@ class EventActivityController extends Controller
         $uploaded = [];
         $failed = [];
         
-        // Create EventActivity directory if it doesn't exist
-        $eventActivityPath = public_path('images/EventActivity');
+        // Create events-activities directory if it doesn't exist
+        $eventActivityPath = public_path('events-activities');
         if (!file_exists($eventActivityPath)) {
             mkdir($eventActivityPath, 0755, true);
         }
@@ -269,10 +302,13 @@ class EventActivityController extends Controller
                     $eventActivity->image = null;
                     $eventActivity->save();
                     
+                    $eventActivity->refresh();
+                    
                     $uploaded[] = [
                         'id' => $id,
                         'title' => $eventActivity->title,
-                        'image_url' => $eventActivity->fresh()->image_url
+                        'image_url' => $eventActivity->image_url,
+                        'timestamp' => filemtime($eventActivityPath . '/' . $filename)
                     ];
                 } else {
                     $failed[] = [
@@ -290,9 +326,10 @@ class EventActivityController extends Controller
         
         return response()->json([
             'success' => count($uploaded) > 0,
-            'message' => "Uploaded: " . count($uploaded) . " files, Failed: " . count($failed) . ". Images saved to images/EventActivity folder.",
+            'message' => "Uploaded: " . count($uploaded) . " files, Failed: " . count($failed) . ". Images saved to events-activities folder.",
             'uploaded' => $uploaded,
-            'failed' => $failed
+            'failed' => $failed,
+            'timestamp' => time()
         ]);
     }
     
@@ -305,23 +342,26 @@ class EventActivityController extends Controller
         $deleted = $eventActivity->deleteFolderImage();
         
         if ($deleted) {
+            $eventActivity->refresh();
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Folder image removed from images/EventActivity folder. System will now use the database image (if any) or default image.',
-                'image_url' => $eventActivity->fresh()->image_url
+                'message' => 'Folder image removed. System will now use the database image (if any) or default image.',
+                'image_url' => $eventActivity->image_url,
+                'timestamp' => time()
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'No folder image found for this item in images/EventActivity folder.'
+                'message' => 'No folder image found for this item.'
             ], 404);
         }
     }
     
-    // NEW METHOD: Get all folder images info
+    // Get all folder images info
     public function getFolderImagesInfo()
     {
-        $eventActivityPath = public_path('images/EventActivity');
+        $eventActivityPath = public_path('events-activities');
         $images = [];
         
         if (file_exists($eventActivityPath)) {
@@ -348,9 +388,24 @@ class EventActivityController extends Controller
         
         return response()->json([
             'success' => true,
-            'folder' => 'images/EventActivity',
+            'folder' => 'events-activities',
             'total_images' => count($images),
-            'images' => $images
+            'images' => $images,
+            'timestamp' => time()
+        ]);
+    }
+    
+    // Get fresh image URL for a specific item (for AJAX refresh)
+    public function getFreshImageUrl($id)
+    {
+        $eventActivity = EventActivity::findOrFail($id);
+        $eventActivity->refresh();
+        
+        return response()->json([
+            'success' => true,
+            'id' => $id,
+            'image_url' => $eventActivity->image_url,
+            'timestamp' => time()
         ]);
     }
 }

@@ -139,15 +139,15 @@ $(document).ready(function() {
     let translateX = 0;
     let translateY = 0;
     
-    // Create fullscreen image preview modal
-    function createImagePreviewModal() {
-        // Check if modal already exists
-        if ($('#imagePreviewModal').length) {
-            return;
-        }
-        
-        // Create a standalone fullscreen modal (not using Bootstrap modal to ensure full control)
-const modalHTML = `
+   // Create fullscreen image preview modal
+function createImagePreviewModal() {
+    // Check if modal already exists
+    if ($('#imagePreviewModal').length) {
+        return;
+    }
+    
+    // Create a standalone fullscreen modal (not using Bootstrap modal to ensure full control)
+    const modalHTML = `
     <div id="imagePreviewModal" style="
         display: none;
         position: fixed;
@@ -299,156 +299,156 @@ const modalHTML = `
         </div>
     </div>
 `;
-        
-        $('body').append(modalHTML);
-        
-        // Get elements
-        const modal = document.getElementById('imagePreviewModal');
-        const zoomInBtn = document.getElementById('zoomInBtn');
-        const zoomOutBtn = document.getElementById('zoomOutBtn');
-        const resetZoomBtn = document.getElementById('resetZoomBtn');
-        const closeBtn = document.getElementById('closePreviewBtn');
-        const downloadBtn = document.getElementById('downloadFullscreenBtn');
-        const previewImage = document.getElementById('fullscreenPreviewImage');
-        const imageContainer = document.getElementById('fullscreenImageContainer');
-        const zoomLevel = document.getElementById('zoomLevel');
-        
-        // Zoom functions
-        function zoomIn() {
-            if (currentZoom < 3) {
-                currentZoom += 0.25;
-                updateZoom();
-            }
-        }
-        
-        function zoomOut() {
-            if (currentZoom > 0.5) {
-                currentZoom -= 0.25;
-                updateZoom();
-            }
-        }
-        
-        function resetZoom() {
-            currentZoom = 1;
-            translateX = 0;
-            translateY = 0;
+    
+    $('body').append(modalHTML);
+    
+    // Get elements
+    const modal = document.getElementById('imagePreviewModal');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const resetZoomBtn = document.getElementById('resetZoomBtn');
+    const closeBtn = document.getElementById('closePreviewBtn');
+    const downloadBtn = document.getElementById('downloadImageBtn'); // FIXED: Changed from 'downloadFullscreenBtn' to 'downloadImageBtn'
+    const previewImage = document.getElementById('fullscreenPreviewImage');
+    const imageContainer = document.getElementById('fullscreenImageContainer');
+    const zoomLevel = document.getElementById('zoomLevel');
+    
+    // Zoom functions
+    function zoomIn() {
+        if (currentZoom < 3) {
+            currentZoom += 0.25;
             updateZoom();
-            updateTransform();
         }
-        
-        function updateZoom() {
-            if (zoomLevel) {
-                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
-            }
-            updateTransform();
+    }
+    
+    function zoomOut() {
+        if (currentZoom > 0.5) {
+            currentZoom -= 0.25;
+            updateZoom();
         }
-        
-        function updateTransform() {
-            if (previewImage) {
-                previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
-            }
+    }
+    
+    function resetZoom() {
+        currentZoom = 1;
+        translateX = 0;
+        translateY = 0;
+        updateZoom();
+        updateTransform();
+    }
+    
+    function updateZoom() {
+        if (zoomLevel) {
+            zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
         }
-        
-        // Pan functionality
-        function startPan(e) {
-            if (currentZoom > 1) {
-                isPanning = true;
-                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-                startX = clientX - translateX;
-                startY = clientY - translateY;
-                imageContainer.style.cursor = 'grabbing';
-                e.preventDefault();
-            }
+        updateTransform();
+    }
+    
+    function updateTransform() {
+        if (previewImage) {
+            previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
         }
-        
-        function pan(e) {
-            if (isPanning && currentZoom > 1) {
-                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-                translateX = clientX - startX;
-                translateY = clientY - startY;
-                
-                // Limit panning
-                const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
-                const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
-                
-                translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
-                translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
-                
-                updateTransform();
-                e.preventDefault();
-            }
-        }
-        
-        function stopPan() {
-            isPanning = false;
-            imageContainer.style.cursor = 'grab';
-        }
-        
-        function handleWheelZoom(e) {
+    }
+    
+    // Pan functionality
+    function startPan(e) {
+        if (currentZoom > 1) {
+            isPanning = true;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            startX = clientX - translateX;
+            startY = clientY - translateY;
+            imageContainer.style.cursor = 'grabbing';
             e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            const newZoom = currentZoom + delta;
+        }
+    }
+    
+    function pan(e) {
+        if (isPanning && currentZoom > 1) {
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            translateX = clientX - startX;
+            translateY = clientY - startY;
             
-            if (newZoom >= 0.5 && newZoom <= 3) {
-                currentZoom = newZoom;
-                updateZoom();
-            }
-        }
-        
-        // Add event listeners
-        if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
-        if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
-        if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
-        
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-                resetZoom();
-            });
-        }
-        
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', function() {
-                if (previewImage && previewImage.src) {
-                    const link = document.createElement('a');
-                    link.href = previewImage.src;
-                    link.download = 'announcement-image.jpg';
-                    link.click();
-                }
-            });
-        }
-        
-        // Pan events
-        if (imageContainer) {
-            imageContainer.addEventListener('mousedown', startPan);
-            window.addEventListener('mousemove', pan);
-            window.addEventListener('mouseup', stopPan);
-            imageContainer.addEventListener('wheel', handleWheelZoom);
+            // Limit panning
+            const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+            const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
             
-            // Touch events
-            imageContainer.addEventListener('touchstart', startPan);
-            window.addEventListener('touchmove', pan);
-            window.addEventListener('touchend', stopPan);
+            translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+            translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+            
+            updateTransform();
+            e.preventDefault();
         }
+    }
+    
+    function stopPan() {
+        isPanning = false;
+        imageContainer.style.cursor = 'grab';
+    }
+    
+    function handleWheelZoom(e) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newZoom = currentZoom + delta;
         
-        // Close on background click
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-                resetZoom();
-            }
+        if (newZoom >= 0.5 && newZoom <= 3) {
+            currentZoom = newZoom;
+            updateZoom();
+        }
+    }
+    
+    // Add event listeners
+    if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+    if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            resetZoom();
         });
-        
-        // Close on escape key
-        $(document).on('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                modal.style.display = 'none';
-                resetZoom();
+    }
+    
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (previewImage && previewImage.src) {
+                const link = document.createElement('a');
+                link.href = previewImage.src;
+                link.download = 'announcement-image.jpg';
+                link.click();
             }
         });
     }
+    
+    // Pan events
+    if (imageContainer) {
+        imageContainer.addEventListener('mousedown', startPan);
+        window.addEventListener('mousemove', pan);
+        window.addEventListener('mouseup', stopPan);
+        imageContainer.addEventListener('wheel', handleWheelZoom);
+        
+        // Touch events
+        imageContainer.addEventListener('touchstart', startPan);
+        window.addEventListener('touchmove', pan);
+        window.addEventListener('touchend', stopPan);
+    }
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            resetZoom();
+        }
+    });
+    
+    // Close on escape key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            modal.style.display = 'none';
+            resetZoom();
+        }
+    });
+}
     
     // Function to show fullscreen image preview
     function showImagePreview(imageUrl, title = 'Image Preview') {

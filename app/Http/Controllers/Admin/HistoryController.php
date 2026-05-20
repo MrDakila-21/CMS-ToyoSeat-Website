@@ -79,7 +79,13 @@ class HistoryController extends Controller
     try {
         $history = History::findOrFail($id);
         
-        // Return with explicit image_url to ensure it's included
+        // Determine the correct image URL for display
+        $imageDisplayUrl = null;
+        if ($history->image) {
+            // Use storage.php URL for display in admin (consistent with guest view)
+            $imageDisplayUrl = '/storage.php?file=' . urlencode($history->image);
+        }
+        
         return response()->json([
             'id' => $history->id,
             'title' => $history->title,
@@ -87,49 +93,63 @@ class HistoryController extends Controller
             'date' => $history->date,
             'status' => $history->status,
             'image' => $history->image,
-            'image_url' => $history->image_url, // Explicitly call the accessor
+            'image_url' => $imageDisplayUrl, // Use storage.php URL
+            'image_display_url' => $imageDisplayUrl,
             'created_at' => $history->created_at,
             'updated_at' => $history->updated_at,
         ]);
     } catch (\Exception $e) {
+        \Log::error('Error in edit: ' . $e->getMessage());
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $history = History::findOrFail($id);
+public function update(Request $request, $id)
+{
+    try {
+        $history = History::findOrFail($id);
 
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'date' => 'required|date',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            ]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
 
-            $history->title = $request->title;
-            $history->description = $request->description;
-            $history->date = $request->date;
+        $history->title = $request->title;
+        $history->description = $request->description;
+        $history->date = $request->date;
 
-            if ($request->hasFile('image')) {
-                if ($history->image && Storage::disk('public')->exists($history->image)) {
-                    Storage::disk('public')->delete($history->image);
-                }
-                
-                $extension = $request->file('image')->getClientOriginalExtension();
-                $filename = "{$history->id}.{$extension}";
-                $imagePath = $request->file('image')->storeAs('histories', $filename, 'public');
-                $history->image = $imagePath;
+        if ($request->hasFile('image')) {
+            if ($history->image && Storage::disk('public')->exists($history->image)) {
+                Storage::disk('public')->delete($history->image);
             }
-
-            $history->save();
-
-            return response()->json(['success' => true, 'message' => 'History record updated successfully!']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            
+            $extension = $request->file('image')->getClientOriginalExtension();
+            $filename = "{$history->id}.{$extension}";
+            $imagePath = $request->file('image')->storeAs('histories', $filename, 'public');
+            $history->image = $imagePath;
+            
+            // Force update the timestamp to trigger cache bust
+            $history->touch(); // This updates updated_at
         }
+
+        $history->save();
+
+        // Return the updated data with new image URL
+        return response()->json([
+            'success' => true, 
+            'message' => 'History record updated successfully!',
+            'data' => [
+                'id' => $history->id,
+                'image_url' => $history->image_url,
+                'updated_at' => $history->updated_at
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
 
     public function destroy($id)
     {
