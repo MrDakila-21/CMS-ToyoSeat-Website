@@ -357,12 +357,16 @@
         if (tableContainer) tableContainer.style.display = 'none';
         
         try {
-            const response = await fetch('/admin/histories/all', {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/histories/all?_=${timestamp}`, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
                 }
             });
             
@@ -384,6 +388,17 @@
                 loadingIndicator.innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
             }
         }
+    }
+    
+    function forceRefreshTableImages() {
+        const table = document.getElementById('historyTable');
+        if (!table) return;
+        
+        const images = table.querySelectorAll('.history-image-preview');
+        images.forEach(img => {
+            const originalSrc = img.src.split('?')[0];
+            img.src = originalSrc + '?t=' + new Date().getTime();
+        });
     }
     
     function populateYearFilter() {
@@ -500,14 +515,8 @@
             tableHtml += '<tr><td colspan="9" class="text-center text-muted py-4">No matching records found</td></tr>';
         } else {
             pageData.forEach(item => {
-                // Use storage.php URL for image display
-            let imageSrc = '/images/default-image.png';
-            if (item.image) {
-                imageSrc = `/storage.php?file=${encodeURIComponent(item.image)}`;
-            } else if (item.image_url && item.image_url !== '/images/default-image.png') {
-                imageSrc = item.image_url;
-            }
-                const imageHtml = `<img src="${imageSrc}" class="history-image-preview" alt="${escapeHtml(item.title)}" data-view-image="${imageSrc}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;">`;
+                const imageSrc = item.image_url || '/images/default-image.png';
+                const imageHtml = `<img src="${imageSrc}" class="history-image-preview" alt="${escapeHtml(item.title)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;">`;
                 
                 const statusSelect = `
                     <select class="form-select form-select-sm status-select" data-id="${item.id}">
@@ -619,34 +628,38 @@
         paginationUl.innerHTML = html;
         
         document.querySelectorAll('#historyPagination .page-link[data-pagination-link="true"]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.dataset.page);
-                let filteredData = [...allData];
-                
-                if (currentFilters.search) {
-                    filteredData = filteredData.filter(item => 
-                        item.title.toLowerCase().includes(currentFilters.search) || 
-                        item.description.toLowerCase().includes(currentFilters.search)
-                    );
-                }
-                if (currentFilters.year) {
-                    filteredData = filteredData.filter(item => {
-                        const itemYear = getYearFromDate(item.date);
-                        return itemYear && itemYear.toString() === currentFilters.year;
-                    });
-                }
-                if (currentFilters.status) {
-                    filteredData = filteredData.filter(item => item.status === currentFilters.status);
-                }
-                
-                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-                if (page >= 1 && page <= totalPages && page !== currentPage) {
-                    currentPage = page;
-                    renderTable();
-                }
-            });
+            link.removeEventListener('click', handlePaginationClick);
+            link.addEventListener('click', handlePaginationClick);
         });
+    }
+    
+    function handlePaginationClick(e) {
+        e.preventDefault();
+        const page = parseInt(this.dataset.page);
+        
+        let filteredData = [...allData];
+        
+        if (currentFilters.search) {
+            filteredData = filteredData.filter(item => 
+                item.title.toLowerCase().includes(currentFilters.search) || 
+                item.description.toLowerCase().includes(currentFilters.search)
+            );
+        }
+        if (currentFilters.year) {
+            filteredData = filteredData.filter(item => {
+                const itemYear = getYearFromDate(item.date);
+                return itemYear && itemYear.toString() === currentFilters.year;
+            });
+        }
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(item => item.status === currentFilters.status);
+        }
+        
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
+            currentPage = page;
+            renderTable();
+        }
     }
     
     function attachDynamicHandlers() {
@@ -668,18 +681,12 @@
     }
     
     function handleImageView(e) {
-    e.stopPropagation();
-    let imageUrl = e.target.dataset.viewImage || e.target.src;
-    
-    // Ensure the image URL uses storage.php format if it's a stored image
-    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
-        imageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
+        e.stopPropagation();
+        let imageUrl = e.target.src;
+        if (imageUrl) {
+            showImageModal(imageUrl);
+        }
     }
-    
-    if (imageUrl) {
-        showImageModal(imageUrl);
-    }
-}
     
     function handleTableClick(e) {
         const viewBtn = e.target.closest('.view-btn');
@@ -709,13 +716,15 @@
         select.disabled = true;
         
         try {
-            const response = await fetch(`/admin/histories/${id}/status/${status}`, {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/histories/${id}/status/${status}?_=${timestamp}`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -723,9 +732,7 @@
             
             if (data.success) {
                 showCustomToast(data.message, 'success');
-                const itemIndex = allData.findIndex(item => item.id == id);
-                if (itemIndex !== -1) allData[itemIndex].status = status;
-                renderTable();
+                await loadDataFromServer();
             } else {
                 showCustomToast(data.message || 'Failed to update status', 'error');
                 await loadDataFromServer();
@@ -745,7 +752,7 @@
         
         const modalBody = document.getElementById('historyViewModalBody');
         if (modalBody) {
-            const imageSrc = item.image_url ? item.image_url : '/images/default-image.png';
+            const imageSrc = item.image_url || '/images/default-image.png';
             
             const imageHtml = `
                 <div class="text-center mb-3">
@@ -792,109 +799,107 @@
         if (viewModal) viewModal.show();
     }
     
-async function handleEditClick(id) {
-    const modalBody = document.getElementById('historyEditModalBody');
-    if (modalBody) {
-        modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
-    }
-    editModal.show();
-    
-    try {
-        const response = await fetch(`/admin/histories/${id}/edit`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        console.log('Edit data received:', data);
-        
-        const formattedDate = data.date ? formatDate(data.date) : '';
-        
-        // FIX: Use storage.php URL for image display
-        let imageSrc = '/images/default-image.png';
-        let hasCustomImage = false;
-        
-        if (data.image) {
-            // Use storage.php URL
-            imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}`;
-            hasCustomImage = true;
-        } else if (data.image_url && data.image_url !== '/images/default-image.png') {
-            imageSrc = data.image_url;
-            hasCustomImage = true;
+    async function handleEditClick(id) {
+        const modalBody = document.getElementById('historyEditModalBody');
+        if (modalBody) {
+            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
         }
+        editModal.show();
         
-        console.log('Image source used in edit modal:', imageSrc);
-        console.log('Has custom image:', hasCustomImage);
-        
-        modalBody.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Title <span class="text-danger">*</span></label>
-                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description <span class="text-danger">*</span></label>
-                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Date <span class="text-danger">*</span></label>
-                <input type="date" name="date" class="form-control" value="${formattedDate}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Current Image</label>
-                <div class="mt-2">
-                    <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
-                         onerror="this.onerror=null; this.src='/images/default-image.png';">
-                    ${hasCustomImage ? 
-                        '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
-                        '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Change Image (Optional)</label>
-                <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
-                <small class="text-muted">Max size: 5MB. Leave empty to keep current image.</small>
-                <div id="editImagePreview" style="display: none;" class="mt-2">
-                    <label class="text-muted">New Image Preview:</label>
-                    <div>
-                        <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        const editImageInput = modalBody.querySelector('input[name="image"]');
-        if (editImageInput) {
-            editImageInput.addEventListener('change', function(e) {
-                const preview = document.getElementById('editImagePreview');
-                const previewImg = document.getElementById('editPreviewImg');
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                } else {
-                    preview.style.display = 'none';
-                    previewImg.src = '#';
+        try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/histories/${id}/edit?_=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
+            
+            const data = await response.json();
+            
+            console.log('Edit data received:', data);
+            
+            const formattedDate = data.date ? formatDate(data.date) : '';
+            const imageSrc = data.image_url || '/images/default-image.png';
+            const hasCustomImage = imageSrc !== '/images/default-image.png';
+            
+            modalBody.innerHTML = `
+                <div class="mb-3">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                    <input type="date" name="date" class="form-control" value="${formattedDate}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Image</label>
+                    <div class="mt-2" id="currentImageContainer">
+                        <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
+                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                        ${hasCustomImage ? 
+                            '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                            '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Change Image (Optional)</label>
+                    <input type="file" name="image" id="editImageInput" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                    <small class="text-muted">Max size: 5MB. Leave empty to keep current image.</small>
+                    <div id="editImagePreview" style="display: none;" class="mt-2">
+                        <label class="text-muted">New Image Preview:</label>
+                        <div>
+                            <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const editImageInput = modalBody.querySelector('#editImageInput');
+            if (editImageInput) {
+                editImageInput.addEventListener('change', function(e) {
+                    const preview = document.getElementById('editImagePreview');
+                    const previewImg = document.getElementById('editPreviewImg');
+                    const currentContainer = document.getElementById('currentImageContainer');
+                    
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            preview.style.display = 'block';
+                            // Optionally hide current image to show new preview
+                            if (currentContainer) {
+                                currentContainer.style.opacity = '0.5';
+                            }
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.style.display = 'none';
+                        previewImg.src = '#';
+                        if (currentContainer) {
+                            currentContainer.style.opacity = '1';
+                        }
+                    }
+                });
+            }
+            
+            const form = document.getElementById('historyEditForm');
+            form.action = `/admin/histories/${data.id}`;
+            form.dataset.id = data.id;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Failed to load data', 'error');
+            editModal.hide();
         }
-        
-        const form = document.getElementById('historyEditForm');
-        form.action = `/admin/histories/${data.id}`;
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showCustomToast('Failed to load data', 'error');
-        editModal.hide();
     }
-}
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this history record?\n\nThis action cannot be undone!')) {
@@ -902,12 +907,14 @@ async function handleEditClick(id) {
         }
         
         try {
-            const response = await fetch(`/admin/histories/${id}`, {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/histories/${id}?_=${timestamp}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -925,177 +932,204 @@ async function handleEditClick(id) {
         }
     }
     
-   function showImageModal(imageUrl) {
-    // Ensure proper URL format
-    let finalImageUrl = imageUrl;
-    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
-        finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
-    }
-    
-    const modalHtml = `
-        <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Image Preview</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img src="${finalImageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;" 
-                             onerror="this.onerror=null; this.src='/images/default-image.png';">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    function showImageModal(imageUrl) {
+        const modalHtml = `
+            <div class="modal fade" id="imageViewModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Image Preview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${imageUrl}" alt="Full size image" style="max-width: 100%; max-height: 70vh;" 
+                                 onerror="this.onerror=null; this.src='/images/default-image.png';">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('imageViewModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('imageViewModal'));
-    modal.show();
-    
-    document.getElementById('imageViewModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
-}
+        `;
+        
+        const existingModal = document.getElementById('imageViewModal');
+        if (existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('imageViewModal'));
+        modal.show();
+        
+        document.getElementById('imageViewModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
     
     function attachEventHandlers() {
         const searchInput = document.getElementById('historySearchInput');
         if (searchInput) {
-            searchInput.addEventListener('keyup', function(e) {
-                currentFilters.search = e.target.value.toLowerCase();
-                currentPage = 1;
-                renderTable();
-            });
+            searchInput.removeEventListener('keyup', handleSearch);
+            searchInput.addEventListener('keyup', handleSearch);
         }
         
         const yearFilter = document.getElementById('historyYearFilter');
         if (yearFilter) {
-            yearFilter.addEventListener('change', function(e) {
-                currentFilters.year = e.target.value;
-                currentPage = 1;
-                renderTable();
-            });
+            yearFilter.removeEventListener('change', handleYearFilter);
+            yearFilter.addEventListener('change', handleYearFilter);
         }
         
         const statusFilter = document.getElementById('historyStatusFilter');
         if (statusFilter) {
-            statusFilter.addEventListener('change', function(e) {
-                currentFilters.status = e.target.value;
-                currentPage = 1;
-                renderTable();
-            });
+            statusFilter.removeEventListener('change', handleStatusFilter);
+            statusFilter.addEventListener('change', handleStatusFilter);
         }
         
         const resetBtn = document.getElementById('resetHistoryFilters');
         if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                const searchInput = document.getElementById('historySearchInput');
-                const yearFilter = document.getElementById('historyYearFilter');
-                const statusFilter = document.getElementById('historyStatusFilter');
-                if (searchInput) searchInput.value = '';
-                if (yearFilter) yearFilter.value = '';
-                if (statusFilter) statusFilter.value = '';
-                currentFilters = { search: '', year: '', status: '' };
-                currentPage = 1;
-                renderTable();
-            });
+            resetBtn.removeEventListener('click', handleReset);
+            resetBtn.addEventListener('click', handleReset);
         }
         
         const rowsPerPageSelect = document.getElementById('historyRowsPerPage');
         if (rowsPerPageSelect) {
-            rowsPerPageSelect.addEventListener('change', function(e) {
-                rowsPerPage = parseInt(e.target.value);
-                currentPage = 1;
-                renderTable();
-            });
+            rowsPerPageSelect.removeEventListener('change', handleRowsPerPageChange);
+            rowsPerPageSelect.addEventListener('change', handleRowsPerPageChange);
         }
         
         const addForm = document.getElementById('historyAddForm');
         if (addForm) {
-            addForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-                
-                try {
-                    const formData = new FormData(this);
-                    const response = await fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showCustomToast(data.message, 'success');
-                        if (addModal) addModal.hide();
-                        this.reset();
-                        document.getElementById('imagePreview').style.display = 'none';
-                        await loadDataFromServer();
-                    } else {
-                        showCustomToast(data.message || 'Failed to save', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showCustomToast('Network error saving data', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
-            });
+            addForm.removeEventListener('submit', handleAddFormSubmit);
+            addForm.addEventListener('submit', handleAddFormSubmit);
         }
         
         const editForm = document.getElementById('historyEditForm');
         if (editForm) {
-            editForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-                
-                try {
-                    const formData = new FormData(this);
-                    const response = await fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showCustomToast(data.message, 'success');
-                        if (editModal) editModal.hide();
-                        await loadDataFromServer();
-                    } else {
-                        showCustomToast(data.message || 'Failed to save', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showCustomToast('Network error saving data', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
+            editForm.removeEventListener('submit', handleEditFormSubmit);
+            editForm.addEventListener('submit', handleEditFormSubmit);
+        }
+    }
+    
+    function handleSearch(e) {
+        currentFilters.search = e.target.value.toLowerCase();
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleYearFilter(e) {
+        currentFilters.year = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleStatusFilter(e) {
+        currentFilters.status = e.target.value;
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleReset(e) {
+        const searchInput = document.getElementById('historySearchInput');
+        const yearFilter = document.getElementById('historyYearFilter');
+        const statusFilter = document.getElementById('historyStatusFilter');
+        if (searchInput) searchInput.value = '';
+        if (yearFilter) yearFilter.value = '';
+        if (statusFilter) statusFilter.value = '';
+        currentFilters = { search: '', year: '', status: '' };
+        currentPage = 1;
+        renderTable();
+    }
+    
+    function handleRowsPerPageChange(e) {
+        rowsPerPage = parseInt(e.target.value);
+        currentPage = 1;
+        renderTable();
+    }
+    
+    async function handleAddFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: formData
             });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                if (addModal) addModal.hide();
+                form.reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                await loadDataFromServer();
+            } else {
+                showCustomToast(data.message || 'Failed to save', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    async function handleEditFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            formData.append('_method', 'PUT');
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                if (editModal) editModal.hide();
+                await loadDataFromServer();
+                
+                setTimeout(() => {
+                    forceRefreshTableImages();
+                }, 100);
+            } else {
+                showCustomToast(data.message || 'Failed to save', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
     }
     
