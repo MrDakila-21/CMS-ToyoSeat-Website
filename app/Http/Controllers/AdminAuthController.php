@@ -49,100 +49,113 @@ class AdminAuthController extends Controller
         ])->onlyInput('name');
     }
 
-    public function dashboard(Request $request)
-    {
-        // Ensure user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('admin.login');
-        }
-        
-        // Get tab from query parameters
-        $tab = $request->query('tab', 'home');
-        $subtab = $request->query('subtab');
-        
-        // Validate that the tab/subtab combination exists
-        $validTabs = ['home', 'about', 'recruitment', 'news', 'inquiry', 'users'];
-        $validAboutSubtabs = ['overview', 'business', 'location', 'history', 'iso', 'privacy'];
-        $validNewsSubtabs = ['media', 'announcements'];
-        $validUsersSubtabs = ['list'];
-        
-        if (!in_array($tab, $validTabs)) {
-            $tab = 'home';
-            $subtab = null;
-        }
-        
-        if ($tab === 'about' && !in_array($subtab, $validAboutSubtabs)) {
-            $subtab = 'overview';
-        }
-        
-        if ($tab === 'news' && !in_array($subtab, $validNewsSubtabs)) {
-            $subtab = 'media';
-        }
-        
-        if ($tab === 'users' && !in_array($subtab, $validUsersSubtabs)) {
-            $subtab = 'list';
-        }
-        
-        // Prepare data for views that need it
-        $events = null;
-        $announcements = null;
-        $content = null;
-        $automotive = null;
-        $organizations = null;
-        $characteristics = null;
-        $partnerships = null;
-        $users = null;
-        
-        if ($tab === 'about' && $subtab === 'overview') {
-            $content = \App\Models\OverviewContent::getContent();
-        }
-        
-        // Add this for business subtab
-        if ($tab === 'about' && $subtab === 'business') {
-            $automotive = \App\Models\BusinessContent::getAutomotiveSeats();
-            $organizations = \App\Models\BusinessContent::getOrganizationMembers();
-            $characteristics = \App\Models\BusinessContent::getCharacteristics();
-            $partnerships = \App\Models\BusinessContent::getPartnerships();
-        }
-        
-        if ($tab === 'news' && $subtab === 'media') {
-            try {
-                $events = EventActivity::orderBy('created_at', 'desc')->get();
-            } catch (\Exception $e) {
-                $events = collect([]);
-            }
-        }
-        
-        if ($tab === 'news' && $subtab === 'announcements') {
-            $announcements = [];
-        }
-        
-        // Add users data for superadmin only
-        if ($tab === 'users') {
-            if (Auth::user()->account_type !== 'superadmin') {
-                abort(403, 'Access denied. Only Super Administrators can access user management.');
-            }
-            $users = \App\Models\User::orderBy('created_at', 'desc')->paginate(10);
-        }
-        
-        // Return the appropriate view directly
-        $viewPath = "admin.partials.{$tab}";
-        
-        if ($tab === 'about') {
-            $viewPath = "admin.partials.about.{$subtab}";
-        } elseif ($tab === 'news') {
-            $viewPath = "admin.partials.news.{$subtab}";
-        } elseif ($tab === 'users') {
-            $viewPath = "admin.partials.users.{$subtab}";
-        }
-        
-        // Check if view exists
-        if (!view()->exists($viewPath)) {
-            abort(404, "View not found: {$viewPath}");
-        }
-        
-        return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content', 'automotive', 'organizations', 'characteristics', 'partnerships', 'users'));
+public function dashboard(Request $request)
+{
+    // Ensure user is authenticated
+    if (!Auth::check()) {
+        return redirect()->route('admin.login');
     }
+    
+    // Get tab from query parameters
+    $tab = $request->query('tab', 'home');
+    $subtab = $request->query('subtab');
+    
+    // Validate that the tab/subtab combination exists
+    $validTabs = ['home', 'about', 'recruitment', 'news', 'inquiry', 'users', 'settings']; // Added 'settings'
+    $validAboutSubtabs = ['overview', 'business', 'location', 'history', 'iso', 'privacy'];
+    $validNewsSubtabs = ['media', 'announcements'];
+    $validUsersSubtabs = ['list'];
+    $validSettingsSubtabs = ['profile']; // Add settings subtabs
+    
+    if (!in_array($tab, $validTabs)) {
+        $tab = 'home';
+        $subtab = null;
+    }
+    
+    if ($tab === 'about' && !in_array($subtab, $validAboutSubtabs)) {
+        $subtab = 'overview';
+    }
+    
+    if ($tab === 'news' && !in_array($subtab, $validNewsSubtabs)) {
+        $subtab = 'media';
+    }
+    
+    if ($tab === 'users' && !in_array($subtab, $validUsersSubtabs)) {
+        $subtab = 'list';
+    }
+    
+    if ($tab === 'settings' && !in_array($subtab, $validSettingsSubtabs)) {
+        $subtab = 'profile';
+    }
+    
+    // Prepare data for views that need it
+    $events = null;
+    $announcements = null;
+    $content = null;
+    $automotive = null;
+    $organizations = null;
+    $characteristics = null;
+    $partnerships = null;
+    $users = null;
+    $user = null; // Add this for settings
+    
+    if ($tab === 'about' && $subtab === 'overview') {
+        $content = \App\Models\OverviewContent::getContent();
+    }
+    
+    // Add this for business subtab
+    if ($tab === 'about' && $subtab === 'business') {
+        $automotive = \App\Models\BusinessContent::getAutomotiveSeats();
+        $organizations = \App\Models\BusinessContent::getOrganizationMembers();
+        $characteristics = \App\Models\BusinessContent::getCharacteristics();
+        $partnerships = \App\Models\BusinessContent::getPartnerships();
+    }
+    
+    if ($tab === 'news' && $subtab === 'media') {
+        try {
+            $events = EventActivity::orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            $events = collect([]);
+        }
+    }
+    
+    if ($tab === 'news' && $subtab === 'announcements') {
+        $announcements = [];
+    }
+    
+    // Add users data for superadmin only
+    if ($tab === 'users') {
+        if (Auth::user()->account_type !== 'superadmin') {
+            abort(403, 'Access denied. Only Super Administrators can access user management.');
+        }
+        $users = \App\Models\User::orderBy('created_at', 'desc')->paginate(10);
+    }
+    
+    // Add user data for settings
+    if ($tab === 'settings') {
+        $user = Auth::user();
+    }
+    
+    // Return the appropriate view directly
+    $viewPath = "admin.partials.{$tab}";
+    
+    if ($tab === 'about') {
+        $viewPath = "admin.partials.about.{$subtab}";
+    } elseif ($tab === 'news') {
+        $viewPath = "admin.partials.news.{$subtab}";
+    } elseif ($tab === 'users') {
+        $viewPath = "admin.partials.users.{$subtab}";
+    } elseif ($tab === 'settings') {
+        $viewPath = "admin.partials.settings.{$subtab}";
+    }
+    
+    // Check if view exists
+    if (!view()->exists($viewPath)) {
+        abort(404, "View not found: {$viewPath}");
+    }
+    
+    return view('admin.dashboard', compact('tab', 'subtab', 'events', 'announcements', 'content', 'automotive', 'organizations', 'characteristics', 'partnerships', 'users', 'user'));
+}
 
     public function logout(Request $request)
     {

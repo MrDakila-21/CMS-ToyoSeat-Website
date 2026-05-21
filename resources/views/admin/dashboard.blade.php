@@ -220,6 +220,15 @@
                     </ul>
                 </li>
 
+                                <!-- Settings Tab -->
+                    <li class="sidebar-item">
+                        <a class="sidebar-link {{ $tab === 'settings' ? 'active' : '' }}" 
+                        href="{{ route('admin.dashboard', ['tab' => 'settings', 'subtab' => 'profile']) }}">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+
                 <!-- User Management Link (Superadmin only) -->
                 @if(auth()->check() && auth()->user()->account_type === 'superadmin')
                 <li class="sidebar-item">
@@ -229,36 +238,39 @@
                         <span>User Management</span>
                     </a>
                 </li>
+
                 @endif
             </ul>
         </aside>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <div class="content-panel active">
-                @if($tab === 'home')
-                    @include('admin.partials.home')
-                @elseif($tab === 'about')
-                    @include("admin.partials.about.{$subtab}")
-                @elseif($tab === 'recruitment')
-                    @include('admin.partials.recruitment')
-                @elseif($tab === 'news')
-                    @include("admin.partials.news.{$subtab}", [
-                        'events' => $events ?? null, 
-                        'announcements' => $announcements ?? null
-                    ])
-                @elseif($tab === 'users')
-                    @include("admin.partials.users.{$subtab}", ['users' => $users ?? null])
-                @elseif($tab === 'inquiry')
-                    @include('admin.partials.inquiry')
-                @else
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Content not found.
-                    </div>
-                @endif
+ <!-- Main Content Area -->
+<main class="main-content">
+    <div class="content-panel active">
+        @if($tab === 'home')
+            @include('admin.partials.home')
+        @elseif($tab === 'about')
+            @include("admin.partials.about.{$subtab}")
+        @elseif($tab === 'recruitment')
+            @include('admin.partials.recruitment')
+        @elseif($tab === 'news')
+            @include("admin.partials.news.{$subtab}", [
+                'events' => $events ?? null, 
+                'announcements' => $announcements ?? null
+            ])
+        @elseif($tab === 'users')
+            @include("admin.partials.users.{$subtab}", ['users' => $users ?? null])
+        @elseif($tab === 'settings')
+            @include("admin.partials.settings.{$subtab}", ['user' => $user ?? null])
+        @elseif($tab === 'inquiry')
+            @include('admin.partials.inquiry')
+        @else
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Content not found. Tab: {{ $tab }}, Subtab: {{ $subtab }}
             </div>
-        </main>
+        @endif
+    </div>
+</main>
     </div>
 
     <!-- Logout Confirmation Modal -->
