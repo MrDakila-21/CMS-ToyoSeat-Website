@@ -16,9 +16,10 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\InquiryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BusinessContentController;
-use App\Http\Controllers\Guest\BusinessIntroductionController; // ADD THIS LINE
+use App\Http\Controllers\Guest\BusinessIntroductionController;
 use App\Http\Controllers\Admin\RecruitmentController; 
 use App\Http\Controllers\Admin\HistoryController; 
+use App\Http\Controllers\Admin\UserController; // ADD THIS LINE
 
 // Image serving route
 Route::get('/image/{path}', [ImageController::class, 'serve'])
@@ -39,7 +40,6 @@ Route::prefix('guest')->name('guest.')->group(function () {
     // About Us pages
     Route::prefix('about')->name('about.')->group(function () {
         Route::view('/overview', 'guest.about.overview')->name('overview');
-        // FIXED: Corrected route definition for business introduction
         Route::get('/business-introduction', [BusinessIntroductionController::class, 'index'])->name('business-introduction');
         Route::get('/location', [GuestLocationController::class, 'index'])->name('location');
         Route::get('/history', [GuestHistoryController::class, 'index'])->name('history');
@@ -50,8 +50,8 @@ Route::prefix('guest')->name('guest.')->group(function () {
 
     // Recruitment pages
     Route::prefix('recruitment')->name('recruitment.')->group(function () {
-    Route::get('/information', [\App\Http\Controllers\Guest\RecruitmentController::class, 'index'])->name('information');
-    Route::get('/api/published', [\App\Http\Controllers\Guest\RecruitmentController::class, 'getPublished'])->name('api.published');
+        Route::get('/information', [\App\Http\Controllers\Guest\RecruitmentController::class, 'index'])->name('information');
+        Route::get('/api/published', [\App\Http\Controllers\Guest\RecruitmentController::class, 'getPublished'])->name('api.published');
     });
 
     // News pages
@@ -83,7 +83,6 @@ Route::prefix('admin')->group(function () {
         Route::get('/check-auth', [AdminAuthController::class, 'checkAuth'])->name('admin.checkAuth');
         Route::get('/load-content', [AdminAuthController::class, 'loadContent'])->name('admin.loadContent');
 
-        // IMPORTANT: Make sure these routes are correctly defined
         // Homepage slideshow management routes
         Route::get('/homepage/slides', [HomepageController::class, 'getSlides'])->name('admin.homepage.slides');
         Route::post('/homepage/upload-multiple', [HomepageController::class, 'uploadMultipleImages'])->name('admin.homepage.uploadMultiple');
@@ -111,12 +110,13 @@ Route::prefix('admin')->group(function () {
         Route::post('announcements/sync-images', [AnnouncementController::class, 'syncAllImages'])->name('admin.announcements.syncImages');
         Route::post('announcements/batch-upload', [AnnouncementController::class, 'batchUploadToFolder'])->name('admin.announcements.batchUpload');
 
-    // History management routes - MAKE SURE THESE ARE EXACTLY HERE
-Route::get('histories/all', [App\Http\Controllers\Admin\HistoryController::class, 'getAll'])->name('admin.histories.all');
-Route::resource('histories', App\Http\Controllers\Admin\HistoryController::class)->names('admin.histories');
-Route::patch('histories/{id}/status/{status}', [App\Http\Controllers\Admin\HistoryController::class, 'updateStatus'])->name('admin.histories.updateStatus');
-Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryController::class, 'uploadDirectImage'])->name('admin.histories.uploadDirect');
-                // Recruitment management routes
+        // History management routes
+        Route::get('histories/all', [App\Http\Controllers\Admin\HistoryController::class, 'getAll'])->name('admin.histories.all');
+        Route::resource('histories', App\Http\Controllers\Admin\HistoryController::class)->names('admin.histories');
+        Route::patch('histories/{id}/status/{status}', [App\Http\Controllers\Admin\HistoryController::class, 'updateStatus'])->name('admin.histories.updateStatus');
+        Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryController::class, 'uploadDirectImage'])->name('admin.histories.uploadDirect');
+        
+        // Recruitment management routes
         Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
         Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');
         Route::patch('recruitments/{id}/status/{status}', [RecruitmentController::class, 'updateStatus'])->name('admin.recruitments.updateStatus');
@@ -129,7 +129,7 @@ Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryContro
         Route::post('/overview/business-principle/add', [OverviewController::class, 'addBusinessPrinciple'])->name('admin.overview.addPrinciple');
         Route::put('/overview/business-principle/{id}', [OverviewController::class, 'updateBusinessPrinciple'])->name('admin.overview.updatePrinciple');
         Route::delete('/overview/business-principle/{id}', [OverviewController::class, 'deleteBusinessPrinciple'])->name('admin.overview.deletePrinciple');
-        // Add these routes inside the admin middleware group
+        
         Route::post('/overview/update-section', [OverviewController::class, 'updateSection'])->name('admin.overview.updateSection');
         Route::post('/overview/remove-image', [OverviewController::class, 'removeImage'])->name('admin.overview.removeImage');
 
@@ -141,7 +141,7 @@ Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryContro
             Route::delete('/delete/{id}', [LocationController::class, 'destroy'])->name('delete');
         });
 
-        // NEW: Additional routes for folder image management
+        // Additional routes for folder image management
         Route::post('media/upload-direct', [EventActivityController::class, 'uploadDirectImage'])->name('admin.media.uploadDirect');
         Route::post('media/sync-images', [EventActivityController::class, 'syncAllImages'])->name('admin.media.syncImages');
         Route::post('media/batch-upload', [EventActivityController::class, 'batchUploadToFolder'])->name('admin.media.batchUpload');
@@ -154,7 +154,8 @@ Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryContro
         Route::patch('/iso-obtained/{id}/status/{status}', [App\Http\Controllers\Admin\IsoObtainedController::class, 'updateStatus'])->name('admin.iso.status');
         Route::delete('/iso-obtained/{id}', [App\Http\Controllers\Admin\IsoObtainedController::class, 'destroy'])->name('admin.iso.destroy');
         Route::delete('/iso-obtained/{id}/remove-image', [App\Http\Controllers\Admin\IsoObtainedController::class, 'removeImage'])->name('admin.iso.removeImage');
-        // Add this inside the admin middleware group in web.php
+        
+        // Business content routes
         Route::prefix('business-content')->name('admin.business.')->group(function () {
             Route::get('/', [BusinessContentController::class, 'index'])->name('index');
             Route::get('/{id}/edit', [BusinessContentController::class, 'edit'])->name('edit');
@@ -178,6 +179,18 @@ Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryContro
             // Delete and order routes
             Route::delete('/{id}', [BusinessContentController::class, 'destroy'])->name('destroy');
             Route::post('/update-order', [BusinessContentController::class, 'updateOrder'])->name('update-order');
+        });
+
+       // User Management routes
+        Route::prefix('users')->name('admin.users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('/filter', [UserController::class, 'filter'])->name('filter'); // ADD THIS LINE
+            Route::get('/all', [UserController::class, 'getAll'])->name('all');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [UserController::class, 'update'])->name('update');
+            Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
         });
 
         // Add a test route to verify JSON responses work

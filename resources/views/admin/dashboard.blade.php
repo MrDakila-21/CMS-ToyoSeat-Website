@@ -133,89 +133,105 @@
     @endif
 
     <!-- Navbar with Logo matching app.blade -->
-    <div class="navbar-custom">
-        <div class="navbar-container">
-            <a href="{{ url('/') }}" class="navbar-brand-custom">
-                <img src="{{ asset('images/logo.svg') }}" 
-                     alt="Toyoseat Logo" 
-                     class="company-logo"
-                     onerror="this.style.display='none';">
-                <div class="company-name">
-                    <div class="company-name-main">TOYO SEAT</div>
-                    <div class="company-name-sub">PHILIPPINES CORPORATION</div>
-                </div>
-            </a>
-            <div>
-                <span class="text-white me-3" style="opacity: 0.9;">
-                    <i class="fas fa-user-shield me-1"></i>
-                    Admin Panel
-                </span>
-                <button type="button" class="btn-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                    <i class="fas fa-sign-out-alt me-1"></i> Logout
-                </button>
+<!-- Navbar with Logo matching app.blade -->
+<div class="navbar-custom">
+    <div class="navbar-container">
+        <a href="{{ url('/') }}" class="navbar-brand-custom">
+            <img src="{{ asset('images/logo.svg') }}" 
+                 alt="Toyoseat Logo" 
+                 class="company-logo"
+                 onerror="this.style.display='none';">
+            <div class="company-name">
+                <div class="company-name-main">TOYO SEAT</div>
+                <div class="company-name-sub">PHILIPPINES CORPORATION</div>
             </div>
+        </a>
+        <div>
+            <span class="text-white me-3" style="opacity: 0.9;">
+                <i class="fas fa-user-shield me-1"></i>
+                Welcome, {{ Auth::user()->display_name ?? Auth::user()->name }}!
+                @if(Auth::user()->account_type === 'superadmin')
+                    <span class="badge bg-danger ms-2" style="font-size: 0.7rem;">Super Admin</span>
+                @else
+                    <span class="badge bg-info ms-2" style="font-size: 0.7rem;">Admin</span>
+                @endif
+            </span>
+            <button type="button" class="btn-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                <i class="fas fa-sign-out-alt me-1"></i> Logout
+            </button>
         </div>
     </div>
+</div>
 
     <div class="dashboard-wrapper">
         <!-- Sidebar -->
-        <!-- Sidebar -->
-<aside class="sidebar">
-    <div class="sidebar-header">
-        <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
-        <small>Manage website content</small>
-    </div>
-    <ul class="sidebar-menu">
-        <!-- Home Tab -->
-        <li class="sidebar-item">
-            <a class="sidebar-link {{ $tab === 'home' ? 'active' : '' }}" 
-               href="{{ route('admin.dashboard', ['tab' => 'home']) }}">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-        </li>
-
-        <!-- About Us Dropdown -->
-        <li class="sidebar-item">
-            <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['about']) ? 'active' : '' }}" 
-                 data-dropdown="aboutDropdown">
-                <i class="fas fa-info-circle"></i>
-                <span>About Us</span>
-                <i class="fas fa-chevron-down chevron-icon"></i>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h5><i class="fas fa-tachometer-alt me-2"></i>Content Management</h5>
+                <small>Manage website content</small>
             </div>
-            <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Certificate</a></li>
-            </ul>
-        </li>
+            <ul class="sidebar-menu">
+                <!-- Home Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ $tab === 'home' ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard', ['tab' => 'home']) }}">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
 
-        <!-- Recruitment Tab -->
-        <li class="sidebar-item">
-            <a class="sidebar-link {{ $tab === 'recruitment' ? 'active' : '' }}" 
-               href="{{ route('admin.dashboard', ['tab' => 'recruitment']) }}">
-                <i class="fas fa-briefcase"></i>
-                <span>Recruitment Information</span>
-            </a>
-        </li>
+                <!-- About Us Dropdown -->
+                <li class="sidebar-item">
+                    <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['about']) ? 'active' : '' }}" 
+                         data-dropdown="aboutDropdown">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Us</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </div>
+                    <ul class="sidebar-dropdown {{ in_array($tab, ['about']) ? 'open' : '' }}" id="aboutDropdown">
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'overview']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'overview' ? 'active' : '' }}">Overview</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'business']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'business' ? 'active' : '' }}">Business Introduction</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'location']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'location' ? 'active' : '' }}">Location</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'history']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'history' ? 'active' : '' }}">History</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'about', 'subtab' => 'iso']) }}" class="{{ $tab === 'about' && isset($subtab) && $subtab === 'iso' ? 'active' : '' }}">ISO Certificate</a></li>
+                    </ul>
+                </li>
 
-        <!-- News Dropdown -->
-        <li class="sidebar-item">
-            <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['news']) ? 'active' : '' }}" 
-                 data-dropdown="newsDropdown">
-                <i class="fas fa-newspaper"></i>
-                <span>News</span>
-                <i class="fas fa-chevron-down chevron-icon"></i>
-            </div>
-            <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Events & Activities</a></li>
-                <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
+                <!-- Recruitment Tab -->
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ $tab === 'recruitment' ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard', ['tab' => 'recruitment']) }}">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Recruitment Information</span>
+                    </a>
+                </li>
+
+                <!-- News Dropdown -->
+                <li class="sidebar-item">
+                    <div class="sidebar-link dropdown-toggle-main {{ in_array($tab, ['news']) ? 'active' : '' }}" 
+                         data-dropdown="newsDropdown">
+                        <i class="fas fa-newspaper"></i>
+                        <span>News</span>
+                        <i class="fas fa-chevron-down chevron-icon"></i>
+                    </div>
+                    <ul class="sidebar-dropdown {{ in_array($tab, ['news']) ? 'open' : '' }}" id="newsDropdown">
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'media']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'media' ? 'active' : '' }}">Events & Activities</a></li>
+                        <li><a href="{{ route('admin.dashboard', ['tab' => 'news', 'subtab' => 'announcements']) }}" class="{{ $tab === 'news' && isset($subtab) && $subtab === 'announcements' ? 'active' : '' }}">Announcements</a></li>
+                    </ul>
+                </li>
+
+                <!-- User Management Link (Superadmin only) -->
+                @if(auth()->check() && auth()->user()->account_type === 'superadmin')
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ $tab === 'users' ? 'active' : '' }}" 
+                    href="{{ route('admin.dashboard', ['tab' => 'users', 'subtab' => 'list']) }}">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                @endif
             </ul>
-        </li>
-    </ul>
-</aside>
+        </aside>
 
         <!-- Main Content Area -->
         <main class="main-content">
@@ -231,6 +247,8 @@
                         'events' => $events ?? null, 
                         'announcements' => $announcements ?? null
                     ])
+                @elseif($tab === 'users')
+                    @include("admin.partials.users.{$subtab}", ['users' => $users ?? null])
                 @elseif($tab === 'inquiry')
                     @include('admin.partials.inquiry')
                 @else
@@ -390,6 +408,6 @@
             });
         });
     })();
-</script>
+    </script>
 </body>
 </html>
