@@ -193,6 +193,12 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
         });
 
+            // Settings routes (accessible to all authenticated users)
+            Route::prefix('settings')->name('admin.settings.')->group(function () {
+                Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('index');
+                Route::post('/update', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('update');
+            });
+
         // Add a test route to verify JSON responses work
         Route::get('/test-json', function () {
             return response()->json(['success' => true, 'message' => 'JSON test successful']);
