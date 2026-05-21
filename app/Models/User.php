@@ -22,6 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'display_name',
+        'account_type',
+        'is_active',
     ];
 
     /**
@@ -42,7 +45,64 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime'
+            'email_verified_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if user is a super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->account_type === 'superadmin';
+    }
+
+    /**
+     * Check if user is an admin (including superadmin)
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->account_type, ['admin', 'superadmin']);
+    }
+
+    /**
+     * Check if user account is active
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    /**
+     * Get display name (fallback to name if display_name is empty)
+     */
+    public function getDisplayNameAttribute($value)
+    {
+        return $value ?: $this->name;
+    }
+
+    /**
+     * Scope a query to only include active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to only include super admins
+     */
+    public function scopeSuperAdmins($query)
+    {
+        return $query->where('account_type', 'superadmin');
+    }
+
+    /**
+     * Scope a query to only include regular admins (not superadmin)
+     */
+    public function scopeRegularAdmins($query)
+    {
+        return $query->where('account_type', 'admin');
     }
 }
