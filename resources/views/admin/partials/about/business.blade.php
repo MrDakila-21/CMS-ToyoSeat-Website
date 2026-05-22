@@ -43,11 +43,11 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    @if($item->image)
-                        <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
-                    @else
-                        <div class="bg-light text-center p-4 rounded">No Image</div>
-                    @endif
+    @if($item->image)
+        <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
+    @else
+        <img src="/images/default-image.png" class="img-fluid rounded" alt="{{ $item->title }}">
+    @endif
                 </div>
                 <div class="col-md-9">
                     <h5>{{ $item->title }}</h5>
@@ -82,10 +82,7 @@
                     @if($member->image)
                         <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->title ?? 'Organization Chart' }}" style="width: 100%; object-fit: contain; padding: 20px;">
                     @else
-                        <div class="bg-light text-center p-5">
-                            <i class="fas fa-building fa-4x text-muted"></i>
-                            <p class="mt-2 text-muted">No Image Uploaded</p>
-                        </div>
+                        <img src="/images/default-image.png" class="card-img-top" alt="Default Image" style="width: 100%; object-fit: contain; padding: 20px;">
                     @endif
                     <div class="card-body text-center">
                         @if($member->title)
@@ -123,7 +120,7 @@
                         @if($char->image)
                             <img src="{{ $char->image_url }}" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
                         @else
-                            <div class="bg-light text-center p-4 rounded w-100">No Image</div>
+                            <img src="/images/default-image.png" class="img-fluid rounded w-100" alt="{{ $char->title }}" style="object-fit: cover; height: 100%; min-height: 150px;">
                         @endif
                     </div>
                     <div class="col-md-9">
@@ -160,6 +157,8 @@
         <div class="card h-100 text-center">
             @if($partner->image)
                 <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
+            @else
+                <img src="/images/default-image.png" class="card-img-top p-3" alt="Default Image" style="height: 150px; object-fit: contain;">
             @endif
             <div class="card-body">
                 <h6>{{ Str::limit($partner->title, 100) }}</h6>
