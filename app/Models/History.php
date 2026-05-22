@@ -49,6 +49,14 @@ class History extends Model
         return null;
     }
     
+    /**
+     * Check if history has an image
+     */
+    public function hasImage()
+    {
+        return !is_null($this->image);
+    }
+    
     // Force cache bust when model is updated
     public static function boot()
     {

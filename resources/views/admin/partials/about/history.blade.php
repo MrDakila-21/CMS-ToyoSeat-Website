@@ -289,6 +289,9 @@
         status: ''
     };
     
+    // ← DECLARE THE FLAG HERE (only once)
+    let historyImageRemovalFlag = false;
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initHistoryManagement);
     } else {
@@ -350,6 +353,9 @@
     }
     
     async function loadDataFromServer() {
+        // ← Reset flag when loading data
+        historyImageRemovalFlag = false;
+        
         const loadingIndicator = document.getElementById('historyLoadingIndicator');
         const tableContainer = document.getElementById('historyTableContainer');
         
@@ -560,7 +566,7 @@
         
         tableHtml += `
                     </tbody>
-                </table>
+                追赶
             </div>
         `;
         
@@ -806,6 +812,9 @@
     }
     
     async function handleEditClick(id) {
+        // ← Reset flag when opening edit modal
+        historyImageRemovalFlag = false;
+        
         const modalBody = document.getElementById('historyEditModalBody');
         if (modalBody) {
             modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
@@ -828,12 +837,10 @@
             
             const formattedDate = data.date ? formatDate(data.date) : '';
             
-            // FIX: Use storage.php URL for image display with cache-busting
             let imageSrc = '/images/default-image.png';
             let hasCustomImage = false;
             
             if (data.image) {
-                // Use storage.php URL with cache-busting
                 const cacheBuster = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
                 imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}&v=${cacheBuster}`;
                 hasCustomImage = true;
@@ -841,9 +848,6 @@
                 imageSrc = data.image_url;
                 hasCustomImage = true;
             }
-            
-            console.log('Image source used in edit modal:', imageSrc);
-            console.log('Has custom image:', hasCustomImage);
             
             modalBody.innerHTML = `
                 <div class="mb-3">
@@ -860,11 +864,14 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Current Image</label>
-                    <div class="mt-2">
+                    <div class="current-image-wrapper position-relative d-inline-block">
                         <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
-                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                             onerror="this.onerror=null; this.src='/images/default-image.png';" id="currentHistoryImage-${data.id}">
                         ${hasCustomImage ? 
-                            '<div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                            `<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentHistoryImage(${data.id})" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>` : 
                             '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
                     </div>
                 </div>
@@ -910,6 +917,63 @@
         }
     }
     
+    // ============================================
+    // IMAGE REMOVAL FUNCTION FOR HISTORY
+    // ============================================
+    // ← REMOVED the duplicate declaration (already declared at top)
+    
+    function removeCurrentHistoryImage(historyId) {
+        if (confirm('Remove the current image? The default image will be used after saving.')) {
+            // Set flag to indicate image should be removed
+            historyImageRemovalFlag = true;
+            
+            // Hide the current image container or show removed indicator
+            const imageContainer = document.querySelector(`#currentHistoryImage-${historyId}`).parentElement;
+            if (imageContainer) {
+                // Add a visual indicator that image will be removed
+                const removedMessage = document.createElement('div');
+                removedMessage.className = 'text-warning small mt-2';
+                removedMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Image will be removed on save';
+                
+                // Remove existing message if any
+                const existingMessage = imageContainer.querySelector('.image-removed-message');
+                if (existingMessage) existingMessage.remove();
+                
+                removedMessage.classList.add('image-removed-message');
+                imageContainer.appendChild(removedMessage);
+                
+                // Change the image to show a "removed" placeholder
+                const img = document.querySelector(`#currentHistoryImage-${historyId}`);
+                if (img) {
+                    img.src = '/images/default-image.png';
+                    img.style.opacity = '0.5';
+                }
+                
+                // Disable the remove button after clicking
+                const removeBtn = imageContainer.querySelector('button');
+                if (removeBtn) {
+                    removeBtn.disabled = true;
+                    removeBtn.style.opacity = '0.5';
+                    removeBtn.title = 'Image marked for removal';
+                }
+            }
+            
+            showCustomToast('Image marked for removal. Save to apply changes.', 'success');
+        }
+    }
+    
+    function clearImageCache(historyId) {
+        const item = allData.find(i => i.id == historyId);
+        if (item && item.updated_at) {
+            const cacheBuster = Date.now();
+            if (item.image) {
+                const newImageUrl = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
+                const img = new Image();
+                img.src = newImageUrl;
+            }
+        }
+    }
+    
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this history record?\n\nThis action cannot be undone!')) {
             return;
@@ -940,7 +1004,6 @@
     }
     
     function showImageModal(imageUrl) {
-        // Ensure proper URL format
         let finalImageUrl = imageUrl;
         if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
             finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
@@ -1041,6 +1104,12 @@
                 
                 try {
                     const formData = new FormData(this);
+                    // ← This should NOT be here because add form doesn't have remove_image
+                    // Remove this line from add form:
+                    // if (historyImageRemovalFlag) {
+                    //     formData.append('remove_image', '1');
+                    // }
+                    
                     const response = await fetch(this.action, {
                         method: 'POST',
                         headers: {
@@ -1083,6 +1152,12 @@
                 
                 try {
                     const formData = new FormData(this);
+                    
+                    // ← ADD THIS - Check if image should be removed (ONLY in edit form)
+                    if (historyImageRemovalFlag) {
+                        formData.append('remove_image', '1');
+                    }
+                    
                     const response = await fetch(this.action, {
                         method: 'POST',
                         headers: {
@@ -1098,9 +1173,12 @@
                     if (data.success) {
                         showCustomToast(data.message, 'success');
                         if (editModal) editModal.hide();
-                        // Force reload data from server
+                        
+                        // ← Reset flag after successful save
+                        historyImageRemovalFlag = false;
+                        
                         await loadDataFromServer();
-                        // Clear image cache for this specific record
+                        
                         if (data.data && data.data.id) {
                             clearImageCache(data.data.id);
                         }
@@ -1157,21 +1235,6 @@
                 if (toast.parentNode) toast.remove();
             }, 300);
         }, 5000);
-    }
-    
-    function clearImageCache(historyId) {
-        // Find the history item and update its data
-        const item = allData.find(i => i.id == historyId);
-        if (item && item.updated_at) {
-            // Force refresh of updated_at to bust cache
-            const cacheBuster = Date.now();
-            if (item.image) {
-                // Preload the new image with cache-busting
-                const newImageUrl = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
-                const img = new Image();
-                img.src = newImageUrl;
-            }
-        }
     }
     
     window.loadHistoryData = loadDataFromServer;
