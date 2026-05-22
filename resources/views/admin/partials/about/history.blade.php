@@ -564,11 +564,7 @@
             });
         }
         
-        tableHtml += `
-                    </tbody>
-                追赶
-            </div>
-        `;
+        
         
         const container = document.getElementById('historyTableContainer');
         if (container) {
