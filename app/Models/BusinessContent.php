@@ -1,5 +1,4 @@
 <?php
-// app/Models/BusinessContent.php
 
 namespace App\Models;
 
@@ -10,7 +9,6 @@ class BusinessContent extends Model
 {
     protected $table = 'business_contents';
     
-// app/Models/BusinessContent.php
     protected $fillable = [
         'section', 'title', 'subtitle', 'description', 'image', 
         'original_filename', 'name', 'position', 'order', 'is_active'
@@ -71,5 +69,13 @@ class BusinessContent extends Model
     public function getDisplayFilenameAttribute()
     {
         return $this->original_filename ?? ($this->image ? basename($this->image) : null);
+    }
+    
+    /**
+     * Check if content has an image
+     */
+    public function hasImage()
+    {
+        return !is_null($this->image);
     }
 }

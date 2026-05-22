@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/BusinessContentController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -53,7 +52,7 @@ class BusinessContentController extends Controller
         
         return response()->json([
             'success' => true,
-            'message' => 'Automotive seat cover added successfully',
+            'message' => 'Product/Service added successfully',
             'data' => $content,
             'html' => $html
         ]);
@@ -66,16 +65,26 @@ class BusinessContentController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_image' => 'nullable|string'
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $data = $request->except('image');
+        $data = $request->except('image', 'remove_image');
         
-        if ($request->hasFile('image')) {
+        // Check if image should be removed
+        if ($request->has('remove_image') && $request->remove_image == '1') {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $data['image'] = null;
+            $data['original_filename'] = null;
+        } 
+        // Check if new image is uploaded
+        elseif ($request->hasFile('image')) {
             if ($content->image && Storage::disk('public')->exists($content->image)) {
                 Storage::disk('public')->delete($content->image);
             }
@@ -91,159 +100,176 @@ class BusinessContentController extends Controller
         
         return response()->json([
             'success' => true,
-            'message' => 'Automotive seat cover updated successfully',
+            'message' => 'Product/Service updated successfully',
             'data' => $content,
             'html' => $html
         ]);
     }
     
     public function storeOrganization(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-    ]);
-    
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-    
-    $data = $request->except('image');
-    $data['section'] = 'organization';
-    $data['order'] = BusinessContent::where('section', 'organization')->max('order') + 1;
-    
-    if ($request->hasFile('image')) {
-        $file = $request->file('image');
-        $path = $file->store('business/organization', 'public');
-        $data['image'] = $path;
-        $data['original_filename'] = $file->getClientOriginalName();
-    }
-    
-    $content = BusinessContent::create($data);
-    
-    $html = view('admin.partials.about.business-components.organization-item', ['member' => $content])->render();
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Organization chart added successfully',
-        'data' => $content,
-        'html' => $html
-    ]);
-}
-
-public function updateOrganization(Request $request, $id)
-{
-    $content = BusinessContent::findOrFail($id);
-    
-    $validator = Validator::make($request->all(), [
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-    ]);
-    
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-    
-    $data = $request->except('image');
-    
-    if ($request->hasFile('image')) {
-        if ($content->image && Storage::disk('public')->exists($content->image)) {
-            Storage::disk('public')->delete($content->image);
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
-        $file = $request->file('image');
-        $path = $file->store('business/organization', 'public');
-        $data['image'] = $path;
-        $data['original_filename'] = $file->getClientOriginalName();
-    }
-    
-    $content->update($data);
-    
-    $html = view('admin.partials.about.business-components.organization-item', ['member' => $content])->render();
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Organization chart updated successfully',
-        'data' => $content,
-        'html' => $html
-    ]);
-}
-    
-// In BusinessContentController.php - update storeCharacteristic method
-public function storeCharacteristic(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'title' => 'required|string|max:255',
-        'subtitle' => 'nullable|string|max:255',  // NEW
-        'description' => 'required|string',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-    ]);
-    
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-    
-    $data = $request->except('image');
-    $data['section'] = 'characteristic';
-    $data['order'] = BusinessContent::where('section', 'characteristic')->max('order') + 1;
-    
-    if ($request->hasFile('image')) {
-        $file = $request->file('image');
-        $path = $file->store('business/characteristics', 'public');
-        $data['image'] = $path;
-        $data['original_filename'] = $file->getClientOriginalName();
-    }
-    
-    $content = BusinessContent::create($data);
-    
-    $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Characteristic added successfully',
-        'data' => $content,
-        'html' => $html
-    ]);
-}
-    
-// In BusinessContentController.php - update updateCharacteristic method
-public function updateCharacteristic(Request $request, $id)
-{
-    $content = BusinessContent::findOrFail($id);
-    
-    $validator = Validator::make($request->all(), [
-        'title' => 'required|string|max:255',
-        'subtitle' => 'nullable|string|max:255',  // NEW
-        'description' => 'required|string',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-    ]);
-    
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-    
-    $data = $request->except('image');
-    
-    if ($request->hasFile('image')) {
-        if ($content->image && Storage::disk('public')->exists($content->image)) {
-            Storage::disk('public')->delete($content->image);
+        
+        $data = $request->except('image');
+        $data['section'] = 'organization';
+        $data['order'] = BusinessContent::where('section', 'organization')->max('order') + 1;
+        
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = $file->store('business/organization', 'public');
+            $data['image'] = $path;
+            $data['original_filename'] = $file->getClientOriginalName();
         }
-        $file = $request->file('image');
-        $path = $file->store('business/characteristics', 'public');
-        $data['image'] = $path;
-        $data['original_filename'] = $file->getClientOriginalName();
+        
+        $content = BusinessContent::create($data);
+        
+        $html = view('admin.partials.about.business-components.organization-item', ['member' => $content])->render();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Organization chart added successfully',
+            'data' => $content,
+            'html' => $html
+        ]);
     }
     
-    $content->update($data);
+    public function updateOrganization(Request $request, $id)
+    {
+        $content = BusinessContent::findOrFail($id);
+        
+        $validator = Validator::make($request->all(), [
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_image' => 'nullable|string'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        $data = $request->except('image', 'remove_image');
+        
+        // Check if image should be removed
+        if ($request->has('remove_image') && $request->remove_image == '1') {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $data['image'] = null;
+            $data['original_filename'] = null;
+        } 
+        // Check if new image is uploaded
+        elseif ($request->hasFile('image')) {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $file = $request->file('image');
+            $path = $file->store('business/organization', 'public');
+            $data['image'] = $path;
+            $data['original_filename'] = $file->getClientOriginalName();
+        }
+        
+        $content->update($data);
+        
+        $html = view('admin.partials.about.business-components.organization-item', ['member' => $content])->render();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Organization chart updated successfully',
+            'data' => $content,
+            'html' => $html
+        ]);
+    }
     
-    $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
+    public function storeCharacteristic(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:255',
+            'description' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        $data = $request->except('image');
+        $data['section'] = 'characteristic';
+        $data['order'] = BusinessContent::where('section', 'characteristic')->max('order') + 1;
+        
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = $file->store('business/characteristics', 'public');
+            $data['image'] = $path;
+            $data['original_filename'] = $file->getClientOriginalName();
+        }
+        
+        $content = BusinessContent::create($data);
+        
+        $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Characteristic added successfully',
+            'data' => $content,
+            'html' => $html
+        ]);
+    }
     
-    return response()->json([
-        'success' => true,
-        'message' => 'Characteristic updated successfully',
-        'data' => $content,
-        'html' => $html
-    ]);
-}
+    public function updateCharacteristic(Request $request, $id)
+    {
+        $content = BusinessContent::findOrFail($id);
+        
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:255',
+            'description' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_image' => 'nullable|string'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        $data = $request->except('image', 'remove_image');
+        
+        // Check if image should be removed
+        if ($request->has('remove_image') && $request->remove_image == '1') {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $data['image'] = null;
+            $data['original_filename'] = null;
+        } 
+        // Check if new image is uploaded
+        elseif ($request->hasFile('image')) {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $file = $request->file('image');
+            $path = $file->store('business/characteristics', 'public');
+            $data['image'] = $path;
+            $data['original_filename'] = $file->getClientOriginalName();
+        }
+        
+        $content->update($data);
+        
+        $html = view('admin.partials.about.business-components.characteristic-item', ['char' => $content])->render();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Characteristic updated successfully',
+            'data' => $content,
+            'html' => $html
+        ]);
+    }
     
-    // Partnership Section Methods
     public function storePartnership(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -284,16 +310,26 @@ public function updateCharacteristic(Request $request, $id)
         
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_image' => 'nullable|string'
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $data = $request->except('image');
+        $data = $request->except('image', 'remove_image');
         
-        if ($request->hasFile('image')) {
+        // Check if image should be removed
+        if ($request->has('remove_image') && $request->remove_image == '1') {
+            if ($content->image && Storage::disk('public')->exists($content->image)) {
+                Storage::disk('public')->delete($content->image);
+            }
+            $data['image'] = null;
+            $data['original_filename'] = null;
+        } 
+        // Check if new image is uploaded
+        elseif ($request->hasFile('image')) {
             if ($content->image && Storage::disk('public')->exists($content->image)) {
                 Storage::disk('public')->delete($content->image);
             }
@@ -315,7 +351,6 @@ public function updateCharacteristic(Request $request, $id)
         ]);
     }
     
-    // Delete method for all sections
     public function destroy($id)
     {
         $content = BusinessContent::findOrFail($id);

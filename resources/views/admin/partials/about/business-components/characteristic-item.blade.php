@@ -6,7 +6,7 @@
                 @if($char->image)
                     <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}" style="object-fit: contain; max-height: 120px; width: auto;">
                 @else
-                    <div class="bg-light text-center p-4 rounded w-100">No Image</div>
+                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image" style="object-fit: contain; max-height: 120px; width: auto;">
                 @endif
             </div>
             <div class="col-md-9">

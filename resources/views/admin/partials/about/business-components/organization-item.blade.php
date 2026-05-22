@@ -4,10 +4,7 @@
         @if($member->image)
             <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->title ?? 'Organization Chart' }}" style="width: 100%; object-fit: contain; padding: 20px;">
         @else
-            <div class="bg-light text-center p-5">
-                <i class="fas fa-building fa-4x text-muted"></i>
-                <p class="mt-2 text-muted">No Image Uploaded</p>
-            </div>
+            <img src="/images/default-image.png" class="card-img-top" alt="Default Image" style="width: 100%; object-fit: contain; padding: 20px;">
         @endif
         <div class="card-body text-center">
             @if($member->title)

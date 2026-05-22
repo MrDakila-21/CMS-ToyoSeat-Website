@@ -6,7 +6,7 @@
                 @if($item->image)
                     <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
                 @else
-                    <div class="bg-light text-center p-4 rounded">No Image</div>
+                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image">
                 @endif
             </div>
             <div class="col-md-9">

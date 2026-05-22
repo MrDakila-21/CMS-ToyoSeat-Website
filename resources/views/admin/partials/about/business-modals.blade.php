@@ -12,8 +12,6 @@
                 @csrf
                 <input type="hidden" id="automotiveId" name="id">
                 <div class="modal-body">
-                    <!-- Current Image Display Field -->
-                    
                     <div class="mb-3">
                         <label>Title *</label>
                         <input type="text" name="title" id="automotive_title" class="form-control" required>
@@ -24,8 +22,11 @@
                     </div>
                     <div class="mb-3" id="automotiveCurrentImageContainer" style="display: none;">
                         <label>Current Image</label>
-                        <div class="current-image-wrapper">
+                        <div class="current-image-wrapper position-relative d-inline-block">
                             <img id="automotiveCurrentImage" src="" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #ddd; padding: 5px;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentImage('automotive')" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div class="mt-1">
                                 <small class="text-muted" id="automotiveCurrentImageName"></small>
                             </div>
@@ -46,7 +47,7 @@
     </div>
 </div>
 
-{{-- Organization Modal - Title made optional --}}
+<!-- Organization Modal -->
 <div class="modal fade" id="organizationModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -68,11 +69,13 @@
                         <input type="file" class="form-control" name="image" accept="image/jpeg,image/png,image/gif" id="organization_image">
                         <div class="form-text">Max 2MB. Allowed: JPG, PNG, GIF. Recommended: Upload organization chart image.</div>
                         
-                        <!-- Current Image Display -->
                         <div id="organizationCurrentImageContainer" class="mt-2" style="display: none;">
                             <label class="form-label small text-muted">Current Image:</label>
-                            <div class="current-image-wrapper">
+                            <div class="current-image-wrapper position-relative d-inline-block">
                                 <img id="organizationCurrentImage" src="" alt="Current" class="img-thumbnail" style="max-height: 150px;">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentImage('organization')" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                    <i class="fas fa-times"></i>
+                                </button>
                                 <p class="small text-muted mt-1" id="organizationCurrentImageName"></p>
                             </div>
                         </div>
@@ -87,7 +90,7 @@
     </div>
 </div>
 
-<!-- Characteristic Modal - Add subtitle field -->
+<!-- Characteristic Modal -->
 <div class="modal fade" id="characteristicModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -103,7 +106,6 @@
                         <label>Title *</label>
                         <input type="text" name="title" id="characteristic_title" class="form-control" required>
                     </div>
-                    <!-- NEW SUBTITLE FIELD -->
                     <div class="mb-3">
                         <label>Subtitle <span class="text-muted">(Optional)</span></label>
                         <input type="text" name="subtitle" id="characteristic_subtitle" class="form-control" placeholder="e.g., Industry Leader, Innovation Driven, Quality Focused">
@@ -115,8 +117,11 @@
                     </div>
                     <div class="mb-3" id="characteristicCurrentImageContainer" style="display: none;">
                         <label>Current Image/Icon</label>
-                        <div class="current-image-wrapper">
+                        <div class="current-image-wrapper position-relative d-inline-block">
                             <img id="characteristicCurrentImage" src="" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #ddd; padding: 5px;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentImage('characteristic')" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div class="mt-1">
                                 <small class="text-muted" id="characteristicCurrentImageName"></small>
                             </div>
@@ -149,16 +154,17 @@
                 @csrf
                 <input type="hidden" id="partnershipId" name="id">
                 <div class="modal-body">
-                    
                     <div class="mb-3">
                         <label>Title/Company Name *</label>
                         <input type="text" name="title" id="partnership_title" class="form-control" required>
                     </div>
-                    <!-- Current Image Display Field -->
                     <div class="mb-3" id="partnershipCurrentImageContainer" style="display: none;">
                         <label>Current Logo</label>
-                        <div class="current-image-wrapper">
+                        <div class="current-image-wrapper position-relative d-inline-block">
                             <img id="partnershipCurrentImage" src="" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #ddd; padding: 5px;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentImage('partnership')" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div class="mt-1">
                                 <small class="text-muted" id="partnershipCurrentImageName"></small>
                             </div>

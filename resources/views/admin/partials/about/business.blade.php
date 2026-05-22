@@ -360,6 +360,7 @@ function showAddAutomotiveModal() {
 
 async function editAutomotive(id) {
     currentSection = 'automotive';
+    imageRemovalFlag.automotive = false;
     try {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
@@ -432,6 +433,9 @@ if (automotiveForm) {
         
         if (currentEditId) {
             formData.append('_method', 'PUT');
+            if (imageRemovalFlag.automotive) {
+                formData.append('remove_image', '1');
+            }
         }
         
         // Show loading state
@@ -483,6 +487,7 @@ if (automotiveForm) {
                 }
                 
                 showToast(data.message, 'success');
+                imageRemovalFlag.automotive = false;
                 
                 // Close modal
                 const modalElement = document.getElementById('automotiveModal');
@@ -534,6 +539,7 @@ function showAddOrganizationModal() {
 
 async function editOrganization(id) {
     currentSection = 'organization';
+    imageRemovalFlag.organization = false;
     try {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
@@ -593,6 +599,9 @@ if (organizationForm) {
         
         if (currentEditId) {
             formData.append('_method', 'PUT');
+            if (imageRemovalFlag.organization) {
+                formData.append('remove_image', '1');
+            }
         }
         
         const submitBtn = this.querySelector('button[type="submit"]');
@@ -641,6 +650,7 @@ if (organizationForm) {
                 }
                 
                 showToast(data.message, 'success');
+                imageRemovalFlag.organization = false;
                 
                 const modalElement = document.getElementById('organizationModal');
                 if (modalElement) {
@@ -692,6 +702,7 @@ function showAddCharacteristicModal() {
 
 async function editCharacteristic(id) {
     currentSection = 'characteristic';
+    imageRemovalFlag.characteristic = false;
     try {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
@@ -754,6 +765,9 @@ if (characteristicForm) {
         
         if (currentEditId) {
             formData.append('_method', 'PUT');
+            if (imageRemovalFlag.characteristic) {
+                formData.append('remove_image', '1');
+            }
         }
         
         const submitBtn = this.querySelector('button[type="submit"]');
@@ -802,6 +816,7 @@ if (characteristicForm) {
                 }
                 
                 showToast(data.message, 'success');
+                imageRemovalFlag.characteristic = false;
                 
                 const modalElement = document.getElementById('characteristicModal');
                 if (modalElement) {
@@ -851,6 +866,7 @@ function showAddPartnershipModal() {
 
 async function editPartnership(id) {
     currentSection = 'partnership';
+    imageRemovalFlag.partnership = false;
     try {
         const response = await fetch(`/admin/business-content/${id}/edit`, {
             headers: {
@@ -909,6 +925,9 @@ if (partnershipForm) {
         
         if (currentEditId) {
             formData.append('_method', 'PUT');
+            if (imageRemovalFlag.partnership) {
+                formData.append('remove_image', '1');
+            }
         }
         
         const submitBtn = this.querySelector('button[type="submit"]');
@@ -957,6 +976,7 @@ if (partnershipForm) {
                 }
                 
                 showToast(data.message, 'success');
+                imageRemovalFlag.partnership = false;
                 
                 const modalElement = document.getElementById('partnershipModal');
                 if (modalElement) {
@@ -976,6 +996,44 @@ if (partnershipForm) {
             }
         }
     });
+}
+
+// ============================================
+// REMOVE IMAGE FUNCTION
+// ============================================
+let imageRemovalFlag = {
+    automotive: false,
+    organization: false,
+    characteristic: false,
+    partnership: false
+};
+
+function removeCurrentImage(section) {
+    // Set flag to indicate image should be removed
+    imageRemovalFlag[section] = true;
+    
+    // Hide the current image container
+    const container = document.getElementById(`${section}CurrentImageContainer`);
+    if (container) {
+        container.style.display = 'none';
+    }
+    
+    // Clear the image source
+    const imageElement = document.getElementById(`${section}CurrentImage`);
+    if (imageElement) {
+        imageElement.src = '';
+    }
+    
+    // Clear the file input to prevent confusion
+    const form = document.getElementById(`${section}Form`);
+    if (form) {
+        const fileInput = form.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    }
+    
+    showToast('Image marked for removal. Save to apply changes.', 'info');
 }
 
 // ============================================

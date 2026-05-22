@@ -3,6 +3,8 @@
     <div class="card h-100 text-center">
         @if($partner->image)
             <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
+        @else
+            <img src="/images/default-image.png" class="card-img-top p-3" alt="Default Image" style="height: 150px; object-fit: contain;">
         @endif
         <div class="card-body">
             <h6>{{ Str::limit($partner->title, 100) }}</h6>
