@@ -248,6 +248,7 @@
     
     .organization-card img {
         transition: transform 0.3s ease;
+        cursor: pointer;
     }
     
     .organization-card:hover img {
@@ -498,6 +499,47 @@
 }
 </style>
 
+<!-- Fullscreen Image Preview Modal (from history blade) -->
+<div id="imagePreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; overflow: hidden;">
+    <!-- Top Blur Overlay -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Bottom Blur Overlay -->
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75px; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.45), transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; pointer-events: none;"></div>
+
+    <!-- Top Controls -->
+    <div style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10001; display: flex; justify-content: space-between; align-items: center;">
+        <div class="zoom-controls">
+            <button type="button" class="btn btn-light btn-sm rounded-circle me-2" id="zoomOutBtn" title="Zoom Out" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <span class="text-white mx-2" id="zoomLevel" style="font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px;">100%</span>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="zoomInBtn" title="Zoom In" style="width: 40px; height: 40px;">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button type="button" class="btn btn-light btn-sm rounded-circle ms-2" id="resetZoomBtn" title="Reset Zoom" style="width: 40px; height: 40px;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        <button id="closePreviewBtn" style="background: rgba(255,255,255,0.2); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 24px; backdrop-filter: blur(8px);">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Image Container -->
+    <div id="fullscreenImageContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: grab; overflow: hidden;">
+        <img id="fullscreenPreviewImage" src="" alt="Preview" style="max-width: 90%; max-height: 90vh; object-fit: contain; transition: transform 0.2s ease; user-select: none;">
+    </div>
+
+    <!-- Bottom Controls -->
+    <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; z-index: 10001;">
+        <button type="button" class="btn btn-light rounded-pill" id="downloadImageBtn" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.9); padding: 10px 20px;">
+            <i class="fas fa-download me-2"></i>
+            Download
+        </button>
+    </div>
+</div>
+
 <!-- Hero Section - Modern Gradient with Subtle Animation -->
 <div class="hero-section-wrapper">
     <div class="hero-particles"></div>
@@ -519,184 +561,189 @@
 </div>
 
 <div class="container py-5">
-    <!-- Automotive Seat Cover Section - CENTERED -->
     <!-- Automotive Seat Cover Section -->
-@if($automotiveSeats->count() > 0)
-<div class="mb-5 fade-in-up">
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="section-title text-center">Products & Services</h2>
-            <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
-        </div>
-    </div>
-    <div class="row">
-        @foreach($automotiveSeats as $seat)
-        @php
-            $description = $seat->description;
-            $shortDesc = Str::limit($description, 350);
-            $needsReadMore = strlen($description) > 350;
-            $uniqueId = 'auto-desc-' . $seat->id;
-        @endphp
-        <div class="col-md-6 mb-4">
-            <div class="card automotive-card h-100">
-                <div class="row g-0 h-100">
-                    <div class="col-md-5">
-                        <!-- ALWAYS show an image - either the custom image or default PNG -->
-                        <img src="{{ $seat->image ? $seat->image_url : '/images/default-image.png' }}" 
-                             class="img-fluid rounded-start h-100" 
-                             alt="{{ $seat->title }}" 
-                             style="object-fit: cover; width: 100%;">
-                    </div>
-                    <div class="col-md-7">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $seat->title }}</h5>
-                            <div class="description-wrapper" id="{{ $uniqueId }}">
-                                <div class="short-description">
-                                    <p class="card-text">{{ $shortDesc }}</p>
-                                    @if($needsReadMore)
-                                    <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                        Read More <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                    @endif
-                                </div>
-                                @if($needsReadMore)
-                                <div class="full-description">
-                                    <p class="card-text">{{ $description }}</p>
-                                    <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                        Read Less <i class="fas fa-chevron-up"></i>
-                                    </button>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-</div>
-@endif
-
-{{-- In guest business-introduction.blade.php --}}
-<!-- Organization Section -->
-<!-- Organization Section -->
-@if($organizationMembers->count() > 0)
-<div class="mb-5 fade-in-up">
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="section-title text-center">Organizational Structure</h2>
-            <p class="section-description">Our company's organizational framework</p>
-        </div>
-    </div>
-    <div class="row justify-content-center">
-        @foreach($organizationMembers as $member)
-        <div class="col-12 mb-4">
-            <div class="card organization-card">
-                <div class="card-body text-center">
-                    @if($member->title)
-                        <h4 class="card-title mb-3">{{ $member->title }}</h4>
-                    @endif
-                    <!-- ALWAYS show an image - either the custom image or default PNG -->
-                    <img src="{{ $member->image ? $member->image_url : '/images/default-image.png' }}" 
-                         class="img-fluid rounded" 
-                         alt="{{ $member->title ?? 'Organization Chart' }}" 
-                         style="max-width: 100%; height: auto;">
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-</div>
-@endif
-
-   <!-- Characteristics Section - IMPROVED IMAGE FITTING -->
-<!-- Characteristics Section -->
-@if($characteristics->count() > 0)
-<div class="mb-5 py-4 fade-in-up">
-    <div class="container">
+    @if($automotiveSeats->count() > 0)
+    <div class="mb-5 fade-in-up">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="section-title text-center">Business Characteristics</h2>
-                <p class="section-description">What makes us unique in the industry</p>
+                <h2 class="section-title text-center">Products & Services</h2>
+                <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
             </div>
         </div>
-        <div class="row justify-content-center">
-            @foreach($characteristics as $characteristic)
+        <div class="row">
+            @foreach($automotiveSeats as $seat)
             @php
-                $description = $characteristic->description;
-                $shortDesc = Str::limit($description, 250);
-                $needsReadMore = strlen($description) > 250;
-                $uniqueId = 'char-desc-' . $characteristic->id;
+                $description = $seat->description;
+                $shortDesc = Str::limit($description, 350);
+                $needsReadMore = strlen($description) > 350;
+                $uniqueId = 'auto-desc-' . $seat->id;
             @endphp
-            <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
-                <div class="characteristic-card h-100 d-flex flex-column">
-                    <!-- Image/Icon Container -->
-                    <div class="characteristic-image-wrapper mb-3">
-                        @if($characteristic->image)
-                            <img src="{{ $characteristic->image_url }}" 
-                                alt="{{ $characteristic->title }}" 
-                                class="characteristic-img">
-                        @else
-                            <!-- Default icon when no image exists -->
-                            <div class="characteristic-icon">
-                                <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
+            <div class="col-md-6 mb-4">
+                <div class="card automotive-card h-100">
+                    <div class="row g-0 h-100">
+                        <div class="col-md-5">
+                            <!-- ALWAYS show an image - either the custom image or default PNG -->
+                            <img src="{{ $seat->image ? $seat->image_url : '/images/default-image.png' }}" 
+                                 class="img-fluid rounded-start h-100" 
+                                 alt="{{ $seat->title }}" 
+                                 style="object-fit: cover; width: 100%;">
+                        </div>
+                        <div class="col-md-7">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ $seat->title }}</h5>
+                                <div class="description-wrapper" id="{{ $uniqueId }}">
+                                    <div class="short-description">
+                                        <p class="card-text">{{ $shortDesc }}</p>
+                                        @if($needsReadMore)
+                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                            Read More <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                    @if($needsReadMore)
+                                    <div class="full-description">
+                                        <p class="card-text">{{ $description }}</p>
+                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                            Read Less <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </div>
+                                    @endif
+                                </div>
                             </div>
-                        @endif
-                    </div>
-                    <h4 class="mt-2">{{ $characteristic->title }}</h4>
-                    @if($characteristic->subtitle)
-                        <h6 class="text-muted mb-3" style="font-size: 0.9rem;">{{ $characteristic->subtitle }}</h6>
-                    @endif
-                    <div class="description-wrapper flex-grow-1" id="{{ $uniqueId }}">
-                        <div class="short-description">
-                            <p class="text-muted characteristic-description">{{ $shortDesc }}</p>
-                            @if($needsReadMore)
-                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                Read More <i class="fas fa-chevron-down"></i>
-                            </button>
-                            @endif
                         </div>
-                        @if($needsReadMore)
-                        <div class="full-description">
-                            <p class="text-muted characteristic-description">{{ $description }}</p>
-                            <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                Read Less <i class="fas fa-chevron-up"></i>
-                            </button>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
     </div>
-</div>
-@endif
+    @endif
 
-   <!-- Partnership Section -->
-@if($partnerships->count() > 0)
-<div class="mb-5 fade-in-up">
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="section-title text-center">Our Partners</h2>
-            <p class="section-description">Trusted partnerships that drive excellence</p>
-        </div>
-    </div>
-    <div class="row align-items-center justify-content-center">
-        @foreach($partnerships as $partner)
-        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-            <div class="partnership-logo">
-                <!-- ALWAYS show an image - either the custom image or default PNG -->
-                <img src="{{ $partner->image ? $partner->image_url : '/images/default-image.png' }}" 
-                     alt="{{ $partner->title }}" 
-                     class="img-fluid">
+    <!-- Organization Section with Zoom Functionality -->
+    @if($organizationMembers->count() > 0)
+    <div class="mb-5 fade-in-up">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="section-title text-center">Organizational Structure</h2>
+                <p class="section-description">Our company's organizational framework (Click on image to zoom)</p>
             </div>
         </div>
-        @endforeach
+        <div class="row justify-content-center">
+            @foreach($organizationMembers as $member)
+            @php
+                // Get image source using same logic as history blade
+                $imageSrc = '/images/default-image.png';
+                if ($member->image_url) {
+                    $imageSrc = $member->image_url;
+                } elseif ($member->image) {
+                    $imageSrc = '/storage.php?file=' . urlencode($member->image);
+                }
+            @endphp
+            <div class="col-12 mb-4">
+                <div class="card organization-card">
+                    <div class="card-body text-center">
+                        @if($member->title)
+                            <h4 class="card-title mb-3">{{ $member->title }}</h4>
+                        @endif
+                        <!-- Image with click handler for zoom -->
+                        <img src="{{ $imageSrc }}" 
+                             class="img-fluid rounded" 
+                             alt="{{ $member->title ?? 'Organization Chart' }}" 
+                             style="max-width: 100%; height: auto; cursor: pointer;"
+                             onclick="showFullscreenImage('{{ $imageSrc }}', '{{ addslashes($member->title ?? 'Organization Chart') }}')">
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
     </div>
-</div>
-@endif
+    @endif
+
+    <!-- Characteristics Section -->
+    @if($characteristics->count() > 0)
+    <div class="mb-5 py-4 fade-in-up">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="section-title text-center">Business Characteristics</h2>
+                    <p class="section-description">What makes us unique in the industry</p>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                @foreach($characteristics as $characteristic)
+                @php
+                    $description = $characteristic->description;
+                    $shortDesc = Str::limit($description, 250);
+                    $needsReadMore = strlen($description) > 250;
+                    $uniqueId = 'char-desc-' . $characteristic->id;
+                @endphp
+                <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
+                    <div class="characteristic-card h-100 d-flex flex-column">
+                        <!-- Image/Icon Container -->
+                        <div class="characteristic-image-wrapper mb-3">
+                            @if($characteristic->image)
+                                <img src="{{ $characteristic->image_url }}" 
+                                    alt="{{ $characteristic->title }}" 
+                                    class="characteristic-img">
+                            @else
+                                <!-- Default icon when no image exists -->
+                                <div class="characteristic-icon">
+                                    <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <h4 class="mt-2">{{ $characteristic->title }}</h4>
+                        @if($characteristic->subtitle)
+                            <h6 class="text-muted mb-3" style="font-size: 0.9rem;">{{ $characteristic->subtitle }}</h6>
+                        @endif
+                        <div class="description-wrapper flex-grow-1" id="{{ $uniqueId }}">
+                            <div class="short-description">
+                                <p class="text-muted characteristic-description">{{ $shortDesc }}</p>
+                                @if($needsReadMore)
+                                <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                    Read More <i class="fas fa-chevron-down"></i>
+                                </button>
+                                @endif
+                            </div>
+                            @if($needsReadMore)
+                            <div class="full-description">
+                                <p class="text-muted characteristic-description">{{ $description }}</p>
+                                <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                    Read Less <i class="fas fa-chevron-up"></i>
+                                </button>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Partnership Section -->
+    @if($partnerships->count() > 0)
+    <div class="mb-5 fade-in-up">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="section-title text-center">Our Partners</h2>
+                <p class="section-description">Trusted partnerships that drive excellence</p>
+            </div>
+        </div>
+        <div class="row align-items-center justify-content-center">
+            @foreach($partnerships as $partner)
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                <div class="partnership-logo">
+                    <img src="{{ $partner->image ? $partner->image_url : '/images/default-image.png' }}" 
+                         alt="{{ $partner->title }}" 
+                         class="img-fluid">
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 </div>
 
 <!-- Font Awesome 6 -->
@@ -707,6 +754,14 @@
 <!-- Smooth Scroll & Read More Script -->
 @push('scripts')
 <script>
+    // Zoom and pan variables for fullscreen modal (from history blade)
+    let currentZoom = 1;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = 0;
+    let translateY = 0;
+    
     // Smooth scroll for hero indicator
     document.querySelector('.hero-scroll-indicator')?.addEventListener('click', function() {
         const nextSection = document.querySelector('.container.py-5');
@@ -722,6 +777,200 @@
             wrapper.classList.toggle('expanded');
         }
     }
+    
+    // Fullscreen modal functionality (copied from history blade)
+    function initFullscreenModal() {
+        const modal = document.getElementById('imagePreviewModal');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const closeBtn = document.getElementById('closePreviewBtn');
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        const previewImage = document.getElementById('fullscreenPreviewImage');
+        const imageContainer = document.getElementById('fullscreenImageContainer');
+        const zoomLevel = document.getElementById('zoomLevel');
+        
+        // Zoom functions
+        function zoomIn() {
+            if (currentZoom < 3) {
+                currentZoom += 0.25;
+                updateZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.25;
+                updateZoom();
+            }
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateZoom();
+            updateTransform();
+        }
+        
+        function updateZoom() {
+            if (zoomLevel) {
+                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+            }
+            updateTransform();
+        }
+        
+        function updateTransform() {
+            if (previewImage) {
+                previewImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+        
+        // Pan functionality
+        function startPan(e) {
+            if (currentZoom > 1) {
+                isPanning = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                startX = clientX - translateX;
+                startY = clientY - translateY;
+                if (imageContainer) imageContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        }
+        
+        function pan(e) {
+            if (isPanning && currentZoom > 1) {
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+                
+                // Limit panning
+                if (previewImage) {
+                    const maxTranslateX = (previewImage.clientWidth * currentZoom - previewImage.clientWidth) / 2;
+                    const maxTranslateY = (previewImage.clientHeight * currentZoom - previewImage.clientHeight) / 2;
+                    
+                    translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                    translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+                }
+                
+                updateTransform();
+                e.preventDefault();
+            }
+        }
+        
+        function stopPan() {
+            isPanning = false;
+            if (imageContainer) imageContainer.style.cursor = 'grab';
+        }
+        
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const newZoom = currentZoom + delta;
+            
+            if (newZoom >= 0.5 && newZoom <= 3) {
+                currentZoom = newZoom;
+                updateZoom();
+            }
+        }
+        
+        // Add event listeners
+        if (zoomInBtn) zoomInBtn.addEventListener('click', zoomIn);
+        if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
+        if (resetZoomBtn) resetZoomBtn.addEventListener('click', resetZoom);
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                resetZoom();
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (previewImage && previewImage.src) {
+                    const link = document.createElement('a');
+                    link.href = previewImage.src;
+                    link.download = 'organization-chart.jpg';
+                    link.click();
+                }
+            });
+        }
+        
+        // Pan events
+        if (imageContainer) {
+            imageContainer.addEventListener('mousedown', startPan);
+            window.addEventListener('mousemove', pan);
+            window.addEventListener('mouseup', stopPan);
+            imageContainer.addEventListener('wheel', handleWheelZoom);
+            
+            // Touch events
+            imageContainer.addEventListener('touchstart', startPan);
+            window.addEventListener('touchmove', pan);
+            window.addEventListener('touchend', stopPan);
+        }
+        
+        // Close on background click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                resetZoom();
+            }
+        });
+    }
+    
+    // Show fullscreen image function (from history blade)
+    function showFullscreenImage(imageUrl, title = 'Organization Chart') {
+        const modal = document.getElementById('imagePreviewModal');
+        const previewImg = document.getElementById('fullscreenPreviewImage');
+        
+        if (previewImg) {
+            previewImg.src = imageUrl;
+            previewImg.alt = title;
+            
+            // Reset zoom when loading new image
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            if (document.getElementById('zoomLevel')) {
+                document.getElementById('zoomLevel').textContent = '100%';
+            }
+            if (previewImg) {
+                previewImg.style.transform = 'translate(0px, 0px) scale(1)';
+            }
+        }
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.flexDirection = 'column';
+        }
+    }
+    
+    // Initialize modal when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        initFullscreenModal();
+        
+        // Also add click handlers to any organization chart images that might be loaded dynamically
+        const orgImages = document.querySelectorAll('.organization-card img');
+        orgImages.forEach(img => {
+            img.style.cursor = 'pointer';
+            if (!img.hasAttribute('onclick')) {
+                img.addEventListener('click', function() {
+                    showFullscreenImage(this.src, this.alt);
+                });
+            }
+        });
+    });
 </script>
 @endpush
 
