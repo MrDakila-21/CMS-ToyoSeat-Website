@@ -917,10 +917,9 @@
         }
     }
     
-    // ============================================
+        // ============================================
     // IMAGE REMOVAL FUNCTION FOR HISTORY
     // ============================================
-    // ← REMOVED the duplicate declaration (already declared at top)
     
     function removeCurrentHistoryImage(historyId) {
         if (confirm('Remove the current image? The default image will be used after saving.')) {
@@ -962,6 +961,9 @@
         }
     }
     
+    // ← ADD THIS LINE - Expose function to global scope
+    window.removeCurrentHistoryImage = removeCurrentHistoryImage;
+    
     function clearImageCache(historyId) {
         const item = allData.find(i => i.id == historyId);
         if (item && item.updated_at) {
@@ -973,6 +975,7 @@
             }
         }
     }
+    window.clearImageCache = clearImageCache;
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this history record?\n\nThis action cannot be undone!')) {
