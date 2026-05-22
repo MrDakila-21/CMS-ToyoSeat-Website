@@ -99,6 +99,8 @@ Route::prefix('admin')->group(function () {
         Route::get('media/all', [EventActivityController::class, 'getAll'])->name('admin.media.all');
         Route::resource('media', EventActivityController::class)->names('admin.media');
         Route::patch('media/{id}/status/{status}', [EventActivityController::class, 'updateStatus'])->name('media.status');
+        // In the admin routes group, after the media routes, add:
+        Route::delete('media/{id}/remove-image', [EventActivityController::class, 'removeImage'])->name('admin.media.removeImage');
 
         // Announcements management routes
         Route::get('announcements/all', [AnnouncementController::class, 'getAll'])->name('admin.announcements.all');

@@ -156,6 +156,51 @@ class EventActivityController extends Controller
             ->with('success', 'Event/Activity updated successfully!');
     }
 
+    /**
+ * Remove the image from an event/activity record
+ */
+public function removeImage($id)
+{
+    try {
+        $eventActivity = EventActivity::findOrFail($id);
+        
+        // Delete any existing folder image first
+        $eventActivity->deleteFolderImage();
+        
+        // Delete database image file if exists in storage
+        if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
+            Storage::disk('public')->delete($eventActivity->image);
+            $eventActivity->image = null;
+        }
+        
+        // Save the changes
+        $eventActivity->save();
+        
+        // Force update the timestamp to trigger cache bust
+        $eventActivity->touch();
+        
+        // Refresh to get latest data
+        $eventActivity->refresh();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Image removed successfully. Default image will be used.',
+            'data' => [
+                'id' => $eventActivity->id,
+                'image' => null,
+                'image_url' => $eventActivity->image_url,
+                'updated_at' => $eventActivity->updated_at
+            ]
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error in removeImage: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to remove image: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
     // Delete record
     public function destroy($id)
     {
