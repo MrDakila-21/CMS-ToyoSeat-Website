@@ -1,19 +1,15 @@
 <div class="settings-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="page-title">
-            <i class="fas fa-cog me-2"></i>
-            My Account Settings
-        </h3>
-    </div>
-
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-user-edit me-2"></i>
-                        Update Your Information
+                        Account Profile
                     </h5>
+                    <button type="button" id="editButton" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </button>
                 </div>
                 <div class="card-body">
                     <form id="settingsForm">
@@ -24,8 +20,8 @@
                             <label for="display_name" class="form-label fw-bold">
                                 <i class="fas fa-user me-2"></i>Display Name
                             </label>
-                            <input type="text" class="form-control form-control-lg" id="display_name" name="display_name" 
-                                   value="{{ $user->display_name }}">
+                            <input type="text" class="form-control form-control-lg" style="font-size: medium;" id="display_name" name="display_name" 
+                                   value="{{ $user->display_name }}" disabled>
                             <small class="text-muted">This name appears at the top of your admin panel</small>
                         </div>
                         
@@ -34,15 +30,15 @@
                             <label for="username" class="form-label fw-bold">
                                 <i class="fas fa-sign-in-alt me-2"></i>Login Username
                             </label>
-                            <input type="text" class="form-control form-control-lg" id="username" name="username" 
-                                   value="{{ $user->name }}">
+                            <input type="text" class="form-control form-control-lg" style="font-size: medium;"id="username" name="username" 
+                                   value="{{ $user->name }}" disabled>
                             <small class="text-muted">You'll use this to log in to your account</small>
                         </div>
                         
                         <!-- Password Change Section (Optional) -->
                         <div class="mb-4">
                             <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="changePasswordCheckbox">
+                                <input class="form-check-input" type="checkbox" id="changePasswordCheckbox" disabled>
                                 <label class="form-check-label fw-bold" for="changePasswordCheckbox">
                                     <i class="fas fa-key me-2"></i>I want to change my password
                                 </label>
@@ -51,13 +47,13 @@
                             <div id="passwordFields" style="display: none;">
                                 <div class="mb-3">
                                     <label for="new_password" class="form-label">New Password</label>
-                                    <input type="password" class="form-control" id="new_password" name="new_password">
+                                    <input type="password" class="form-control" style="font-size: medium;" id="new_password" name="new_password" disabled>
                                     <small class="text-muted">Minimum 6 characters</small>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="confirm_password" class="form-label">Confirm New Password</label>
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                                    <input type="password" class="form-control" style="font-size: medium;"  id="confirm_password" name="confirm_password" disabled>
                                     <small class="text-muted">Type your new password again to confirm</small>
                                 </div>
                             </div>
@@ -68,7 +64,7 @@
                             <label for="current_password" class="form-label fw-bold">
                                 <i class="fas fa-lock me-2"></i>Current Password <span class="text-danger">*</span>
                             </label>
-                            <input type="password" class="form-control form-control-lg" id="current_password" name="current_password" required>
+                            <input type="password" class="form-control form-control-lg" style="font-size: medium;" id="current_password" name="current_password" required disabled>
                             <small class="text-muted">Required to confirm any changes to your account</small>
                         </div>
                         
@@ -86,7 +82,7 @@
                         
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                            <button type="submit" class="btn btn-primary btn-lg" disabled>
                                 <i class="fas fa-save me-2"></i>Save Changes
                             </button>
                         </div>
@@ -112,6 +108,24 @@
     background-color: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     border-radius: 10px 10px 0 0 !important;
+}
+
+/* Style the edit button to match user management */
+.settings-container .card-header .btn-primary {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+.settings-container .card-header .btn-primary i {
+    margin-right: 0.5rem;
+}
+
+/* Cancel button style matching user management */
+.settings-container .card-header .btn-secondary {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
 }
 
 .settings-container .form-control-lg {
@@ -168,24 +182,102 @@
 </style>
 
 <script>
+let isEditMode = false;
+
+// Edit button functionality
+document.getElementById('editButton').addEventListener('click', function() {
+    if (!isEditMode) {
+        // Enter edit mode
+        isEditMode = true;
+        
+        // Enable all form fields
+        document.getElementById('display_name').disabled = false;
+        document.getElementById('username').disabled = false;
+        document.getElementById('changePasswordCheckbox').disabled = false;
+        document.getElementById('current_password').disabled = false;
+        
+        // Enable password fields if they are visible
+        if (document.getElementById('passwordFields').style.display === 'block') {
+            document.getElementById('new_password').disabled = false;
+            document.getElementById('confirm_password').disabled = false;
+        }
+        
+        // Enable save button
+        document.querySelector('#settingsForm button[type="submit"]').disabled = false;
+        
+        // Change edit button appearance (like in user management)
+        this.innerHTML = '<i class="fas fa-times me-2"></i>Cancel';
+        this.classList.remove('btn-primary');
+        this.classList.add('btn-secondary');
+        
+        // Focus on display name
+        document.getElementById('display_name').focus();
+    } else {
+        // Cancel edit mode
+        cancelEditMode();
+    }
+});
+
+// Cancel edit mode
+function cancelEditMode() {
+    isEditMode = false;
+    
+    // Reset form to original values
+    document.getElementById('display_name').value = "{{ $user->display_name }}";
+    document.getElementById('username').value = "{{ $user->name }}";
+    document.getElementById('current_password').value = '';
+    document.getElementById('changePasswordCheckbox').checked = false;
+    document.getElementById('passwordFields').style.display = 'none';
+    document.getElementById('new_password').value = '';
+    document.getElementById('confirm_password').value = '';
+    
+    // Disable all form fields
+    document.getElementById('display_name').disabled = true;
+    document.getElementById('username').disabled = true;
+    document.getElementById('changePasswordCheckbox').disabled = true;
+    document.getElementById('current_password').disabled = true;
+    document.getElementById('new_password').disabled = true;
+    document.getElementById('confirm_password').disabled = true;
+    
+    // Disable save button
+    document.querySelector('#settingsForm button[type="submit"]').disabled = true;
+    
+    // Reset edit button to original style (matching user management)
+    const editBtn = document.getElementById('editButton');
+    editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Edit';
+    editBtn.classList.remove('btn-secondary');
+    editBtn.classList.add('btn-primary');
+}
+
 // Show/hide password fields when checkbox is toggled
 document.getElementById('changePasswordCheckbox').addEventListener('change', function() {
     const passwordFields = document.getElementById('passwordFields');
     if (this.checked) {
         passwordFields.style.display = 'block';
-        document.getElementById('new_password').required = true;
-        document.getElementById('confirm_password').required = true;
+        if (isEditMode) {
+            document.getElementById('new_password').disabled = false;
+            document.getElementById('confirm_password').disabled = false;
+            document.getElementById('new_password').required = true;
+            document.getElementById('confirm_password').required = true;
+        }
     } else {
         passwordFields.style.display = 'none';
-        document.getElementById('new_password').required = false;
-        document.getElementById('confirm_password').required = false;
+        document.getElementById('new_password').disabled = true;
+        document.getElementById('confirm_password').disabled = true;
         document.getElementById('new_password').value = '';
         document.getElementById('confirm_password').value = '';
+        document.getElementById('new_password').required = false;
+        document.getElementById('confirm_password').required = false;
     }
 });
 
 document.getElementById('settingsForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    if (!isEditMode) {
+        showToast('info', 'Please click Edit button to make changes');
+        return;
+    }
     
     const changePassword = document.getElementById('changePasswordCheckbox').checked;
     const newPassword = document.getElementById('new_password').value;
@@ -203,6 +295,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     if (!hasDisplayNameChange && !hasUsernameChange && !hasPasswordChange) {
         showToast('info', 'No changes were made to your account');
+        cancelEditMode();
         return;
     }
     
@@ -258,9 +351,11 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Show loading state
     const submitBtn = document.querySelector('#settingsForm button[type="submit"]');
+    const editBtn = document.getElementById('editButton');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
     submitBtn.disabled = true;
+    editBtn.disabled = true;
     
     // Send update request
     fetch('/admin/settings/update', {
@@ -310,16 +405,10 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
                     });
                 }, 3000);
             } else {
-                // Only reset form for display name changes
-                document.getElementById('current_password').value = '';
-                document.getElementById('changePasswordCheckbox').checked = false;
-                document.getElementById('passwordFields').style.display = 'none';
-                document.getElementById('new_password').value = '';
-                document.getElementById('confirm_password').value = '';
-                document.getElementById('new_password').required = false;
-                document.getElementById('confirm_password').required = false;
+                // Successfully saved changes without logout - exit edit mode
+                cancelEditMode();
                 
-                // Update the current values in the form
+                // Update the current values in the form for next edit
                 if (data.user) {
                     document.getElementById('username').value = data.user.name;
                     document.getElementById('display_name').value = data.user.display_name;
@@ -344,7 +433,8 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     .finally(() => {
         // Reset button state
         submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        submitBtn.disabled = !isEditMode;
+        editBtn.disabled = false;
     });
 });
 
