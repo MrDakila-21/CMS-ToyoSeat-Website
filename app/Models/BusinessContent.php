@@ -54,16 +54,19 @@ class BusinessContent extends Model
     
     /**
      * Get the image URL using storage.php (same pattern as Overview module)
+     * Returns null if no image exists (frontend will use default image)
      */
     public function getImageUrlAttribute()
     {
-        if ($this->image) {
+        if ($this->image && !empty($this->image)) {
             // Check if file exists to add cache busting
             $path = storage_path('app/public/' . $this->image);
-            $mtime = file_exists($path) ? filemtime($path) : time();
-            return '/storage.php?file=' . $this->image . '&t=' . $mtime;
+            if (file_exists($path)) {
+                $mtime = filemtime($path);
+                return '/storage.php?file=' . $this->image . '&t=' . $mtime;
+            }
         }
-        return null;
+        return null; // Return null instead of image URL when no image exists
     }
     
     public function getDisplayFilenameAttribute()
@@ -76,6 +79,6 @@ class BusinessContent extends Model
      */
     public function hasImage()
     {
-        return !is_null($this->image);
+        return !is_null($this->image) && !empty($this->image);
     }
 }

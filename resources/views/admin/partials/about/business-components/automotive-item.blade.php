@@ -3,10 +3,10 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-3">
-                @if($item->image)
+                @if($item->image && $item->image_url)
                     <img src="{{ $item->image_url }}" class="img-fluid rounded" alt="{{ $item->title }}">
                 @else
-                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image">
+                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image" style="background: #f8f9fa;">
                 @endif
             </div>
             <div class="col-md-9">

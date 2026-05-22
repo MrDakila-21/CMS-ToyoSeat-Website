@@ -3,10 +3,10 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-3 d-flex align-items-center justify-content-center">
-                @if($char->image)
+                @if($char->image && $char->image_url)
                     <img src="{{ $char->image_url }}" class="img-fluid rounded" alt="{{ $char->title }}" style="object-fit: contain; max-height: 120px; width: auto;">
                 @else
-                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image" style="object-fit: contain; max-height: 120px; width: auto;">
+                    <img src="/images/default-image.png" class="img-fluid rounded" alt="Default Image" style="object-fit: contain; max-height: 120px; width: auto; background: #f8f9fa;">
                 @endif
             </div>
             <div class="col-md-9">

@@ -1,10 +1,10 @@
 {{-- resources/views/admin/partials/about/business-components/organization-item.blade.php --}}
 <div class="col-md-6 mb-4" data-id="{{ $member->id }}">
     <div class="card h-100">
-        @if($member->image)
+        @if($member->image && $member->image_url)
             <img src="{{ $member->image_url }}" class="card-img-top" alt="{{ $member->title ?? 'Organization Chart' }}" style="width: 100%; object-fit: contain; padding: 20px;">
         @else
-            <img src="/images/default-image.png" class="card-img-top" alt="Default Image" style="width: 100%; object-fit: contain; padding: 20px;">
+            <img src="/images/default-image.png" class="card-img-top" alt="Default Image" style="width: 100%; object-fit: contain; padding: 20px; background: #f8f9fa;">
         @endif
         <div class="card-body text-center">
             @if($member->title)
