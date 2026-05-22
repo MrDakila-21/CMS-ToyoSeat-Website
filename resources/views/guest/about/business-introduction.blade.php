@@ -520,62 +520,66 @@
 
 <div class="container py-5">
     <!-- Automotive Seat Cover Section - CENTERED -->
-    @if($automotiveSeats->count() > 0)
-    <div class="mb-5 fade-in-up">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2 class="section-title text-center">Products & Services</h2>
-                <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
-            </div>
+    <!-- Automotive Seat Cover Section -->
+@if($automotiveSeats->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Products & Services</h2>
+            <p class="section-description">Comprehensive automotive solutions and professional services tailored to your needs</p>
         </div>
-        <div class="row">
-            @foreach($automotiveSeats as $seat)
-            @php
-                $description = $seat->description;
-                $shortDesc = Str::limit($description, 350);
-                $needsReadMore = strlen($description) > 350;
-                $uniqueId = 'auto-desc-' . $seat->id;
-            @endphp
-            <div class="col-md-6 mb-4">
-                <div class="card automotive-card h-100">
-                    <div class="row g-0 h-100">
-                        @if($seat->image)
-                        <div class="col-md-5">
-                            <img src="{{ $seat->image_url }}" class="img-fluid rounded-start h-100" alt="{{ $seat->title }}" style="object-fit: cover;">
-                        </div>
-                        @endif
-                        <div class="col-md-7">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ $seat->title }}</h5>
-                                <div class="description-wrapper" id="{{ $uniqueId }}">
-                                    <div class="short-description">
-                                        <p class="card-text">{{ $shortDesc }}</p>
-                                        @if($needsReadMore)
-                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                            Read More <i class="fas fa-chevron-down"></i>
-                                        </button>
-                                        @endif
-                                    </div>
+    </div>
+    <div class="row">
+        @foreach($automotiveSeats as $seat)
+        @php
+            $description = $seat->description;
+            $shortDesc = Str::limit($description, 350);
+            $needsReadMore = strlen($description) > 350;
+            $uniqueId = 'auto-desc-' . $seat->id;
+        @endphp
+        <div class="col-md-6 mb-4">
+            <div class="card automotive-card h-100">
+                <div class="row g-0 h-100">
+                    <div class="col-md-5">
+                        <!-- ALWAYS show an image - either the custom image or default PNG -->
+                        <img src="{{ $seat->image ? $seat->image_url : '/images/default-image.png' }}" 
+                             class="img-fluid rounded-start h-100" 
+                             alt="{{ $seat->title }}" 
+                             style="object-fit: cover; width: 100%;">
+                    </div>
+                    <div class="col-md-7">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ $seat->title }}</h5>
+                            <div class="description-wrapper" id="{{ $uniqueId }}">
+                                <div class="short-description">
+                                    <p class="card-text">{{ $shortDesc }}</p>
                                     @if($needsReadMore)
-                                    <div class="full-description">
-                                        <p class="card-text">{{ $description }}</p>
-                                        <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
-                                            Read Less <i class="fas fa-chevron-up"></i>
-                                        </button>
-                                    </div>
+                                    <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                        Read More <i class="fas fa-chevron-down"></i>
+                                    </button>
                                     @endif
                                 </div>
+                                @if($needsReadMore)
+                                <div class="full-description">
+                                    <p class="card-text">{{ $description }}</p>
+                                    <button class="read-more-btn" onclick="toggleDescription('{{ $uniqueId }}')">
+                                        Read Less <i class="fas fa-chevron-up"></i>
+                                    </button>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            @endforeach
         </div>
+        @endforeach
     </div>
-    @endif
+</div>
+@endif
 
 {{-- In guest business-introduction.blade.php --}}
+<!-- Organization Section -->
 <!-- Organization Section -->
 @if($organizationMembers->count() > 0)
 <div class="mb-5 fade-in-up">
@@ -593,14 +597,11 @@
                     @if($member->title)
                         <h4 class="card-title mb-3">{{ $member->title }}</h4>
                     @endif
-                    @if($member->image)
-                        <img src="{{ $member->image_url }}" class="img-fluid rounded" alt="{{ $member->title ?? 'Organization Chart' }}" style="max-width: 100%; height: auto;">
-                    @else
-                        <div class="bg-light p-5 text-center">
-                            <i class="fas fa-building fa-5x text-muted"></i>
-                            <p class="mt-3 text-muted">Organization chart coming soon</p>
-                        </div>
-                    @endif
+                    <!-- ALWAYS show an image - either the custom image or default PNG -->
+                    <img src="{{ $member->image ? $member->image_url : '/images/default-image.png' }}" 
+                         class="img-fluid rounded" 
+                         alt="{{ $member->title ?? 'Organization Chart' }}" 
+                         style="max-width: 100%; height: auto;">
                 </div>
             </div>
         </div>
@@ -610,6 +611,7 @@
 @endif
 
    <!-- Characteristics Section - IMPROVED IMAGE FITTING -->
+<!-- Characteristics Section -->
 @if($characteristics->count() > 0)
 <div class="mb-5 py-4 fade-in-up">
     <div class="container">
@@ -629,13 +631,14 @@
             @endphp
             <div class="col-md-4 mb-4 {{ $characteristics->count() == 1 ? 'col-md-6 mx-auto' : '' }}">
                 <div class="characteristic-card h-100 d-flex flex-column">
-                    <!-- IMPROVED IMAGE CONTAINER -->
+                    <!-- Image/Icon Container -->
                     <div class="characteristic-image-wrapper mb-3">
                         @if($characteristic->image)
                             <img src="{{ $characteristic->image_url }}" 
                                 alt="{{ $characteristic->title }}" 
                                 class="characteristic-img">
                         @else
+                            <!-- Default icon when no image exists -->
                             <div class="characteristic-icon">
                                 <i class="fas fa-chart-line fa-3x" style="color: #3988BD;"></i>
                             </div>
@@ -671,33 +674,29 @@
 </div>
 @endif
 
-    <!-- Partnership Section -->
-    @if($partnerships->count() > 0)
-    <div class="mb-5 fade-in-up">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2 class="section-title text-center">Our Partners</h2>
-                <p class="section-description">Trusted partnerships that drive excellence</p>
-            </div>
-        </div>
-        <div class="row align-items-center justify-content-center">
-            @foreach($partnerships as $partner)
-            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-                <div class="partnership-logo">
-                    @if($partner->image)
-                    <img src="{{ $partner->image_url }}" alt="{{ $partner->title }}" class="img-fluid">
-                    @else
-                    <div class="text-center">
-                        <i class="fas fa-building fa-3x text-muted"></i>
-                        <p class="mt-2 mb-0 small">{{ Str::limit($partner->title, 50) }}</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endforeach
+   <!-- Partnership Section -->
+@if($partnerships->count() > 0)
+<div class="mb-5 fade-in-up">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="section-title text-center">Our Partners</h2>
+            <p class="section-description">Trusted partnerships that drive excellence</p>
         </div>
     </div>
-    @endif
+    <div class="row align-items-center justify-content-center">
+        @foreach($partnerships as $partner)
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+            <div class="partnership-logo">
+                <!-- ALWAYS show an image - either the custom image or default PNG -->
+                <img src="{{ $partner->image ? $partner->image_url : '/images/default-image.png' }}" 
+                     alt="{{ $partner->title }}" 
+                     class="img-fluid">
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
 </div>
 
 <!-- Font Awesome 6 -->
