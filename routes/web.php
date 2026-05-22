@@ -106,6 +106,8 @@ Route::prefix('admin')->group(function () {
         Route::get('announcements/all', [AnnouncementController::class, 'getAll'])->name('admin.announcements.all');
         Route::resource('announcements', AnnouncementController::class)->names('admin.announcements');
         Route::patch('announcements/{id}/status/{status}', [AnnouncementController::class, 'updateStatus'])->name('admin.announcements.updateStatus');
+        // In the admin routes group, after the announcements routes, add:
+        Route::delete('announcements/{id}/remove-image', [AnnouncementController::class, 'removeImage'])->name('admin.announcements.removeImage');
 
         // Additional routes for folder image management
         Route::post('announcements/upload-direct', [AnnouncementController::class, 'uploadDirectImage'])->name('admin.announcements.uploadDirect');

@@ -79,14 +79,92 @@ class AnnouncementController extends Controller
             ->with('success', 'Announcement created successfully!');
     }
 
-    // Get record for editing
-    public function edit($id)
-    {
+    /**
+ * Remove the image from an announcement record
+ */
+public function removeImage($id)
+{
+    try {
         $announcement = Announcement::findOrFail($id);
-        $announcement->image_url = $announcement->image_url;
         
-        return response()->json($announcement);
+        // Delete any existing folder image first
+        $announcement->deleteFolderImage();
+        
+        // Delete database image file if exists in storage
+        if ($announcement->image && Storage::disk('public')->exists($announcement->image)) {
+            Storage::disk('public')->delete($announcement->image);
+        }
+        
+        // IMPORTANT: Set image to null in database
+        $announcement->image = null;
+        $announcement->save();
+        
+        // Force update the timestamp to trigger cache bust
+        $announcement->touch();
+        
+        // Refresh to get latest data from database
+        $announcement->refresh();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Image removed successfully. Default image will be used.',
+            'data' => [
+                'id' => $announcement->id,
+                'image' => null,
+                'image_url' => null,
+                'has_folder_image' => $announcement->hasFolderImage(),
+                'updated_at' => $announcement->updated_at
+            ]
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error in removeImage: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to remove image: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+    // Get record for editing
+public function edit($id)
+{
+    $announcement = Announcement::findOrFail($id);
+    
+    // Force refresh to get latest data
+    $announcement->refresh();
+    
+    // Determine if there's actually a custom image
+    $hasCustomImage = false;
+    $imageDisplayUrl = null;
+    
+    // Check for folder image first
+    if ($announcement->hasFolderImage()) {
+        $hasCustomImage = true;
+        $imageDisplayUrl = $announcement->image_url;
+    } 
+    // Then check for database image
+    elseif ($announcement->image && Storage::disk('public')->exists($announcement->image)) {
+        $hasCustomImage = true;
+        $imageDisplayUrl = $announcement->image_url;
+    }
+    else {
+        // No custom image, use default
+        $imageDisplayUrl = '/images/default-image.png';
+    }
+    
+    return response()->json([
+        'id' => $announcement->id,
+        'title' => $announcement->title,
+        'description' => $announcement->description,
+        'date' => $announcement->date,
+        'status' => $announcement->status,
+        'image' => $announcement->image,
+        'image_url' => $imageDisplayUrl,
+        'has_custom_image' => $hasCustomImage, // Add this flag
+        'created_at' => $announcement->created_at,
+        'updated_at' => $announcement->updated_at,
+    ]);
+}
 
     // Update record
     public function update(Request $request, $id)

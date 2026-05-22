@@ -443,71 +443,197 @@
     }
     
     function populateEditModal(data) {
-        const modalBody = document.getElementById('announcementEditModalBody');
-        
-        let formattedDate = '';
-        if (data.date) {
-            const date = new Date(data.date);
-            if (!isNaN(date.getTime())) {
-                formattedDate = date.toISOString().split('T')[0];
-            }
+    const modalBody = document.getElementById('announcementEditModalBody');
+    
+    let formattedDate = '';
+    if (data.date) {
+        const date = new Date(data.date);
+        if (!isNaN(date.getTime())) {
+            formattedDate = date.toISOString().split('T')[0];
         }
-        
-        modalBody.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Title <span class="text-danger">*</span></label>
-                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description <span class="text-danger">*</span></label>
-                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Date <span class="text-danger">*</span></label>
-                <input type="date" name="date" class="form-control" value="${formattedDate}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Current Image</label>
-                <div id="currentImageContainer">
-                    ${data.image_url ? `<img src="${data.image_url}" id="currentImagePreview" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">` : '<p class="text-muted">No image uploaded</p>'}
-                </div>
-                <label class="form-label mt-2">Change Image</label>
-                <input type="file" name="image" id="editImageInput" class="form-control" accept="image/*">
-                <small class="form-text text-muted">Max size: 5MB. Leave empty to keep current image.</small>
-            </div>
-        `;
-        
-        const form = document.getElementById('announcementEditForm');
-        form.action = `/admin/announcements/${data.id}`;
-        form.enctype = 'multipart/form-data';
-        form.dataset.id = data.id;
-        
-        // Add image preview for edit modal
-        const imageInput = document.getElementById('editImageInput');
-        if (imageInput) {
-            imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        let previewContainer = document.getElementById('currentImageContainer');
-                        if (!previewContainer) {
-                            previewContainer = document.createElement('div');
-                            previewContainer.id = 'currentImageContainer';
-                            const imageSection = document.querySelector('#announcementEditModalBody .mb-3:last-child');
-                            if (imageSection) {
-                                imageSection.insertBefore(previewContainer, imageSection.querySelector('label.mt-2'));
-                            }
-                        }
-                        previewContainer.innerHTML = `<img src="${event.target.result}" style="max-width: 200px; display: block; margin-bottom: 10px; border-radius: 4px;">`;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-        
-        preventEnterKeyOnForm(form);
     }
+    
+    // Use the has_custom_image flag from server response
+    let hasCustomImage = data.has_custom_image === true;
+    let imageSrc = '/images/default-image.png';
+    
+    // Only use custom image URL if has_custom_image is true
+    if (hasCustomImage && data.image_url) {
+        imageSrc = data.image_url;
+    }
+    
+    console.log('Edit modal data:', { 
+        hasCustomImage, 
+        imageSrc, 
+        image: data.image,
+        image_url: data.image_url 
+    });
+    
+    modalBody.innerHTML = `
+        <div class="mb-3">
+            <label class="form-label">Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description <span class="text-danger">*</span></label>
+            <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date <span class="text-danger">*</span></label>
+            <input type="date" name="date" class="form-control" value="${formattedDate}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Current Image</label>
+            <div class="current-image-wrapper mt-2">
+                <div class="d-flex align-items-start gap-3">
+                    <img src="${imageSrc}" alt="Current image" id="currentEditImage" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
+                         onerror="this.onerror=null; this.src='/images/default-image.png';">
+                    <div class="image-info">
+                        ${hasCustomImage ? 
+                            '<div class="text-success small mb-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                            '<div class="text-muted small mb-2"><i class="fas fa-image"></i> Using default image</div>'}
+                        ${hasCustomImage ? 
+                            `<button type="button" class="btn btn-danger btn-sm" id="removeImageBtn" data-id="${data.id}">
+                                <i class="fas fa-trash-alt me-1"></i> Remove Image
+                            </button>` : 
+                            ''}
+                    </div>
+                </div>
+            </div>
+            <label class="form-label mt-3">Change Image (Optional)</label>
+            <input type="file" name="image" id="editImageInput" class="form-control" accept="image/*">
+            <small class="form-text text-muted">Max size: 5MB. Upload a new image to replace the current one.</small>
+            <div id="editImagePreview" style="display: none;" class="mt-2">
+                <label class="text-muted">New Image Preview:</label>
+                <div>
+                    <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Attach remove image button handler
+    const removeBtn = document.getElementById('removeImageBtn');
+    if (removeBtn) {
+        // Remove any existing event listeners to prevent duplicates
+        const newRemoveBtn = removeBtn.cloneNode(true);
+        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+        newRemoveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleRemoveImage(data.id);
+        });
+    }
+    
+    // Attach image preview handler for new upload
+    const editImageInput = document.getElementById('editImageInput');
+    if (editImageInput) {
+        // Remove existing listeners to prevent duplicates
+        const newEditImageInput = editImageInput.cloneNode(true);
+        editImageInput.parentNode.replaceChild(newEditImageInput, editImageInput);
+        
+        newEditImageInput.addEventListener('change', function(e) {
+            const preview = document.getElementById('editImagePreview');
+            const previewImg = document.getElementById('editPreviewImg');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                preview.style.display = 'none';
+                previewImg.src = '#';
+            }
+        });
+    }
+    
+    const form = document.getElementById('announcementEditForm');
+    form.action = `/admin/announcements/${data.id}`;
+    form.enctype = 'multipart/form-data';
+    form.dataset.id = data.id;
+    
+    preventEnterKeyOnForm(form);
+}
+
+async function handleRemoveImage(announcementId) {
+    if (!confirm('⚠️ Are you sure you want to remove this image?\n\nDefault image will be used instead.')) {
+        return;
+    }
+    
+    // Show loading state on the remove button
+    const removeBtn = document.getElementById('removeImageBtn');
+    const originalBtnHtml = removeBtn ? removeBtn.innerHTML : '';
+    if (removeBtn) {
+        removeBtn.disabled = true;
+        removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Removing...';
+    }
+    
+    try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/admin/announcements/${announcementId}/remove-image?_=${timestamp}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            
+            // Update the current image display to default
+            const currentImage = document.getElementById('currentEditImage');
+            if (currentImage) {
+                currentImage.src = '/images/default-image.png';
+            }
+            
+            // Update the image info section - remove the remove button since image is gone
+            const imageInfoDiv = document.querySelector('.image-info');
+            if (imageInfoDiv) {
+                imageInfoDiv.innerHTML = '<div class="text-muted small"><i class="fas fa-image"></i> Using default image</div>';
+            }
+            
+            // Also remove the remove button if it still exists
+            const removeButton = document.getElementById('removeImageBtn');
+            if (removeButton) {
+                removeButton.remove();
+            }
+            
+            // Update the global data to reflect image removal
+            const itemIndex = allData.findIndex(item => item.id == announcementId);
+            if (itemIndex !== -1) {
+                allData[itemIndex].image = null;
+                allData[itemIndex].image_url = null;
+                allData[itemIndex].has_custom_image = false;
+                allData[itemIndex].updated_at = data.data.updated_at;
+            }
+            
+            // Refresh the table to show updated image
+            renderTable();
+            
+            // Force refresh images in the table
+            setTimeout(() => {
+                forceRefreshTableImages();
+            }, 100);
+            
+        } else {
+            showCustomToast(data.message || 'Failed to remove image', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error removing image', 'error');
+    } finally {
+        if (removeBtn) {
+            removeBtn.disabled = false;
+            removeBtn.innerHTML = originalBtnHtml;
+        }
+    }
+}
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this announcement?\n\nThis action cannot be undone!')) {
