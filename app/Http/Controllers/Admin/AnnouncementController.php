@@ -214,6 +214,7 @@ public function edit($id)
                 'success' => true, 
                 'message' => 'Announcement updated successfully!',
                 'image_url' => $announcement->image_url,
+                'updated_at' => $announcement->updated_at->timestamp, // Make sure this is included
                 'timestamp' => time()
             ]);
         }
