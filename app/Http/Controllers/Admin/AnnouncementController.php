@@ -24,6 +24,7 @@ class AnnouncementController extends Controller
         // Add image_url for each announcement
         $announcements->each(function($announcement) {
             $announcement->image_url = $announcement->image_url;
+            $announcement->cache_buster = time();
         });
         
         return response()->json($announcements);
@@ -214,7 +215,7 @@ public function edit($id)
                 'success' => true, 
                 'message' => 'Announcement updated successfully!',
                 'image_url' => $announcement->image_url,
-                'updated_at' => $announcement->updated_at->timestamp, // Make sure this is included
+                
                 'timestamp' => time()
             ]);
         }

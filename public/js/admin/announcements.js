@@ -22,72 +22,120 @@
         initAnnouncementManagement();
     }
     
-    function initAnnouncementManagement() {
-        console.log('Initializing announcement management...');
+function initAnnouncementManagement() {
+    console.log('Initializing announcement management...');
+    
+    // Initialize Add Modal
+    const addModalElement = document.getElementById('announcementAddModal');
+    if (addModalElement && typeof bootstrap !== 'undefined') {
+        addModal = new bootstrap.Modal(addModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
         
-        // Initialize Add Modal
-        const addModalElement = document.getElementById('announcementAddModal');
-        if (addModalElement && typeof bootstrap !== 'undefined') {
-            addModal = new bootstrap.Modal(addModalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            
-            addModalElement.addEventListener('hidden.bs.modal', function() {
-                const form = document.getElementById('announcementAddForm');
-                if (form) {
-                    form.reset();
-                    form.querySelectorAll('.is-invalid').forEach(el => {
-                        el.classList.remove('is-invalid');
-                    });
-                }
-            });
-        }
-        
-        // Initialize Edit Modal
-        const editModalElement = document.getElementById('announcementEditModal');
-        if (editModalElement && typeof bootstrap !== 'undefined') {
-            editModal = new bootstrap.Modal(editModalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            
-            editModalElement.addEventListener('hidden.bs.modal', function() {
-                const form = document.getElementById('announcementEditForm');
-                if (form) {
-                    form.reset();
-                }
-            });
-        }
-        
-        // Initialize Direct Upload Modal
-        const directUploadModalElement = document.getElementById('announcementDirectUploadModal');
-        if (directUploadModalElement && typeof bootstrap !== 'undefined') {
-            directUploadModal = new bootstrap.Modal(directUploadModalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            
-            directUploadModalElement.addEventListener('show.bs.modal', function() {
-                loadAnnouncementsForDirectUpload();
-            });
-        }
-        
-        loadDataFromServer();
-        attachEventHandlers();
-        
-        // Prevent Enter key in modals
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.target.closest('.modal')) {
-                if (e.target.tagName.toLowerCase() === 'textarea') {
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+        addModalElement.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('announcementAddForm');
+            if (form) {
+                form.reset();
+                form.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
             }
         });
     }
+    
+    // Initialize Edit Modal
+    const editModalElement = document.getElementById('announcementEditModal');
+    if (editModalElement && typeof bootstrap !== 'undefined') {
+        editModal = new bootstrap.Modal(editModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        editModalElement.addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('announcementEditForm');
+            if (form) {
+                form.reset();
+            }
+        });
+    }
+    
+    // Initialize Direct Upload Modal
+    const directUploadModalElement = document.getElementById('announcementDirectUploadModal');
+    if (directUploadModalElement && typeof bootstrap !== 'undefined') {
+        directUploadModal = new bootstrap.Modal(directUploadModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        directUploadModalElement.addEventListener('show.bs.modal', function() {
+            loadAnnouncementsForDirectUpload();
+        });
+    }
+    
+    loadDataFromServer();
+    attachEventHandlers();
+    
+    // Prevent Enter key in modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.closest('.modal')) {
+            if (e.target.tagName.toLowerCase() === 'textarea') {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+    
+    // Refresh data when page becomes visible (tab switching)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            console.log('Page became visible, refreshing data...');
+            loadDataFromServer();
+        }
+    });
+    
+    // Refresh data when window gets focus (coming back from other apps)
+    window.addEventListener('focus', function() {
+        console.log('Window focused, refreshing data...');
+        loadDataFromServer();
+    });
+    
+    // Listen for custom events that might trigger data refresh
+    window.addEventListener('announcementDataChanged', function() {
+        console.log('Data change event detected, refreshing...');
+        loadDataFromServer();
+    });
+    
+    // Also refresh after a short delay when modals close (as a fallback)
+    if (addModalElement) {
+        addModalElement.addEventListener('hidden.bs.modal', function() {
+            console.log('Add modal closed, refreshing data...');
+            setTimeout(() => {
+                loadDataFromServer();
+            }, 100);
+        });
+    }
+    
+    if (editModalElement) {
+        editModalElement.addEventListener('hidden.bs.modal', function() {
+            console.log('Edit modal closed, refreshing data...');
+            setTimeout(() => {
+                loadDataFromServer();
+            }, 100);
+        });
+    }
+    
+    if (directUploadModalElement) {
+        directUploadModalElement.addEventListener('hidden.bs.modal', function() {
+            console.log('Upload modal closed, refreshing data...');
+            setTimeout(() => {
+                loadDataFromServer();
+            }, 100);
+        });
+    }
+}
     
     async function loadDataFromServer() {
     const loadingIndicator = document.getElementById('announcementLoadingIndicator');
@@ -114,12 +162,12 @@
         allData = await response.json();
         console.log(`Loaded ${allData.length} records`);
         
-        // Process each item to ensure image URLs have timestamps
+        // Add a cache buster to each item's image_url if not already present
         allData = allData.map(item => {
-            if (item.image_url && item.image_url !== '/images/default-image.png' && !item.image_url.includes('default-image.png')) {
-                const timestamp = item.updated_at ? new Date(item.updated_at).getTime() : new Date().getTime();
-                const baseUrl = item.image_url.split('?')[0];
-                item.image_url = baseUrl + '?t=' + timestamp;
+            if (item.image_url) {
+                // Add or update cache buster
+                const separator = item.image_url.includes('?') ? '&' : '?';
+                item.image_url = `${item.image_url}${separator}_cb=${timestamp}`;
             }
             return item;
         });
@@ -166,127 +214,108 @@
         const images = table.querySelectorAll('img');
         images.forEach(img => {
             const originalSrc = img.src.split('?')[0];
-            // Add timestamp to force reload
             img.src = originalSrc + '?t=' + new Date().getTime();
         });
     }
-    
+        
     function renderTable() {
-    let filteredData = [...allData];
-    
-    if (currentFilters.search) {
-        filteredData = filteredData.filter(item => 
-            item.title.toLowerCase().includes(currentFilters.search) || 
-            (item.description && item.description.toLowerCase().includes(currentFilters.search))
-        );
-    }
-    
-    if (currentFilters.status) {
-        filteredData = filteredData.filter(item => item.status === currentFilters.status);
-    }
-    
-    const totalRecords = filteredData.length;
-    const totalPages = Math.ceil(totalRecords / rowsPerPage);
-    
-    if (currentPage > totalPages) currentPage = totalPages || 1;
-    if (currentPage < 1) currentPage = 1;
-    
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = filteredData.slice(start, end);
-    
-    let tableHtml = `
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped align-middle" id="announcementTable">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">ID</th>
-                        <th style="width: 80px;">Image</th>
-                        <th>Title</th>
-                        <th style="width: 110px;">Date</th>
-                        <th style="width: 110px;">Status</th>
-                        <th style="width: 140px;">Created At</th>
-                        <th style="width: 140px;">Actions</th>
+        let filteredData = [...allData];
+        
+        if (currentFilters.search) {
+            filteredData = filteredData.filter(item => 
+                item.title.toLowerCase().includes(currentFilters.search) || 
+                (item.description && item.description.toLowerCase().includes(currentFilters.search))
+            );
+        }
+        
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(item => item.status === currentFilters.status);
+        }
+        
+        const totalRecords = filteredData.length;
+        const totalPages = Math.ceil(totalRecords / rowsPerPage);
+        
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        if (currentPage < 1) currentPage = 1;
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = filteredData.slice(start, end);
+        
+        let tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle" id="announcementTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th style="width: 80px;">Image</th>
+                            <th>Title</th>
+                            <th style="width: 110px;">Date</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 140px;">Created At</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (pageData.length === 0) {
+            tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td>\n                </tr>';
+        } else {
+            pageData.forEach(item => {
+                const imageHtml = item.image_url 
+                    ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" loading="lazy" onerror="this.onerror=null; this.src='/images/default-image.png';">`
+                    : '<span class="badge bg-secondary">No Image</span>';
+                
+                const statusSelect = `
+                    <select class="form-select form-select-sm status-select" data-id="${item.id}">
+                        <option value="published" ${item.status === 'published' ? 'selected' : ''}>Published</option>
+                        <option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option>
+                    </select>
+                `;
+                
+                const actions = `
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-warning edit-btn" data-id="${item.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger delete-btn" data-id="${item.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                const formattedDate = formatDate(item.date);
+                const formattedCreatedAt = formatDateTime(item.created_at);
+                
+                tableHtml += `
+                    <tr data-id="${item.id}" data-status="${item.status}">
+                        <td class="text-center"><strong>${item.id}</strong></td>
+                        <td>${imageHtml}</td>
+                        <td>${escapeHtml(item.title)}</td>
+                        <td>${formattedDate}</td>
+                        <td>${statusSelect}</td>
+                        <td>${formattedCreatedAt}</td>
+                        <td>${actions}</td>
                     </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    if (pageData.length === 0) {
-        tableHtml += '<tr><td colspan="7" class="text-center text-muted py-4">No matching records found</td></tr>';
-    } else {
-        pageData.forEach(item => {
-            // Generate image URL with cache-busting timestamp
-            let imageSrc = '/images/default-image.png';
-            let hasCustomImage = false;
-            
-            if (item.image_url && item.image_url !== '/images/default-image.png' && !item.image_url.includes('default-image.png')) {
-                // Add timestamp to force refresh
-                const timestamp = item.updated_at ? new Date(item.updated_at).getTime() : new Date().getTime();
-                const baseUrl = item.image_url.split('?')[0];
-                imageSrc = baseUrl + '?t=' + timestamp;
-                hasCustomImage = true;
-            }
-            
-            const imageHtml = hasCustomImage 
-                ? `<img src="${imageSrc}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" loading="lazy" onerror="this.src='/images/default-image.png'">`
-                : `<div class="position-relative d-inline-block">
-                        <img src="/images/default-image.png" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; opacity: 0.7;" onerror="this.src='/images/default-image.png'">
-                        <span class="position-absolute top-0 start-100 translate-middle badge bg-secondary rounded-pill" style="font-size: 8px;">
-                            <i class="fas fa-image"></i>
-                        </span>
-                    </div>`;
-            
-            const statusSelect = `
-                <select class="form-select form-select-sm status-select" data-id="${item.id}">
-                    <option value="published" ${item.status === 'published' ? 'selected' : ''}>Published</option>
-                    <option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option>
-                </select>
-            `;
-            
-            const actions = `
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-warning edit-btn" data-id="${item.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger delete-btn" data-id="${item.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            
-            const formattedDate = formatDate(item.date);
-            const formattedCreatedAt = formatDateTime(item.created_at);
-            
-            tableHtml += `
-                <tr data-id="${item.id}" data-status="${item.status}">
-                    <td class="text-center"><strong>${item.id}</strong></td>
-                    <td>${imageHtml}</td>
-                    <td>${escapeHtml(item.title)}</td>
-                    <td>${formattedDate}</td>
-                    <td>${statusSelect}</td>
-                    <td>${formattedCreatedAt}</td>
-                    <td>${actions}</td>
-                </tr>
-            `;
-        });
+                `;
+            });
+        }
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('announcementTableContainer').innerHTML = tableHtml;
+        
+        document.getElementById('announcementShowingStart').textContent = totalRecords === 0 ? 0 : start + 1;
+        document.getElementById('announcementShowingEnd').textContent = Math.min(end, totalRecords);
+        document.getElementById('announcementTotalRecords').textContent = totalRecords;
+        
+        renderPagination(currentPage, totalPages);
+        attachDynamicHandlers();
     }
-    
-    tableHtml += `
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    document.getElementById('announcementTableContainer').innerHTML = tableHtml;
-    
-    document.getElementById('announcementShowingStart').textContent = totalRecords === 0 ? 0 : start + 1;
-    document.getElementById('announcementShowingEnd').textContent = Math.min(end, totalRecords);
-    document.getElementById('announcementTotalRecords').textContent = totalRecords;
-    
-    renderPagination(currentPage, totalPages);
-    attachDynamicHandlers();
-}
     
     function renderPagination(currentPage, totalPages) {
         const paginationUl = document.getElementById('announcementPagination');
@@ -443,47 +472,33 @@
     }
     
     async function handleEditClick(id) {
-    const modalBody = document.getElementById('announcementEditModalBody');
-    if (modalBody) {
-        modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
-    }
-    
-    editModal.show();
-    
-    try {
-        // Add timestamp to prevent caching of the edit data
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/admin/announcements/${id}/edit?_=${timestamp}`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
-            }
-        });
-        
-        const data = await response.json();
-        populateEditModal(data);
-    } catch (error) {
-        console.error('Error:', error);
-        showCustomToast('Failed to load data', 'error');
-        editModal.hide();
-    }
-}
-
-function refreshImageUrlsInData() {
-    // Force refresh all image URLs in the data array by adding a timestamp
-    allData = allData.map(item => {
-        if (item.image_url && item.image_url !== '/images/default-image.png' && !item.image_url.includes('default-image.png')) {
-            // Add or update timestamp in the URL
-            const separator = item.image_url.includes('?') ? '&' : '?';
-            item.image_url = item.image_url.split('?')[0] + separator + 't=' + new Date().getTime();
+        const modalBody = document.getElementById('announcementEditModalBody');
+        if (modalBody) {
+            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
         }
-        return item;
-    });
-}
+        
+        editModal.show();
+        
+        try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/admin/announcements/${id}/edit?_=${timestamp}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            
+            const data = await response.json();
+            populateEditModal(data);
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Failed to load data', 'error');
+            editModal.hide();
+        }
+    }
     
     function populateEditModal(data) {
     const modalBody = document.getElementById('announcementEditModalBody');
@@ -761,73 +776,19 @@ async function handleRemoveImage(announcementId) {
         }
     }
     
-    async function handleAddFormSubmit(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-        
-        try {
-            const formData = new FormData(form);
-            
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                },
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showCustomToast(data.message, 'success');
-                
-                if (addModal) {
-                    addModal.hide();
-                }
-                
-                form.reset();
-                await loadDataFromServer();
-            } else {
-                let errorMessage = data.message || 'Failed to save';
-                if (data.errors) {
-                    errorMessage = Object.values(data.errors).flat().join('\n');
-                }
-                showCustomToast(errorMessage, 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showCustomToast('Network error saving data', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    }
-    
-    async function handleEditFormSubmit(e) {
+   async function handleAddFormSubmit(e) {
     e.preventDefault();
     e.stopPropagation();
     
     const form = e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
-    const id = form.dataset.id || form.action.split('/').pop();
     
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
     
     try {
         const formData = new FormData(form);
-        formData.append('_method', 'PUT');
         
         const response = await fetch(form.action, {
             method: 'POST',
@@ -845,21 +806,20 @@ async function handleRemoveImage(announcementId) {
         if (data.success) {
             showCustomToast(data.message, 'success');
             
-            if (editModal) {
-                editModal.hide();
+            if (addModal) {
+                addModal.hide();
             }
             
-            // IMPORTANT: Force reload fresh data from server with cache busting
+            form.reset();
+            
+            // Clear all data and reload
+            allData = [];
             await loadDataFromServer();
             
             // Force refresh all images in the table
             setTimeout(() => {
                 forceRefreshTableImages();
-                // Also refresh any cached image URLs in the data
-                refreshImageUrlsInData();
-            }, 100);
-            
-            form.reset();
+            }, 200);
         } else {
             let errorMessage = data.message || 'Failed to save';
             if (data.errors) {
@@ -875,6 +835,65 @@ async function handleRemoveImage(announcementId) {
         submitBtn.innerHTML = originalText;
     }
 }
+    
+    async function handleEditFormSubmit(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        const id = form.dataset.id || form.action.split('/').pop();
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        
+        try {
+            const formData = new FormData(form);
+            formData.append('_method', 'PUT');
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showCustomToast(data.message, 'success');
+                
+                if (editModal) {
+                    editModal.hide();
+                }
+                
+                form.reset();
+                await loadDataFromServer();
+                
+                // Force refresh images
+                setTimeout(() => {
+                    forceRefreshTableImages();
+                }, 100);
+            } else {
+                let errorMessage = data.message || 'Failed to save';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).flat().join('\n');
+                }
+                showCustomToast(errorMessage, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomToast('Network error saving data', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
     
     async function handleDirectUpload() {
         const announcementId = document.getElementById('announcementSelect').value;
