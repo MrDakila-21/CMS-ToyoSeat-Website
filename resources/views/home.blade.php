@@ -99,7 +99,7 @@ $automotiveSeats = BusinessContent::where('section', 'automotive')
             <div class="card-icon-circle">
                 <img src="{{ asset('images/Group 2.svg') }}" alt="Company Profile" class="card-icon-img">
             </div>
-            <div class="card-title">COMPANY PROFILE</div>
+            <div class="card-title">PROFILE</div>
         </div>
         <div class="card-item" data-url="{{ url('/guest/about/business-introduction') }}">
             <div class="card-icon-circle">

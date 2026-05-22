@@ -53,14 +53,14 @@
                     </a>
 
                     <!-- Email with icon and text - both clickable -->
-                    <a href="mailto:inquiry@toyoseat.com.ph" class="contact-link" rel="noopener noreferrer">
+                    <a href="mailto:info@toyoseat.ph" class="contact-link" rel="noopener noreferrer">
                         <div class="contact-info-item mb-4">
                             <div class="contact-icon">
                                 <i class="fa-solid fa-envelope"></i>
                             </div>
                             <div>
                                 <h6 class="mb-1">Email Us</h6>
-                                <p class="mb-0 small">inquiry@toyoseat.com.ph</p>
+                                <p class="mb-0 small">info@toyoseat.ph</p>
                             </div>
                         </div>
                     </a>
@@ -144,13 +144,15 @@
                                 <textarea name="message" rows="5" class="form-control corporate-input" placeholder="Please provide details about your inquiry...">{{ old('message') }}</textarea>
                                 <div class="invalid-feedback"></div>
                             </div>
-
+ <!-- Commented out the attachment field as per the latest requirements, but keeping the code for future reference if needed
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Attachment</label>
                                 <input type="file" name="attachment" id="attachment" class="form-control corporate-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                 <small class="text-muted">Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 2MB)</small>
                                 <div class="invalid-feedback"></div>
                             </div>
+
+                            -->
 
                             <!-- UPDATED: Terms & Conditions Checkbox - NOT disabled, opens modal when clicked -->
                             <div class="col-12 mt-3">
@@ -215,7 +217,7 @@
                     <p>These Terms & Conditions shall be governed by and construed in accordance with the laws of the Republic of the Philippines.</p>
                     
                     <h6>10. Contact Information</h6>
-                    <p>If you have any questions about these Terms & Conditions, please contact us at inquiry@toyoseat.com.ph</p>
+                    <p>If you have any questions about these Terms & Conditions, please contact us at our official email.</p>
                     
                 </div>
             </div>
