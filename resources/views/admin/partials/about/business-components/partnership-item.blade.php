@@ -1,10 +1,10 @@
 {{-- resources/views/admin/partials/about/business-components/partnership-item.blade.php --}}
 <div class="col-md-3 mb-4" data-id="{{ $partner->id }}">
     <div class="card h-100 text-center">
-        @if($partner->image && $partner->image_url)
+        @if($partner->image)
             <img src="{{ $partner->image_url }}" class="card-img-top p-3" alt="{{ $partner->title }}" style="height: 150px; object-fit: contain;">
         @else
-            <img src="/images/default-image.png" class="card-img-top p-3" alt="Default Image" style="height: 150px; object-fit: contain; background: #f8f9fa;">
+            <img src="/images/default-image.png" class="card-img-top p-3" alt="Default Image" style="height: 150px; object-fit: contain;">
         @endif
         <div class="card-body">
             <h6>{{ Str::limit($partner->title, 100) }}</h6>

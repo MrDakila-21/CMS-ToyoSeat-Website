@@ -14,33 +14,10 @@ $file = str_replace(['..', './', '\\', "\0"], '', $file);
 // Remove any leading slashes
 $file = ltrim($file, '/');
 
-// Define default image path
-$defaultImagePath = __DIR__ . '/images/default-image.png';
-$storageDefaultPath = __DIR__ . '/storage/app/public/images/default-image.png';
-
-// Check if the requested file is empty or null
-if (empty($file)) {
-    // Serve default image if available
-    if (file_exists($defaultImagePath)) {
-        header('Content-Type: image/png');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        readfile($defaultImagePath);
-        exit;
-    } elseif (file_exists($storageDefaultPath)) {
-        header('Content-Type: image/png');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        readfile($storageDefaultPath);
-        exit;
-    }
-    http_response_code(404);
-    echo 'No image specified and default image not found';
-    exit;
-}
-
 // Build the full path to the file
 $storagePath = __DIR__ . '/storage/app/public/' . $file;
 
-// Check if file exists and is a file
+// Check if file exists
 if (file_exists($storagePath) && is_file($storagePath)) {
     // Get file extension
     $ext = strtolower(pathinfo($storagePath, PATHINFO_EXTENSION));
@@ -75,22 +52,18 @@ if (file_exists($storagePath) && is_file($storagePath)) {
     // Output the file
     readfile($storagePath);
     exit;
+} else {
+    // File not found - Return default image or 404
+    $defaultImage = __DIR__ . '/storage/app/public/images/default-image.png';
+    if (file_exists($defaultImage)) {
+        header('Content-Type: image/png');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        readfile($defaultImage);
+        exit;
+    }
+    
+    // No default image, return 404
+    http_response_code(404);
+    echo 'File not found: ' . htmlspecialchars($file);
 }
-
-// File not found - Serve default image from public/images/ or storage
-if (file_exists($defaultImagePath)) {
-    header('Content-Type: image/png');
-    header('Cache-Control: no-cache, no-store, must-revalidate');
-    readfile($defaultImagePath);
-    exit;
-} elseif (file_exists($storageDefaultPath)) {
-    header('Content-Type: image/png');
-    header('Cache-Control: no-cache, no-store, must-revalidate');
-    readfile($storageDefaultPath);
-    exit;
-}
-
-// No default image found, return 404
-http_response_code(404);
-echo 'File not found: ' . htmlspecialchars($file);
 ?>
