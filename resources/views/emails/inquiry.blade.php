@@ -384,7 +384,7 @@ TOYO SEAT PHILIPPINES CORPORATION
 </div>
 
 <div class="title">
-Customer Inquiry Notification
+Inquiry Notification
 </div>
 
 <div class="meta">
