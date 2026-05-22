@@ -177,16 +177,15 @@
     }
 
     /* Location specific styles - Enhanced Responsive */
-    .info-card {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        margin-top: 50px;
-        height: 100%;
-        transition: var(--transition);
-        box-shadow: var(--shadow-md);
-        border: 1px solid rgba(0,0,0,0.03);
-    }
+.info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0,0,0,0.03);
+}
     
     .info-card:hover {
         transform: translateY(-8px);
@@ -410,11 +409,9 @@
         font-style: italic;
     }
     
-    /* Map Card - Fixed for proper fit */
     .map-card {
         background: white;
         border-radius: 20px;
-        margin-top: 50px;
         overflow: hidden;
         height: 100%;
         box-shadow: var(--shadow-md);
@@ -423,7 +420,7 @@
         display: flex;
         flex-direction: column;
     }
-    
+        
     .map-card:hover {
         transform: translateY(-8px);
         box-shadow: var(--shadow-lg);
@@ -535,7 +532,7 @@
     /* Responsive Design - Enhanced */
     @media (max-width: 992px) {
         .info-card, .map-card {
-            margin-top: 30px;
+          
         }
         
         .info-title {
@@ -703,7 +700,6 @@
         }
         
         .info-card, .map-card {
-            margin-top: 20px;
             border-radius: 16px;
         }
         
@@ -868,7 +864,7 @@
     </div>
 </div>
 
-<div class="container mb-5">
+<div class="container pt-5 mt-3 mb-5">
     @php
         // Ensure default values if location is null
         $defaultCity = 'Santa Rosa';
