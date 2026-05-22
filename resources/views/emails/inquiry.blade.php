@@ -288,55 +288,15 @@ font-size:12px;
 color:#64748b;
 }
 
-/* Operational Footer */
-
-.system-footer{
-
-background:#f8fafc;
-
-border-top:
-1px solid #e2e8f0;
-
-padding:28px 34px;
-}
-
-.system-title{
-
-font-size:11px;
-
-font-weight:700;
-
-letter-spacing:.08em;
-
-text-transform:uppercase;
-
-color:#64748b;
-
-margin-bottom:14px;
-}
-
-.system-grid{
-
-display:grid;
-
-grid-template-columns:
-repeat(2,1fr);
-
-gap:10px 30px;
-
-font-size:13px;
-
-color:#475569;
-
-margin-bottom:22px;
-}
+/* FOOTER (UPDATED - simplified, system section removed) */
 
 .footer-company{
 
-padding-top:18px;
+background:#f8fafc;
 
-border-top:
-1px solid #e2e8f0;
+border-top:1px solid #e2e8f0;
+
+padding:28px 34px;
 
 font-size:12px;
 
@@ -361,47 +321,33 @@ color:#0f172a;
 @media(max-width:640px){
 
 body{
-
 padding:16px 10px;
 }
 
 .header{
-
 padding:24px;
 }
 
 .content{
-
 padding:24px;
 }
 
-.system-footer{
-
+.footer-company{
 padding:24px;
 }
 
 .title{
-
 font-size:24px;
 }
 
 .meta{
-
 flex-direction:column;
-
 gap:6px;
 }
 
 .detail-row{
-
 grid-template-columns:1fr;
-
 gap:6px;
-}
-
-.system-grid{
-
-grid-template-columns:1fr;
 }
 
 }
@@ -409,14 +355,11 @@ grid-template-columns:1fr;
 @media print{
 
 body{
-
 padding:0;
-
 background:white;
 }
 
 .container{
-
 border:none;
 }
 
@@ -437,15 +380,11 @@ border:none;
 <div class="header">
 
 <div class="company">
-
 TOYO SEAT PHILIPPINES CORPORATION
-
 </div>
 
 <div class="title">
-
 Customer Inquiry Notification
-
 </div>
 
 <div class="meta">
@@ -476,15 +415,11 @@ Website Form
 <div class="alert">
 
 <div class="alert-label">
-
 ACTION REQUIRED
-
 </div>
 
 <div class="alert-text">
-
 Please review and respond within 24 hours to maintain customer service standards.
-
 </div>
 
 </div>
@@ -494,105 +429,46 @@ Please review and respond within 24 hours to maintain customer service standards
 <div class="section">
 
 <div class="section-title">
-
 Customer Details
-
 </div>
 
 <div class="detail-row">
-
-<div class="detail-label">
-
-Full Name
-
-</div>
-
-<div class="detail-value">
-
-{{ $data['name'] ?? '—' }}
-
-</div>
-
+<div class="detail-label">Full Name</div>
+<div class="detail-value">{{ $data['name'] ?? '—' }}</div>
 </div>
 
 <div class="detail-row">
-
-<div class="detail-label">
-
-Email Address
-
-</div>
-
+<div class="detail-label">Email Address</div>
 <div class="detail-value">
-
 @if(!empty($data['email']))
-<a href="mailto:{{ $data['email'] }}">
-{{ $data['email'] }}
-</a>
+<a href="mailto:{{ $data['email'] }}">{{ $data['email'] }}</a>
 @else
 —
 @endif
-
 </div>
-
 </div>
 
 <div class="detail-row">
-
-<div class="detail-label">
-
-Contact Number
-
-</div>
-
+<div class="detail-label">Contact Number</div>
 <div class="detail-value">
-
 @if(!empty($data['contact_number']))
-<a href="tel:{{ $data['contact_number'] }}">
-{{ $data['contact_number'] }}
-</a>
+<a href="tel:{{ $data['contact_number'] }}">{{ $data['contact_number'] }}</a>
 @else
 —
 @endif
-
 </div>
-
 </div>
 
 @if(!empty($data['company_name']))
-
 <div class="detail-row">
-
-<div class="detail-label">
-
-Company
-
+<div class="detail-label">Company</div>
+<div class="detail-value">{{ $data['company_name'] }}</div>
 </div>
-
-<div class="detail-value">
-
-{{ $data['company_name'] }}
-
-</div>
-
-</div>
-
 @endif
 
 <div class="detail-row">
-
-<div class="detail-label">
-
-Subject
-
-</div>
-
-<div class="detail-value">
-
-{{ $data['subject'] ?? 'General Inquiry' }}
-
-</div>
-
+<div class="detail-label">Subject</div>
+<div class="detail-value">{{ $data['subject'] ?? 'General Inquiry' }}</div>
 </div>
 
 </div>
@@ -602,15 +478,11 @@ Subject
 <div class="section">
 
 <div class="section-title">
-
 Inquiry Message
-
 </div>
 
 <div class="message-box">
-
 {!! nl2br(e($data['message'] ?? '')) !!}
-
 </div>
 
 </div>
@@ -620,28 +492,20 @@ Inquiry Message
 <div class="section">
 
 <div class="section-title">
-
 Attachment
-
 </div>
 
 <div class="attachment">
 
 <div class="attachment-name">
-
 {{ $data['attachment_original_name'] }}
-
 </div>
 
 <div class="attachment-meta">
-
 @if(!empty($data['attachment_mime']))
-{{ $data['attachment_mime'] }}
-•
+{{ $data['attachment_mime'] }} •
 @endif
-
 File attached for reference
-
 </div>
 
 </div>
@@ -654,55 +518,17 @@ File attached for reference
 
 <!-- FOOTER -->
 
-<div class="system-footer">
-
-<div class="system-title">
-
-System Information
-
-</div>
-
-<div class="system-grid">
-
-<div>
-
-Generated:
-{{ now()->format('M d, Y • g:i A') }}
-
-</div>
-
-<div>
-
-Response Deadline:
-{{ now()->addHours(24)->format('M d, g:i A') }}
-
-</div>
-
-<div>
-
-Notification:
-Automated
-
-</div>
-
-</div>
-
 <div class="footer-company">
 
-<strong>
-TOYO SEAT PHILIPPINES CORPORATION
-</strong>
+<strong>TOYO SEAT PHILIPPINES CORPORATION</strong>
 
 Lot 7-A, Greenfield Automotive Park,
 Don Jose, City of Santa Rosa,
 Laguna 4026, Philippines
 
 <br><br>
-
 This notification was generated automatically by the website inquiry management system.
 Please do not reply directly to this email.
-
-</div>
 
 </div>
 
