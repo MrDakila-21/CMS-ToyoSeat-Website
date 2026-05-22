@@ -289,9 +289,6 @@
         status: ''
     };
     
-    // ← DECLARE THE FLAG HERE (only once)
-    let historyImageRemovalFlag = false;
-    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initHistoryManagement);
     } else {
@@ -353,9 +350,6 @@
     }
     
     async function loadDataFromServer() {
-        // ← Reset flag when loading data
-        historyImageRemovalFlag = false;
-        
         const loadingIndicator = document.getElementById('historyLoadingIndicator');
         const tableContainer = document.getElementById('historyTableContainer');
         
@@ -564,7 +558,11 @@
             });
         }
         
-        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
         
         const container = document.getElementById('historyTableContainer');
         if (container) {
@@ -808,170 +806,127 @@
     }
     
     async function handleEditClick(id) {
-        // ← Reset flag when opening edit modal
-        historyImageRemovalFlag = false;
-        
-        const modalBody = document.getElementById('historyEditModalBody');
-        if (modalBody) {
-            modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
-        }
-        editModal.show();
-        
-        try {
-            const response = await fetch(`/admin/histories/${id}/edit`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            
-            console.log('Edit data received:', data);
-            
-            const formattedDate = data.date ? formatDate(data.date) : '';
-            
-            let imageSrc = '/images/default-image.png';
-            let hasCustomImage = false;
-            
-            if (data.image) {
-                const cacheBuster = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
-                imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}&v=${cacheBuster}`;
-                hasCustomImage = true;
-            } else if (data.image_url && data.image_url !== '/images/default-image.png') {
-                imageSrc = data.image_url;
-                hasCustomImage = true;
+    const modalBody = document.getElementById('historyEditModalBody');
+    if (modalBody) {
+        modalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading...</p></div>';
+    }
+    editModal.show();
+    
+    try {
+        const response = await fetch(`/admin/histories/${id}/edit`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
-            
-            modalBody.innerHTML = `
-                <div class="mb-3">
-                    <label class="form-label">Title <span class="text-danger">*</span></label>
-                    <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description <span class="text-danger">*</span></label>
-                    <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Date <span class="text-danger">*</span></label>
-                    <input type="date" name="date" class="form-control" value="${formattedDate}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Current Image</label>
-                    <div class="current-image-wrapper position-relative d-inline-block">
-                        <img src="${imageSrc}" alt="Current image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
-                             onerror="this.onerror=null; this.src='/images/default-image.png';" id="currentHistoryImage-${data.id}">
-                        ${hasCustomImage ? 
-                            `<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentHistoryImage(${data.id})" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            <div class="text-success small mt-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>` : 
-                            '<div class="text-muted small mt-2"><i class="fas fa-image"></i> Using default image</div>'}
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Change Image (Optional)</label>
-                    <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
-                    <small class="text-muted">Max size: 5MB. Leave empty to keep current image.</small>
-                    <div id="editImagePreview" style="display: none;" class="mt-2">
-                        <label class="text-muted">New Image Preview:</label>
-                        <div>
-                            <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+        });
+        
+        const data = await response.json();
+        
+        console.log('Edit data received:', data);
+        
+        const formattedDate = data.date ? formatDate(data.date) : '';
+        
+        // FIX: Use storage.php URL for image display with cache-busting
+        let imageSrc = '/images/default-image.png';
+        let hasCustomImage = false;
+        
+        if (data.image) {
+            // Use storage.php URL with cache-busting
+            const cacheBuster = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+            imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}&v=${cacheBuster}`;
+            hasCustomImage = true;
+        } else if (data.image_url && data.image_url !== '/images/default-image.png') {
+            imageSrc = data.image_url;
+            hasCustomImage = true;
+        }
+        
+        console.log('Image source used in edit modal:', imageSrc);
+        console.log('Has custom image:', hasCustomImage);
+        
+        modalBody.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" name="title" class="form-control" value="${escapeHtml(data.title)}" required maxlength="255">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea name="description" class="form-control" rows="5" required>${escapeHtml(data.description)}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" name="date" class="form-control" value="${formattedDate}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Current Image</label>
+                <div class="current-image-wrapper mt-2">
+                    <div class="d-flex align-items-start gap-3">
+                        <img src="${imageSrc}" alt="Current image" id="currentEditImage" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;" 
+                             onerror="this.onerror=null; this.src='/images/default-image.png';">
+                        <div class="image-info">
+                            ${hasCustomImage ? 
+                                '<div class="text-success small mb-2"><i class="fas fa-check-circle"></i> Custom image uploaded</div>' : 
+                                '<div class="text-muted small mb-2"><i class="fas fa-image"></i> Using default image</div>'}
+                            ${hasCustomImage ? 
+                                `<button type="button" class="btn btn-danger btn-sm" id="removeImageBtn" data-id="${data.id}">
+                                    <i class="fas fa-trash-alt me-1"></i> Remove Image
+                                </button>` : 
+                                ''}
                         </div>
                     </div>
                 </div>
-            `;
-            
-            const editImageInput = modalBody.querySelector('input[name="image"]');
-            if (editImageInput) {
-                editImageInput.addEventListener('change', function(e) {
-                    const preview = document.getElementById('editImagePreview');
-                    const previewImg = document.getElementById('editPreviewImg');
-                    if (this.files && this.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            previewImg.src = e.target.result;
-                            preview.style.display = 'block';
-                        };
-                        reader.readAsDataURL(this.files[0]);
-                    } else {
-                        preview.style.display = 'none';
-                        previewImg.src = '#';
-                    }
-                });
-            }
-            
-            const form = document.getElementById('historyEditForm');
-            form.action = `/admin/histories/${data.id}`;
-            
-        } catch (error) {
-            console.error('Error:', error);
-            showCustomToast('Failed to load data', 'error');
-            editModal.hide();
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Change Image (Optional)</label>
+                <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                <small class="text-muted">Max size: 5MB. Leave empty to keep current image. Upload a new image to replace the current one.</small>
+                <div id="editImagePreview" style="display: none;" class="mt-2">
+                    <label class="text-muted">New Image Preview:</label>
+                    <div>
+                        <img id="editPreviewImg" src="#" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Attach remove image button handler
+        const removeBtn = document.getElementById('removeImageBtn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleRemoveImage(data.id);
+            });
         }
-    }
-    
-        // ============================================
-    // IMAGE REMOVAL FUNCTION FOR HISTORY
-    // ============================================
-    
-    function removeCurrentHistoryImage(historyId) {
-        if (confirm('Remove the current image? The default image will be used after saving.')) {
-            // Set flag to indicate image should be removed
-            historyImageRemovalFlag = true;
-            
-            // Hide the current image container or show removed indicator
-            const imageContainer = document.querySelector(`#currentHistoryImage-${historyId}`).parentElement;
-            if (imageContainer) {
-                // Add a visual indicator that image will be removed
-                const removedMessage = document.createElement('div');
-                removedMessage.className = 'text-warning small mt-2';
-                removedMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Image will be removed on save';
-                
-                // Remove existing message if any
-                const existingMessage = imageContainer.querySelector('.image-removed-message');
-                if (existingMessage) existingMessage.remove();
-                
-                removedMessage.classList.add('image-removed-message');
-                imageContainer.appendChild(removedMessage);
-                
-                // Change the image to show a "removed" placeholder
-                const img = document.querySelector(`#currentHistoryImage-${historyId}`);
-                if (img) {
-                    img.src = '/images/default-image.png';
-                    img.style.opacity = '0.5';
+        
+        const editImageInput = modalBody.querySelector('input[name="image"]');
+        if (editImageInput) {
+            editImageInput.addEventListener('change', function(e) {
+                const preview = document.getElementById('editImagePreview');
+                const previewImg = document.getElementById('editPreviewImg');
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    preview.style.display = 'none';
+                    previewImg.src = '#';
                 }
-                
-                // Disable the remove button after clicking
-                const removeBtn = imageContainer.querySelector('button');
-                if (removeBtn) {
-                    removeBtn.disabled = true;
-                    removeBtn.style.opacity = '0.5';
-                    removeBtn.title = 'Image marked for removal';
-                }
-            }
-            
-            showCustomToast('Image marked for removal. Save to apply changes.', 'success');
+            });
         }
+        
+        const form = document.getElementById('historyEditForm');
+        form.action = `/admin/histories/${data.id}`;
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Failed to load data', 'error');
+        editModal.hide();
     }
-    
-    // ← ADD THIS LINE - Expose function to global scope
-    window.removeCurrentHistoryImage = removeCurrentHistoryImage;
-    
-    function clearImageCache(historyId) {
-        const item = allData.find(i => i.id == historyId);
-        if (item && item.updated_at) {
-            const cacheBuster = Date.now();
-            if (item.image) {
-                const newImageUrl = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
-                const img = new Image();
-                img.src = newImageUrl;
-            }
-        }
-    }
-    window.clearImageCache = clearImageCache;
+}
     
     async function handleDeleteClick(id) {
         if (!confirm('⚠️ Are you sure you want to delete this history record?\n\nThis action cannot be undone!')) {
@@ -1003,6 +958,7 @@
     }
     
     function showImageModal(imageUrl) {
+        // Ensure proper URL format
         let finalImageUrl = imageUrl;
         if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/storage.php') && !imageUrl.startsWith('/images/')) {
             finalImageUrl = `/storage.php?file=${encodeURIComponent(imageUrl)}`;
@@ -1039,6 +995,72 @@
             this.remove();
         });
     }
+
+
+    async function handleRemoveImage(historyId) {
+    if (!confirm('⚠️ Are you sure you want to remove this image?\n\nDefault image will be used instead.')) {
+        return;
+    }
+    
+    // Show loading state on the remove button
+    const removeBtn = document.getElementById('removeImageBtn');
+    const originalBtnHtml = removeBtn ? removeBtn.innerHTML : '';
+    if (removeBtn) {
+        removeBtn.disabled = true;
+        removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Removing...';
+    }
+    
+    try {
+        const response = await fetch(`/admin/histories/${historyId}/remove-image`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showCustomToast(data.message, 'success');
+            
+            // Update the current image display to default
+            const currentImage = document.getElementById('currentEditImage');
+            if (currentImage) {
+                currentImage.src = '/images/default-image.png';
+            }
+            
+            // Update the image info section - remove the remove button since image is gone
+            const imageInfoDiv = document.querySelector('.image-info');
+            if (imageInfoDiv) {
+                imageInfoDiv.innerHTML = '<div class="text-muted small"><i class="fas fa-image"></i> Using default image</div>';
+            }
+            
+            // Update the global data to reflect image removal
+            const itemIndex = allData.findIndex(item => item.id == historyId);
+            if (itemIndex !== -1) {
+                allData[itemIndex].image = null;
+                allData[itemIndex].image_url = null;
+                allData[itemIndex].updated_at = data.data.updated_at;
+            }
+            
+            // Refresh the table to show updated image
+            renderTable();
+            
+        } else {
+            showCustomToast(data.message || 'Failed to remove image', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showCustomToast('Network error removing image', 'error');
+    } finally {
+        if (removeBtn) {
+            removeBtn.disabled = false;
+            removeBtn.innerHTML = originalBtnHtml;
+        }
+    }
+}
     
     function attachEventHandlers() {
         const searchInput = document.getElementById('historySearchInput');
@@ -1103,12 +1125,6 @@
                 
                 try {
                     const formData = new FormData(this);
-                    // ← This should NOT be here because add form doesn't have remove_image
-                    // Remove this line from add form:
-                    // if (historyImageRemovalFlag) {
-                    //     formData.append('remove_image', '1');
-                    // }
-                    
                     const response = await fetch(this.action, {
                         method: 'POST',
                         headers: {
@@ -1151,12 +1167,6 @@
                 
                 try {
                     const formData = new FormData(this);
-                    
-                    // ← ADD THIS - Check if image should be removed (ONLY in edit form)
-                    if (historyImageRemovalFlag) {
-                        formData.append('remove_image', '1');
-                    }
-                    
                     const response = await fetch(this.action, {
                         method: 'POST',
                         headers: {
@@ -1172,12 +1182,9 @@
                     if (data.success) {
                         showCustomToast(data.message, 'success');
                         if (editModal) editModal.hide();
-                        
-                        // ← Reset flag after successful save
-                        historyImageRemovalFlag = false;
-                        
+                        // Force reload data from server
                         await loadDataFromServer();
-                        
+                        // Clear image cache for this specific record
                         if (data.data && data.data.id) {
                             clearImageCache(data.data.id);
                         }
@@ -1234,6 +1241,21 @@
                 if (toast.parentNode) toast.remove();
             }, 300);
         }, 5000);
+    }
+    
+    function clearImageCache(historyId) {
+        // Find the history item and update its data
+        const item = allData.find(i => i.id == historyId);
+        if (item && item.updated_at) {
+            // Force refresh of updated_at to bust cache
+            const cacheBuster = Date.now();
+            if (item.image) {
+                // Preload the new image with cache-busting
+                const newImageUrl = `/storage.php?file=${encodeURIComponent(item.image)}&v=${cacheBuster}`;
+                const img = new Image();
+                img.src = newImageUrl;
+            }
+        }
     }
     
     window.loadHistoryData = loadDataFromServer;

@@ -115,7 +115,7 @@ Route::prefix('admin')->group(function () {
         Route::resource('histories', App\Http\Controllers\Admin\HistoryController::class)->names('admin.histories');
         Route::patch('histories/{id}/status/{status}', [App\Http\Controllers\Admin\HistoryController::class, 'updateStatus'])->name('admin.histories.updateStatus');
         Route::post('histories/upload-direct', [App\Http\Controllers\Admin\HistoryController::class, 'uploadDirectImage'])->name('admin.histories.uploadDirect');
-        
+        Route::delete('histories/{id}/remove-image', [App\Http\Controllers\Admin\HistoryController::class, 'removeImage'])->name('admin.histories.removeImage');
         // Recruitment management routes
         Route::get('recruitments/all', [RecruitmentController::class, 'getAll'])->name('admin.recruitments.all');
         Route::resource('recruitments', RecruitmentController::class)->names('admin.recruitments');

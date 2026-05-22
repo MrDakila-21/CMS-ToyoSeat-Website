@@ -151,6 +151,45 @@ public function update(Request $request, $id)
     }
 }
 
+/**
+ * Remove the image from a history record
+ */
+public function removeImage($id)
+{
+    try {
+        $history = History::findOrFail($id);
+        
+        // Delete the existing image file if it exists
+        if ($history->image && Storage::disk('public')->exists($history->image)) {
+            Storage::disk('public')->delete($history->image);
+        }
+        
+        // Set image to null
+        $history->image = null;
+        $history->save();
+        
+        // Force touch to update timestamp for cache busting
+        $history->touch();
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Image removed successfully. Default image will be used.',
+            'data' => [
+                'id' => $history->id,
+                'image' => null,
+                'image_url' => null,
+                'updated_at' => $history->updated_at
+            ]
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error in removeImage: ' . $e->getMessage());
+        return response()->json([
+            'success' => false, 
+            'message' => 'Failed to remove image: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
     public function destroy($id)
     {
         try {
