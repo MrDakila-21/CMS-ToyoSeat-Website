@@ -438,7 +438,7 @@
         }
     }
     
-    function populateEditModal(data) {
+function populateEditModal(data) {
     const modalBody = document.getElementById('mediaEditModalBody');
     
     let formattedDate = '';
@@ -449,17 +449,21 @@
         }
     }
     
-    // Determine if custom image exists
-    let hasCustomImage = false;
+    // Use the has_custom_image flag from server response
+    let hasCustomImage = data.has_custom_image === true;
     let imageSrc = '/images/default-image.png';
     
-    if (data.image_url && data.image_url !== '/images/default-image.png') {
+    // Only use custom image URL if has_custom_image is true
+    if (hasCustomImage && data.image_url) {
         imageSrc = data.image_url;
-        hasCustomImage = true;
-    } else if (data.image) {
-        imageSrc = `/storage.php?file=${encodeURIComponent(data.image)}&v=${Date.now()}`;
-        hasCustomImage = true;
     }
+    
+    console.log('Edit modal data:', { 
+        hasCustomImage, 
+        imageSrc, 
+        image: data.image,
+        image_url: data.image_url 
+    });
     
     modalBody.innerHTML = `
         <div class="mb-3">
@@ -514,7 +518,10 @@
     // Attach remove image button handler
     const removeBtn = document.getElementById('removeImageBtn');
     if (removeBtn) {
-        removeBtn.addEventListener('click', function(e) {
+        // Remove any existing event listeners to prevent duplicates
+        const newRemoveBtn = removeBtn.cloneNode(true);
+        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+        newRemoveBtn.addEventListener('click', function(e) {
             e.preventDefault();
             handleRemoveImage(data.id);
         });
@@ -588,11 +595,18 @@ async function handleRemoveImage(mediaId) {
                 imageInfoDiv.innerHTML = '<div class="text-muted small"><i class="fas fa-image"></i> Using default image</div>';
             }
             
+            // Also remove the remove button if it still exists
+            const removeButton = document.getElementById('removeImageBtn');
+            if (removeButton) {
+                removeButton.remove();
+            }
+            
             // Update the global data to reflect image removal
             const itemIndex = allData.findIndex(item => item.id == mediaId);
             if (itemIndex !== -1) {
                 allData[itemIndex].image = null;
                 allData[itemIndex].image_url = null;
+                allData[itemIndex].has_custom_image = false;
                 allData[itemIndex].updated_at = data.data.updated_at;
             }
             

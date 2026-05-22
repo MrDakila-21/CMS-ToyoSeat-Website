@@ -85,15 +85,46 @@ class EventActivityController extends Controller
     }
 
     // Get record for editing
-    public function edit($id)
-    {
-        $eventActivity = EventActivity::findOrFail($id);
-        
-        // Add image_url for display (accessor handles folder images)
-        $eventActivity->image_url = $eventActivity->image_url;
-        
-        return response()->json($eventActivity);
+public function edit($id)
+{
+    $eventActivity = EventActivity::findOrFail($id);
+    
+    // Force refresh to get latest data
+    $eventActivity->refresh();
+    
+    // Determine if there's actually a custom image
+    $hasCustomImage = false;
+    $imageDisplayUrl = null;
+    
+    // Check for folder image first
+    if ($eventActivity->hasFolderImage()) {
+        $hasCustomImage = true;
+        $imageDisplayUrl = $eventActivity->image_url;
+    } 
+    // Then check for database image
+    elseif ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
+        $hasCustomImage = true;
+        $imageDisplayUrl = $eventActivity->image_url;
     }
+    else {
+        // No custom image, use default
+        $imageDisplayUrl = '/images/default-image.png';
+    }
+    
+    return response()->json([
+        'id' => $eventActivity->id,
+        'title' => $eventActivity->title,
+        'description' => $eventActivity->description,
+        'event_date' => $eventActivity->event_date,
+        'status' => $eventActivity->status,
+        'type' => $eventActivity->type,
+        'image' => $eventActivity->image,
+        'image_url' => $imageDisplayUrl,
+        'has_custom_image' => $hasCustomImage, // Add this flag
+        'created_at' => $eventActivity->created_at,
+        'updated_at' => $eventActivity->updated_at,
+    ]);
+}
 
     // Update record
     public function update(Request $request, $id)
@@ -170,17 +201,20 @@ public function removeImage($id)
         // Delete database image file if exists in storage
         if ($eventActivity->image && Storage::disk('public')->exists($eventActivity->image)) {
             Storage::disk('public')->delete($eventActivity->image);
-            $eventActivity->image = null;
         }
         
-        // Save the changes
+        // IMPORTANT: Set image to null in database
+        $eventActivity->image = null;
         $eventActivity->save();
         
         // Force update the timestamp to trigger cache bust
         $eventActivity->touch();
         
-        // Refresh to get latest data
+        // Refresh to get latest data from database
         $eventActivity->refresh();
+        
+        // Double check that image_url returns null/default
+        $imageUrl = $eventActivity->image_url;
         
         return response()->json([
             'success' => true,
@@ -188,7 +222,8 @@ public function removeImage($id)
             'data' => [
                 'id' => $eventActivity->id,
                 'image' => null,
-                'image_url' => $eventActivity->image_url,
+                'image_url' => null,
+                'has_folder_image' => $eventActivity->hasFolderImage(),
                 'updated_at' => $eventActivity->updated_at
             ]
         ]);
